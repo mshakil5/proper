@@ -15,21 +15,19 @@
     </li>
 
     <li class="nav-item dropdown 
-        {{ Route::is('products.*') || Route::is('categories.*') || Route::is('product-tags.*') ? 'menu-open' : '' }}">
-        
+        {{ Route::is('products.*') || Route::is('allcategories') || Route::is('producttags.*') ? 'menu-open' : '' }}">
+
         <a href="#" class="nav-link dropdown-toggle 
-            {{ Route::is('products.*') || Route::is('categories.*') || Route::is('product-tags.*') ? 'active' : '' }}">
+            {{ Route::is('products.*') || Route::is('allcategories') || Route::is('producttags.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-box"></i>
-            <p>
-                Products <i class="fas fa-angle-left right"></i>
-            </p>
+            <p>Products <i class="fas fa-angle-left right"></i></p>
         </a>
 
         <ul class="nav nav-treeview">
-            
+
             <li class="nav-item">
                 <a href="{{ route('products.index') }}" 
-                class="nav-link {{ Route::is('products.*') ? 'active' : '' }}">
+                    class="nav-link {{ Route::is('products.*') ? 'active' : '' }}">
                     <i class="fas fa-project-diagram nav-icon"></i>
                     <p>Products</p>
                 </a>
@@ -37,7 +35,7 @@
 
             <li class="nav-item">
                 <a href="{{ route('allcategories') }}" 
-                class="nav-link {{ Route::is('categories.*') ? 'active' : '' }}">
+                    class="nav-link {{ Route::is('allcategories') ? 'active' : '' }}">
                     <i class="fas fa-th-list nav-icon"></i>
                     <p>Categories</p>
                 </a>
@@ -45,7 +43,7 @@
 
             <li class="nav-item">
                 <a href="{{ route('producttags.index') }}" 
-                class="nav-link {{ Route::is('tags.*') ? 'active' : '' }}">
+                    class="nav-link {{ Route::is('producttags.*') ? 'active' : '' }}">
                     <i class="fas fa-tags nav-icon"></i>
                     <p>Tags</p>
                 </a>

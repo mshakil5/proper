@@ -1,24 +1,8 @@
 @extends('frontend.master')
 
 @section('content')
-  @include('frontend.partials.banner', [
-      'title' => 'Privacy Policy',
-      'image' => $page->banner_image ?? asset('banner.jpg')
-  ])
-
-  <section id="privacy" class="privacy section">
-    <div class="container section-title" data-aos="fade-up">
-      <h2>Privacy Policy</h2>
-    </div>
-
-    <div class="container" data-aos="fade-up">
-      <div class="row">
-        <div class="col-12">
-          <div class="privacy-content">
-            {!! $companyPrivacy->privacy_policy !!}
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+<section class="find-us container p-3  align-items-center">
+    <h2 class="big-title"><span style="color:var(--orange)">Privacy Policy</span></h2>
+    <p class="subtitle">{!! $companyPrivacy->privacy_policy ?? '' !!}</p>
+</section>
 @endsection

@@ -1,39 +1,67 @@
 @extends('frontend.master')
 
 @section('content')
+<section class="container p-3">
 
-@include('frontend.partials.banner', [
-    'title' => 'Frequently Asked Questions',
-    'image' => $page->banner_image ?? asset('banner.jpg')
-])
-
-<section id="faq" class="faq section">
-  <div class="container" data-aos="fade-up" data-aos-delay="100">
     <div class="row justify-content-center">
-      <div class="col-lg-10">
+        <div class="col-lg-10">
 
-        <div class="faq-list">
-          @foreach($faqs as $index => $faq)
-            <div class="faq-item" data-aos="fade-up" data-aos-delay="{{ 200 + ($index * 100) }}">
-              <h3>
-                <span class="num">{{ $index + 1 }}</span>
-                <span class="question">{{ $faq->question }}</span>
-                <i class="bi bi-plus-lg faq-toggle"></i>
-              </h3>
-              <div class="faq-content">
-                {!! $faq->answer !!}
-              </div>
+            <h2 class="big-title mb-4">
+                <span style="color:var(--orange)">Frequently Asked Questions</span>
+            </h2>
+
+            <div class="accordion" id="faqAccordion">
+
+                @foreach ($faqs as $key => $faq)
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header" id="heading{{ $faq->id }}">
+                            <button class="accordion-button faq-question {{ $key !== 0 ? 'collapsed' : '' }}"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapse{{ $faq->id }}"
+                                aria-expanded="{{ $key === 0 ? 'true' : 'false' }}"
+                                aria-controls="collapse{{ $faq->id }}">
+                                
+                                {{ $faq->question }}
+                            </button>
+                        </h2>
+
+                        <div id="collapse{{ $faq->id }}" 
+                            class="accordion-collapse collapse {{ $key === 0 ? 'show' : '' }}"
+                            aria-labelledby="heading{{ $faq->id }}"
+                            data-bs-parent="#faqAccordion">
+
+                            <div class="accordion-body faq-answer">
+                                {!! $faq->answer !!}
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+
             </div>
-          @endforeach
-        </div>
 
-        <div class="faq-cta text-center mt-5" data-aos="fade-up" data-aos-delay="300">
-          <p>Still have questions? We're here to help!</p>
-          <a href="{{ route('contact') }}" class="btn btn-primary">Contact Support</a>
         </div>
-      </div>
     </div>
-  </div>
+
 </section>
+
+<style>
+    .faq-question {
+        color: var(--orange) !important;
+        font-weight: 600;
+        padding: 15px 20px !important;
+    }
+
+    .accordion-item {
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        border: 1px solid #eee;
+    }
+
+    .faq-answer {
+        padding: 15px 20px;
+    }
+</style>
 
 @endsection

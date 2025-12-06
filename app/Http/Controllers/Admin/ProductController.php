@@ -112,6 +112,10 @@ class ProductController extends Controller
             $imageName = time() . '.webp';
             $path = public_path('images/products/');
 
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
+
             // Ensure directory exists
             if (!file_exists($path)) {
                 mkdir($path, 0755, true);
@@ -263,6 +267,10 @@ class ProductController extends Controller
             $image = $request->file('image');
             $imageName = time() . '.webp';
             $path = public_path('images/products/');
+
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+            }
 
             // Save main image
             Image::make($image)

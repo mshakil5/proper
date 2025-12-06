@@ -169,6 +169,9 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::get('/categories/{id}', [CategoryController::class, 'destroy']);
     Route::post('/categories-status', [CategoryController::class, 'toggleStatus']);
 
+    Route::get('/sort-categories', [CategoryController::class, 'sortCategories'])->name('categories.sort');
+    Route::post('/sort-categories/update', [CategoryController::class, 'updateCategoryOrder'])->name('categories.updateOrder');
+
     // Product Tag Routes
     Route::get('/product-tags', [ProductTagController::class, 'index'])->name('producttags.index');
     Route::post('/product-tags', [ProductTagController::class, 'store'])->name('producttags.store');

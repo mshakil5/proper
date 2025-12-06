@@ -4,6 +4,9 @@
 <section class="content" id="newBtnSection">
   <div class="container-fluid">
     <button type="button" class="btn btn-secondary my-3" id="newBtn">Add New Category</button>
+    <a href="{{ route('categories.sort') }}" class="btn btn-warning my-3">
+        <i class="fas fa-sort"></i> Sort Categories
+    </a>
   </div>
 </section>
 
@@ -38,6 +41,7 @@
             <tr>
               <th>Sl</th>
               <th>Name</th>
+              <th>Sort Order</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -145,6 +149,7 @@
       columns: [
         {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
         {data: 'name', name: 'name'},
+        {data: 'sl', name: 'sl'},
         {data: 'status', name: 'status', orderable: false, searchable: false},
         {data: 'action', name: 'action', orderable: false, searchable: false},
       ],

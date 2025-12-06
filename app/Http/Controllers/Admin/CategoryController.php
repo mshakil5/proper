@@ -17,6 +17,9 @@ class CategoryController extends Controller
             $data = Category::latest();
             return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('sl', function($row) {
+                    return $row->sl;
+                })
                 ->addColumn('status', fn($row) => 
                     '<div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input toggle-status" id="status'.$row->id.'" data-id="'.$row->id.'" '.($row->status ? 'checked' : '').'>
@@ -24,6 +27,9 @@ class CategoryController extends Controller
                     </div>'
                 )
                 ->addColumn('action', fn($row) => '
+                    <a href="'.route('categories.sort').'" class="btn btn-sm btn-warning sort-btn" title="Sort Categories">
+                        <i class="fas fa-sort"></i>
+                    </a>
                     <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'"><i class="fas fa-edit"></i></button>
                     <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'"><i class="fas fa-trash-alt"></i></button>
                 ')
@@ -88,5 +94,21 @@ class CategoryController extends Controller
         $category->status = $request->status;
         $category->save();
         return response()->json(['status'=>200,'message'=>'Status updated']);
+    }
+
+    public function sortCategories()
+    {
+        $categories = Category::orderBy('sl')->get();
+        return view('admin.categories.sort', compact('categories'));
+    }
+
+    public function updateCategoryOrder(Request $request)
+    {
+        $order = $request->order;
+        foreach ($order as $index => $id) {
+            Category::where('id', $id)->update(['sl' => $index + 1]);
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Category order updated successfully']);
     }
 }

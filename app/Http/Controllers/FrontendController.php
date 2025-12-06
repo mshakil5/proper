@@ -145,28 +145,20 @@ class FrontendController extends Controller
     
     public function privacyPolicy()
     {
-        $banner = null;
-        $companyPrivacy = Cache::rememberForever('company_privacy', function () {
-            return CompanyDetails::select('privacy_policy')->first();
-        });
-
-        return view('frontend.privacy', compact('companyPrivacy', 'banner'));
+        $companyPrivacy = CompanyDetails::select('privacy_policy')->first();
+        return view('frontend.privacy', compact('companyPrivacy'));
     }
 
     public function termsAndConditions()
     {
-        $banner = null;
-        $companyDetails = Cache::rememberForever('company_terms', function () {
-            return CompanyDetails::select('terms_and_conditions')->first();
-        });
-        return view('frontend.terms', compact('companyDetails', 'banner'));
+        $terms = CompanyDetails::select('terms_and_conditions')->first();
+        return view('frontend.terms', compact('terms'));
     }
 
     public function frequentlyAskedQuestions()
     {   
-        $banner = null;
         $faqs = FaqQuestion::orderBy('id', 'asc')->get();
-        return view('frontend.faq', compact('faqs', 'banner'));
+        return view('frontend.faq', compact('faqs'));
     }
 
     private function seo($title = null, $description = null, $keywords = null, $image = null)

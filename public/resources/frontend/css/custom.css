@@ -497,7 +497,7 @@ body {
     transform: translateX(-50%);
     width: 150vw;
     min-width: 1500px;
-    height: 200px;
+    /* height: 200px; */
     background: #f8f9fa;
     /* Changed to match the next section */
     border-radius: 50%;

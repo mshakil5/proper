@@ -1,4 +1,4 @@
-    <section class="subscribe-section">
+    <section class="subscribe-section d-none">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6">
@@ -11,7 +11,7 @@
                         <input class="subscribe-input me-2" id="subscriberEmail" placeholder="Enter your email"
                             type="email" required>
                         <button class="subscribe-btn" id="subscribeBtn"><i class="fa-solid fa-paper-plane"></i>
-                            &nbsp;Subscribe</button>
+                            Subscribe</button>
                     </form>
                 </div>
             </div>
@@ -68,14 +68,49 @@
             </div>
         </div>
 
-        <div class="footer-legal d-flex justify-content-between align-items-center">
-            <div>© {{ date('Y') }}
-                {{ $company->company_name ?? '' }}
-                . All rights reserved.</div>
-            <div style="opacity:.9">Designed & Developed by <a href="https://www.mentosoftware.co.uk">Mento Software</a>
+        <div class="footer-legal d-flex justify-content-between align-items-center mt-4 flex-wrap">
+            <div class="footer-copy mb-2">
+                © {{ date('Y') }} {{ $company->company_name ?? '' }}. All rights reserved.
+            </div>
+
+            <div class="footer-links mb-2" style="opacity:.9">
+                Designed & Developed by 
+                <a href="https://www.mentosoftware.co.uk">Mento Software</a>
                 &nbsp; &nbsp;
-                <a href="{{ route('privacy-policy') }}">Privacy Policy</a> · <a
-                    href="{{ route('terms-and-conditions') }}">Terms of Service</a></div>
+                <a href="{{ route('privacy-policy') }}">Privacy Policy</a> · 
+                <a href="{{ route('terms-and-conditions') }}">Terms of Service</a>
+            </div>
+
+            <div class="footer-payment">
+                <img src="{{ asset('payment-icon.webp') }}" alt="Payment Icons" class="payment-img">
+            </div>
         </div>
     </div>
 </footer>
+
+<style>
+    .footer-legal {
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 15px;
+}
+
+.footer-payment {
+    margin-left: auto;
+}
+
+.payment-img {
+    height: 30px;
+    width: auto;
+    display: block;
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .footer-payment {
+        width: 100%;
+        text-align: center;
+        margin-top: 12px;
+    }
+}
+
+</style>

@@ -1,40 +1,45 @@
 @php
-    $categories = App\Models\Category::with(['products' => function($q) {
-        $q->where('status', 1)->with('productTag');
-    }])->where('status', 1)->get();
+    $categories = App\Models\Category::with([
+        'products' => function ($q) {
+            $q->where('status', 1)->with('productTag');
+        },
+    ])
+        ->where('status', 1)
+        ->orderBy('sl', 'asc')
+        ->get();
+    $firstCategory = $categories->first();
+    $firstCategoryName = $firstCategory ? strtolower($firstCategory->name) : 'all';
 @endphp
-
 <section id="product" class="section bg-light">
     <div class="container-fluid">
         <section class="section-head">
-            <div class="eyebrow">Our Menu</div>
             <h2 class="big-title">Popular <span class="accent">Picks</span></h2>
-            <p class="subtxt">Discover our most-loved dishes, crafted with the finest ingredients and bursting with flavour</p>
+            <p class="subtxt">Discover our most-loved dishes, crafted with the finest ingredients and bursting with
+                flavour</p>
         </section>
-
         <div class="category-pills" id="categoryPills">
-            <div class="pill active" data-filter="all">All</div>
-            @foreach($categories as $category)
-                <div class="pill" data-filter="{{ strtolower($category->name) }}">{{ $category->name }}</div>
+            <div class="pill" data-filter="all">All</div>
+            @foreach ($categories as $key => $category)
+                <div class="pill {{ $key === 0 ? 'active' : '' }}" data-filter="{{ strtolower($category->name) }}">
+                    {{ $category->name }}
+                </div>
             @endforeach
         </div>
-
         <div class="cards-grid container" id="cardsGrid">
-            @foreach($categories as $category)
-                @foreach($category->products as $product)
-                    <div class="food-card rounded-xl" data-cat="{{ strtolower($category->name) }}">
+            @foreach ($categories as $category)
+                @foreach ($category->products as $product)
+                    <div class="food-card rounded-xl" data-cat="{{ strtolower($category->name) }}"
+                        style="display: {{ strtolower($category->name) === $firstCategoryName ? 'block' : 'none' }};">
                         <div class="img-wrap">
                             <img src="{{ asset('images/products/' . $product->image) }}" alt="{{ $product->title }}">
-
-                            @if($product->productTag)
-                                @if(strtolower($product->productTag->name) == 'veg')
+                            @if ($product->productTag)
+                                @if (strtolower($product->productTag->name) == 'veg')
                                     <div class="badge-top veg">{{ $product->productTag->name }}</div>
                                 @else
                                     <div class="badge-top">{{ $product->productTag->name }}</div>
                                 @endif
                             @endif
                         </div>
-
                         <div class="card-body">
                             <h3 class="card-title">{{ $product->title }}</h3>
                             <div class="card-desc">{{ $product->short_description }}</div>
@@ -51,9 +56,9 @@
             @endforeach
         </div>
         @if (Route::is('home'))
-        <div class="text-center mb-5">
-            <a href="{{ route('menu') }}" class="btn btn-outline-dark rounded-pill px-4 py-2">View Full Menu</a>
-        </div>
+            <div class="text-center mb-5">
+                <a href="{{ route('menu') }}" class="btn btn-outline-dark rounded-pill px-4 py-2">View Full Menu</a>
+            </div>
         @endif
     </div>
 </section>
