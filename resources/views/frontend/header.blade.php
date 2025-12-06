@@ -1,7 +1,17 @@
 <nav class="navbar navbar-expand-lg bg-white py-3 shadow-sm sticky-top">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
-            <span>{{ $company->company_name ?? '' }}</span>
+            @if(isset($company->company_logo) && $company->company_logo != '')
+                <img 
+                    id="company_logo_preview"
+                    src="{{ asset('images/company/' . $company->company_logo) }}"
+                    alt="Company Logo"
+                    class="me-2"
+                    style="width:180px; height:40px; object-fit:contain;"
+                >
+            @endif
+
+            <span class="fw-bold fs-5 d-none">{{ $company->company_name ?? '' }}</span>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">

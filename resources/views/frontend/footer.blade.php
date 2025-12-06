@@ -23,10 +23,15 @@
             <div class="col-md-4">
                 <div class="d-flex align-items-start gap-3">
                     <div>
-                        <h5 style="margin:0;color:#fff">
-                            {{ $company->company_name ?? '' }}
-                        </h5>
-                        <p style="margin-top:8px;color:#c0c0c0">{{ $company->footer_content }}</p>
+                            @if(isset($company->company_logo) && $company->company_logo != '')
+                                <img 
+                                    id="footer_logo_preview"
+                                    src="{{ asset('images/company/' . $company->company_logo) }}"
+                                    alt="Footer Logo"
+                                    style="width:260px; height:60px; object-fit:contain;"
+                                >
+                            @endif
+                        <p style="margin-top:8px;color:#c0c0c0">{{ $company->footer_content ?? '' }}</p>
                         <div class="mt-2">
                             <a class="me-2" href="{{ $company->instagram ?? '' }}"><i
                                     class="fa-brands fa-instagram"></i></a>
