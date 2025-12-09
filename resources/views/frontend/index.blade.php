@@ -14,7 +14,7 @@
                                 <i class="fa-solid fa-star"></i>
                                 <i class="fa-solid fa-star"></i>
                                 <i class="fa-solid fa-star"></i>
-                                Rated 4.9 by 2,000+ customers
+                                Rated 4.0 star by 41 Google reviews
                             </div>
 
                             <h1 class="banner-title display-1 fw-bold">
@@ -42,18 +42,24 @@
                                         <i class="fa-solid fa-clock text-warning fs-4"></i>
                                     </div>
                                     <div>
-                                        <div class="stat-value fw-bold fs-4">25 min</div>
-                                        <div class="stat-label text-muted small">Avg. Delivery</div>
+                                        <div class="stat-value fw-bold fs-4">£12</div>
+                                        <div class="stat-label text-muted small">
+                                            Minimum Order<br>
+                                            Within 4.5 Miles
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div class="delivery-stat d-flex align-items-center">
                                     <div class="stat-icon me-3">
-                                        <i class="fa-solid fa-truck text-warning fs-4"></i>
+                                        <i class="fa-solid fa-clock text-warning fs-4"></i>
                                     </div>
                                     <div>
-                                        <div class="stat-value fw-bold fs-4">Free</div>
-                                        <div class="stat-label text-muted small">Delivery £25+</div>
+                                        <div class="stat-value fw-bold fs-4">£20</div>
+                                        <div class="stat-label text-muted small">
+                                            Minimum Order<br>
+                                            Within 7.5 Miles
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -88,8 +94,8 @@
                                 </button>
 
                                 <!-- Floating Badges -->
-                                <div class="dish-badge">50+<br><small class="text-muted">Dishes</small></div>
-                                <div class="open-badge">24/7<br><small class="fw-normal">Open</small></div>
+                                <div class="dish-badge">140+<br><small class="text-muted">Dishes</small></div>
+                                <div class="open-badge">365<br><small class="fw-normal">Open</small></div>
 
                             </div>
                         </div>

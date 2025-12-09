@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg bg-white py-3 shadow-sm sticky-top">
+<nav class="navbar navbar-dark shadow-sm navbar-expand-lg py-3 sticky-top fw-bold bg-dark">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
             @if(isset($company->company_logo) && $company->company_logo != '')
@@ -42,6 +42,134 @@
             <span>Fast Delivery •</span>
             <span>Authentic Taste •</span>
             <span>Fresh Food •</span>
+            <span>Fast Delivery •</span>
+            <span>Authentic Taste •</span>
+            <span>Fresh Food •</span>
+            <span>Fast Delivery •</span>
+            <span>Authentic Taste •</span>
+            <span>Fresh Food •</span>
+            <span>Fast Delivery •</span>
+            <span>Authentic Taste •</span>
+            <span>Fresh Food •</span>
+            <span>Fast Delivery •</span>
+            <span>Authentic Taste •</span>
+            <span>Fresh Food •</span>
         </div>
     </div>
 </div>
+<!-- Floating Shop Status -->
+<div class="floating-shop-status swing" id="shopStatus">
+    OPEN
+</div>
+
+<style>
+.floating-shop-status {
+    position: fixed;
+    top: 200px;
+    right: 20px;
+    z-index: 9999;
+    background: #fff;
+    border: 2px solid;
+    border-radius: 5px;
+    padding: 10px 25px;
+    font-weight: bold;
+    font-size: 18px;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+    transform-origin: top center;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .floating-shop-status {
+        top: 60px;
+        padding: 8px 20px;
+        font-size: 16px;
+    }
+}
+
+.floating-shop-status::before {
+    content: "";
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    width: 2px;
+    height: 20px;
+    background: #555;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.floating-shop-status::after {
+    content: "";
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    border: 2px solid #555;
+    border-radius: 50%;
+    background: #fff;
+    transform: translateX(-50%);
+    z-index: 0;
+}
+
+/* Open/Closed colors */
+.floating-shop-status.open {
+    color: green;
+    border-color: green;
+}
+
+.floating-shop-status.closed {
+    color: red;
+    border-color: red;
+}
+
+/* Swing animation */
+.swing {
+    animation: swingBoard 3s ease-in-out infinite;
+}
+
+@keyframes swingBoard {
+    0% { transform: rotate(2deg); }
+    50% { transform: rotate(-2deg); }
+    100% { transform: rotate(2deg); }
+}
+</style>
+
+<script>
+const shopStatus = document.getElementById('shopStatus');
+
+function updateShopStatus() {
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday, 1 = Monday ... 6 = Saturday
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    let open = false;
+
+    // Define opening hours
+    // Monday - Saturday: 16:00 - 22:00
+    // Sunday: 16:00 - 22:00
+    const openingHour = 16;
+    const closingHour = 22;
+
+    if (hour >= openingHour && hour < closingHour) {
+        open = true;
+    }
+
+    if(open) {
+        shopStatus.classList.add('open');
+        shopStatus.classList.remove('closed');
+        shopStatus.textContent = "OPEN";
+    } else {
+        shopStatus.classList.add('closed');
+        shopStatus.classList.remove('open');
+        shopStatus.textContent = "CLOSED";
+    }
+}
+
+// Initial check
+updateShopStatus();
+
+// Optional: update every minute
+setInterval(updateShopStatus, 60000);
+</script>

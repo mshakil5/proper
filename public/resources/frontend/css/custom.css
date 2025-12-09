@@ -26,8 +26,8 @@ body {
 }
 
 .marquee-bar {
-    background: #000;
-    color: #fff;
+    background: transparent;
+    color: #000000;
     padding: 15px 0;
     overflow: hidden;
     transform: rotate(-1deg);
@@ -126,7 +126,7 @@ body {
     font-size: larger;
     position: absolute;
     top: -10px;
-    right: -10px;
+    left: -10px;
     background: white;
     color: #ff8a00;
     padding: 10px 14px;
@@ -430,7 +430,7 @@ body {
 
     .dish-badge {
         top: -5px;
-        right: -5px;
+        left: -5px;
     }
 }
 
@@ -1254,7 +1254,7 @@ footer a:hover {
     outline: none;
 }
 
-nav.navbar.navbar-expand-lg.bg-white.py-3.shadow-sm.sticky-top {
+/* nav.navbar.navbar-expand-lg.bg-white.py-3.shadow-sm.sticky-top {
     background: linear-gradient(135deg, #fff8f0, #fff3e7) !important;
 }
 
@@ -1263,4 +1263,4 @@ nav.navbar.navbar-expand-lg.py-3.shadow-sm.sticky-top {
     font-weight: 700 !important;
     border-bottom: 1px solid rgba(255, 120, 0, 0.1) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-}
+} */

@@ -29,7 +29,7 @@
 
                     <div class="col-12">
                         <div class="collage-item" style="height: 200px;">
-                            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80"
+                            <img src="{{ asset('pizza.jpg') }}"
                                 alt="table" class="w-100 h-100">
                         </div>
                     </div>
@@ -84,7 +84,7 @@
                     <div class="pill"><span class="year">2021</span><span>Expanded to delivery
                             services</span>
                     </div>
-                    <div class="pill"><span class="year">2024</span><span>Serving 1000+ happy customers
+                    <div class="pill"><span class="year">2025</span><span>Serving 1000+ happy customers
                             weekly</span></div>
                 </div>
             </div>
