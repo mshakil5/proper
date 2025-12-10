@@ -93,6 +93,20 @@
     background: #fff;
 }
 
+.contact-section h3 {
+    font-weight: 700;   /* bold */
+    font-size: 28px;    /* bigger */
+}
+
+.contact-section h3 span {
+    font-weight: 700;   /* bold span too */
+}
+
+.contact-section p {
+    font-weight: 500;   /* medium bold */
+    font-size: 16px;    /* slightly bigger */
+}
+
 .contact-input {
     background: #ffffff;
     border: 1px solid rgba(0,0,0,0.1);
@@ -101,6 +115,8 @@
     color: #000;
     width: 100%;
     outline: none;
+    font-weight: 500; /* medium bold */
+    font-size: 15px; /* slightly bigger */
     transition: all 0.3s;
 }
 .contact-input:focus {
@@ -114,11 +130,17 @@
     padding: 12px 28px;
     border-radius: 28px;
     color: #fff;
-    font-weight: 700;
+    font-weight: 700; /* bold */
+    font-size: 16px;  /* slightly bigger */
     transition: all 0.3s;
 }
 .contact-btn:hover {
     opacity: 0.9;
+}
+
+#captcha-question {
+    font-weight: 600; /* bold */
+    font-size: 16px;  /* slightly bigger */
 }
 </style>
 <!-- jQuery CDN -->

@@ -18,57 +18,6 @@
         </div>
     </section>
 
-    <section style="background: #f5f5dc;">
-        <div class="container">
-            <div class="row text-dark p-4">
-
-                <!-- Delivery Information -->
-                <div class="col-md-6 p-4 mb-4" style="background-color: rgb(232 232 200);">
-                    <h6>Minimum Order For Delivery</h6>
-                    <table class="table table-bordered table-sm text-dark mb-2">
-                        <tbody>
-                            <tr>
-                                <td>Minimum Order £12.00</td>
-                                <td>Within 4.5 Miles</td>
-                            </tr>
-                            <tr>
-                                <td>Minimum Order £20.00</td>
-                                <td>Within 7.5 Miles</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p class="small text-muted">
-                        * Note: You must spend at least this amount on the items, after discount, excluding any delivery
-                        or processing fees.
-                    </p>
-                </div>
-
-                <div class="col-md-2"></div>
-
-                <!-- Opening Hours -->
-                <div class="col-md-4 p-4" style="background-color: rgb(232 232 200);">
-                    <h6>Opening Hours</h6>
-                    <table class="table table-bordered table-sm text-dark mb-2">
-                        <tbody>
-                            <tr>
-                                <td>Mon - Sat</td>
-                                <td>16:00 - 22:00</td>
-                            </tr>
-                            <tr>
-                                <td>Sunday</td>
-                                <td>16:00 - 22:00</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p class="small text-muted">
-                        Further Information: Our online ordering website will stop taking orders ten minutes before we close.
-                    </p>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
     <footer>
         <div class="container">
             <div class="row gy-4">
@@ -91,7 +40,7 @@
                     </div>
                 </div>
 
-                <div class="col-6 col-md-2">
+                <div class="col-4 col-md-2">
                     <h6 style="color:#fff">Quick Links</h6>
                     <ul class="list-unstyled mt-2">
                         <li><a href="{{ route('home') }}">Home</a></li>
@@ -102,18 +51,23 @@
                     </ul>
                 </div>
 
-                <div class="col-6 col-md-3">
-                    <h6 style="color:#fff">Menu</h6>
-                    <ul class="list-unstyled mt-2">
-                        <li><a href="#">Bowls</a></li>
-                        <li><a href="#">Burgers</a></li>
-                        <li><a href="#">Sandwiches</a></li>
-                        <li><a href="#">Sides</a></li>
-                        <li><a href="#">Drinks</a></li>
-                    </ul>
-                </div>
+                @php
+                    $categories = App\Models\Category::where('status', 1)->pluck('name');
+                    $chunks = $categories->chunk(ceil($categories->count() / 2));
+                @endphp
 
-                <div class="col-md-3">
+                @foreach($chunks as $chunk)
+                    <div class="col-6 col-md-2">
+                        <h6 style="color:#fff">Menu</h6>
+                        <ul class="list-unstyled mt-2">
+                            @foreach($chunk as $name)
+                                <li><a href="#">{{ $name }}</a></li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endforeach
+
+                <div class="col-md-2">
                     <h6 style="color:#fff">Contact Us</h6>
                     <p class="mt-2" style="color:#cfcfcf">{{ $company->company_name ?? '' }}
                         <br>{{ $company->address1 ?? '' }}<br>

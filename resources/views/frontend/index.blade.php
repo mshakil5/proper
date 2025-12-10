@@ -36,29 +36,45 @@
                             </div>
 
                             <!-- Delivery Stats -->
-                            <div class="delivery-stats mt-5 d-flex gap-4">
-                                <div class="delivery-stat d-flex align-items-center">
-                                    <div class="stat-icon me-3">
-                                        <i class="fa-solid fa-clock text-warning fs-4"></i>
-                                    </div>
-                                    <div>
-                                        <div class="stat-value fw-bold fs-4">£12</div>
-                                        <div class="stat-label text-muted small">
-                                            Minimum Order<br>
-                                            Within 4.5 Miles
+                            <div class="delivery-stats mt-5">
+                                <div class="row">
+                                    <div class="col-6 col-md-4 mb-3 mb-md-0">
+                                        <div class="delivery-stat d-flex align-items-center h-100">
+                                            <div class="stat-icon me-3">
+                                                <i class="fa-solid fa-clock text-warning fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="stat-value fw-bold fs-4">£15</div>
+                                                <div class="stat-label text-muted small">
+                                                    Minimum Order<br>
+                                                    Within 7.5 Miles
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="delivery-stat d-flex align-items-center">
-                                    <div class="stat-icon me-3">
-                                        <i class="fa-solid fa-clock text-warning fs-4"></i>
+                                    <div class="col-6 col-md-4 mb-3 mb-md-0">
+                                        <div class="delivery-stat d-flex align-items-center h-100">
+                                            <div class="stat-icon me-3">
+                                                <i class="fa-solid fa-clock text-warning fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="stat-value fw-bold fs-4">30 min</div>
+                                                <div class="stat-label text-muted small">Avg. Delivery</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div class="stat-value fw-bold fs-4">£20</div>
-                                        <div class="stat-label text-muted small">
-                                            Minimum Order<br>
-                                            Within 7.5 Miles
+                                    <div class="col-12 col-md-4">
+                                        <div class="delivery-stat d-flex align-items-center h-100">
+                                            <div class="stat-icon me-3">
+                                                <i class="fa-solid fa-clock text-warning fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="stat-value fw-bold fs-4">£2 / £3</div>
+                                                <div class="stat-label text-muted small">
+                                                    Delivery Charge<br>
+                                                    £2 up to 3 miles,<br> £3 above
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -122,4 +138,30 @@
             @include('frontend.partials.find-us')
         @endif
     @endforeach
+
+    @php
+        $bottomAbout = App\Models\Master::firstOrCreate(['name' => 'bottom-about']);
+    @endphp
+
+    <section class="find-us container p-3 my-5">
+        <div class="container">
+            <div class="row">
+
+            <div class="col-lg-5 mb-4 mb-lg-0 d-flex">
+                <img src="{{ asset('images/meta_image/' . $bottomAbout->meta_image) }}" alt="Bottom About Image" 
+                         style="width:100%; border-radius:3px; object-fit:cover; flex:1;">
+            </div>
+
+            <div class="col-lg-7 d-flex flex-column" style="text-align: center;">
+                <div>
+                    <h2 class="story-title mb-4">{{ $bottomAbout->short_title ?? '' }} 
+                        <span class="accent">{{ $bottomAbout->long_title ?? '' }}</span>
+                    </h2>
+                    <p class="story-desc mb-5">{!! $bottomAbout->long_description ?? '' !!}</p>
+                </div>
+            </div>
+
+            </div>
+        </div>
+    </section>
 @endsection

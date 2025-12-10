@@ -4,7 +4,7 @@
 @endphp
 
 <section class="find-us container p-3  align-items-center">
-    <div class="eyebrow">{{ $findUs->short_title ?? '' }}</div>
+    {{-- <div class="eyebrow">{{ $findUs->short_title ?? '' }}</div> --}}
     <h2 class="big-title">{{ $findUs->long_title ?? '' }} <span style="color:var(--orange)">{{ $findUs->short_description ?? '' }}</span></h2>
     <p class="subtitle">{!! $findUs->long_description ?? '' !!}</p>
 
@@ -13,7 +13,7 @@
             <div class="map-card p-3">
                 <iframe
                     src="{{ $company->google_map ?? '' }}"
-                    width="600" style="height: 450px;" allowfullscreen="" loading="lazy"
+                    width="500" style="height: 450px;" allowfullscreen="" loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade" class="map-img"></iframe>
 
             </div>
@@ -24,8 +24,8 @@
             <div class="info-card d-flex align-items-start">
                 <div class="icon"><i class="fa-solid fa-location-dot"></i></div>
                 <div>
-                    <h6>Address</h6>
-                    <p style="font-size:13px">{{ $company->company_name ?? '' }}
+                    <h5 class="fw-bold">Address</h5>
+                    <p style="font-size:14px">{{ $company->company_name ?? '' }}
                         <br>{{ $company->address1 ?? '' }}</p>
                 </div>
             </div>
@@ -33,25 +33,42 @@
             <div class="info-card d-flex align-items-start">
                 <div class="icon"><i class="fa-regular fa-clock"></i></div>
                 <div>
-                    <h6>Opening Hours</h6>
-                    <p style="font-size:13px">Mon - Sat: 16:00 - 22:00<br>Sunday: 16:00 - 22:00</p>
+                    <h5 class="fw-bold">Opening Hours</h5>
+                    <p style="font-size:14px" class="mb-2">
+                        Mon - Sat: 4:30pm - 11:30pm<br>
+                        Sunday: 4:30pm - 10:00pm
+                    </p>
+                    <small style="font-size:12px;">
+                        <span style="color:red">*</span> Our online ordering website will stop taking orders ten minutes before we close.
+                    </small>
                 </div>
             </div>
 
             <div class="info-card d-flex align-items-start">
                 <div class="icon"><i class="fa-solid fa-phone"></i></div>
                 <div>
-                    <h6>Phone</h6>
-                    <p style="font-size:13px">{{ $company->phone1 ?? '' }}</p>
+                    <h5 class="fw-bold">Phone</h5>
+                    <p style="font-size:14px">{{ $company->phone1 ?? '' }}</p>
                 </div>
             </div>
 
             <div class="delivery-card mt-3">
-                <h6 style="margin-bottom:8px">Delivery Zone</h6>
-                <p style="margin-bottom:10px;font-size:14px;opacity:0.95">We deliver within a 5-mile radius.
-                    Orders
-                    over £25 get free delivery!</p>
-                <div class="badge">Avg. delivery: 25-35 mins</div>
+                <h5 style="margin-bottom:8px" class="fw-bold">Minimum Order For Delivery</h5>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <p style="font-size:14px; margin:0;">Minimum Order £12.00 Within 4.5 Miles</p>
+                    <div class="badge">4.5 Miles</div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;" class="mb-2">
+                    <p style="font-size:14px; margin:0;">Minimum Order £20.00 Within 7.5 Miles</p>
+                    <div class="badge">7.5 Miles</div>
+                </div>
+
+                <small style="font-size:12px;">
+                    <span>*</span> You must spend at least this amount on the items, after discount, excluding any delivery or processing fees.
+                </small>
+
             </div>
 
         </div>
