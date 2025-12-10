@@ -34,17 +34,16 @@
                             @endif
                             <strong>Email:</strong> {{ $email }}<br>
                             <strong>Phone:</strong> {{ $phone }}<br>
-                            <strong>Message:</strong><br>
+                            <strong>Message:</strong>
                             {!! nl2br(e($contactMessage)) !!}
                         </p>
-                        <p style="margin-top:20px; color:#444;">{!! $mailFooter !!}</p>
                     </td>
                 </tr>
 
                 <tr>
                     <td style="background-color:#f8f8f8;padding:20px;font-size:12px;color:#555;text-align:center;">
-                        <p style="margin:0;">&copy; {{ date('Y') }} Mento Software. All rights reserved.</p>
-                        <p style="margin:4px 0 0 0;"><a href="https://www.mentosoftware.co.uk/" style="color:#FF6D33;text-decoration:none;">Visit Website</a></p>
+                        <p style="margin:0;">&copy; {{ date('Y') }} Propertakeaways. All rights reserved.</p>
+                        <p style="margin:4px 0 0 0;"><a href="https://www.propertakeaways.co.uk/" style="color:#FF6D33;text-decoration:none;">Visit Website</a></p>
                     </td>
                 </tr>
             </table>

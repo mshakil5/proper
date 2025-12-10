@@ -57,11 +57,11 @@
                 @endphp
 
                 @foreach($chunks as $chunk)
-                    <div class="col-6 col-md-2">
+                    <div class="col-4 col-md-2">
                         <h6 style="color:#fff">Menu</h6>
                         <ul class="list-unstyled mt-2">
                             @foreach($chunk as $name)
-                                <li><a href="#">{{ $name }}</a></li>
+                                <li><a class="text-wrap" href="{{ route('menu') }}">{{ $name }}</a></li>
                             @endforeach
                         </ul>
                     </div>

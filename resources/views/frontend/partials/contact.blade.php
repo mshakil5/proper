@@ -31,7 +31,7 @@
                         <div class="icon me-3"><i class="fa-solid fa-envelope fa-lg"></i></div>
                         <div>
                             <h6>Email</h6>
-                            <p style="font-size:13px">{{ $company->email ?? '' }}</p>
+                            <p style="font-size:13px">{{ $company->email1 ?? '' }}</p>
                         </div>
                     </div>
                 </div>

@@ -25,6 +25,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\ContactEmail;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\ContactMail;
 
 class FrontendController extends Controller
 {

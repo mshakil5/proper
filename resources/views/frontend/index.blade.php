@@ -38,7 +38,7 @@
                             <!-- Delivery Stats -->
                             <div class="delivery-stats mt-5">
                                 <div class="row">
-                                    <div class="col-6 col-md-4 mb-3 mb-md-0">
+                                    <div class="col-6 mb-3 mb-md-0">
                                         <div class="delivery-stat d-flex align-items-center h-100">
                                             <div class="stat-icon me-3">
                                                 <i class="fa-solid fa-clock text-warning fs-4"></i>
@@ -52,7 +52,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-6 col-md-4 mb-3 mb-md-0">
+                                    <div class="col-6 mb-3 mb-md-0">
                                         <div class="delivery-stat d-flex align-items-center h-100">
                                             <div class="stat-icon me-3">
                                                 <i class="fa-solid fa-clock text-warning fs-4"></i>
@@ -60,20 +60,6 @@
                                             <div>
                                                 <div class="stat-value fw-bold fs-4">30 min</div>
                                                 <div class="stat-label text-muted small">Avg. Delivery</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-md-4">
-                                        <div class="delivery-stat d-flex align-items-center h-100">
-                                            <div class="stat-icon me-3">
-                                                <i class="fa-solid fa-clock text-warning fs-4"></i>
-                                            </div>
-                                            <div>
-                                                <div class="stat-value fw-bold fs-4">£2 / £3</div>
-                                                <div class="stat-label text-muted small">
-                                                    Delivery Charge<br>
-                                                    £2 up to 3 miles,<br> £3 above
-                                                </div>
                                             </div>
                                         </div>
                                     </div>

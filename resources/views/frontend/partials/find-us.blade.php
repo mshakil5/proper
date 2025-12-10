@@ -25,7 +25,7 @@
                 <div class="icon"><i class="fa-solid fa-location-dot"></i></div>
                 <div>
                     <h5 class="fw-bold">Address</h5>
-                    <p style="font-size:14px">{{ $company->company_name ?? '' }}
+                    <p class="company-info">{{ $company->company_name ?? '' }}
                         <br>{{ $company->address1 ?? '' }}</p>
                 </div>
             </div>
@@ -34,7 +34,7 @@
                 <div class="icon"><i class="fa-regular fa-clock"></i></div>
                 <div>
                     <h5 class="fw-bold">Opening Hours</h5>
-                    <p style="font-size:14px" class="mb-2">
+                    <p class="company-info mb-2">
                         Mon - Sat: 4:30pm - 11:30pm<br>
                         Sunday: 4:30pm - 10:00pm
                     </p>
@@ -48,29 +48,36 @@
                 <div class="icon"><i class="fa-solid fa-phone"></i></div>
                 <div>
                     <h5 class="fw-bold">Phone</h5>
-                    <p style="font-size:14px">{{ $company->phone1 ?? '' }}</p>
+                    <p class="company-info">{{ $company->phone1 ?? '' }}</p>
                 </div>
             </div>
 
             <div class="delivery-card mt-3">
-                <h5 style="margin-bottom:8px" class="fw-bold">Minimum Order For Delivery</h5>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <p style="font-size:14px; margin:0;">Minimum Order £12.00 Within 4.5 Miles</p>
-                    <div class="badge">4.5 Miles</div>
+                <h5 class="fw-bold mb-3" style="margin-bottom:8px;">Minimum Order For Delivery</h5>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <p class="order-info mb-0">Minimum Order Within 7.5 Miles</p>
+                    <div class="badge bg-warnng text-white" style="padding:0.25rem 0.5rem; font-size:0.85rem;">£15</div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center;" class="mb-2">
-                    <p style="font-size:14px; margin:0;">Minimum Order £20.00 Within 7.5 Miles</p>
-                    <div class="badge">7.5 Miles</div>
-                </div>
-
-                <small style="font-size:12px;">
+                <small class="d-block mt-2" style="font-size:12px;">
                     <span>*</span> You must spend at least this amount on the items, after discount, excluding any delivery or processing fees.
                 </small>
-
             </div>
 
         </div>
     </div>
 </section>
+
+<style>
+    .company-info {
+        color: #000 !important;
+        font-family: "Segoe UI", Inter, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif !important;
+        font-size: 14px !important;
+    }
+    .order-info {
+        color: #fff !important;
+        font-family: "Segoe UI", Inter, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif !important;
+        font-size: 14px !important;
+    }
+</style>

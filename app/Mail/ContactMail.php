@@ -30,7 +30,6 @@ class ContactMail extends Mailable
                         'phone'          => $this->contact->phone,
                         'subjectText'    => $this->contact->subject ?? 'New query from website',
                         'contactMessage' => $this->contact->message,
-                        'mailFooter'     => CompanyDetails::select('mail_footer')->first()->mail_footer ?? '',
                     ]);
     }
 }
