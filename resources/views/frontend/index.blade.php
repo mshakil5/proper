@@ -148,15 +148,18 @@
             <div class="row">
 
             <div class="col-lg-5 mb-4 mb-lg-0 d-flex">
-                <img src="{{ asset('images/meta_image/' . $bottomAbout->meta_image) }}" alt="Bottom About Image" 
-                         style="width:100%; border-radius:3px; object-fit:cover; flex:1;">
+                <img src="{{ asset('images/meta_image/' . $bottomAbout->meta_image) }}" 
+                    alt="Bottom About Image" 
+                    style="width:100%; flex:1; object-fit:cover; border-radius:16px; 
+                            transition: transform 0.5s ease; 
+                            box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
             </div>
 
             <div class="col-lg-7 d-flex flex-column" style="text-align: center;">
                 <div>
                     <h2 class="story-title mb-4">{{ $bottomAbout->short_title ?? '' }} 
-                        <span class="accent">{{ $bottomAbout->long_title ?? '' }}</span>
                     </h2>
+                    <h3 class="accent fw-bold" style="font-size:25px; color:var(--orange)">{{ $bottomAbout->long_title ?? '' }}</h3>
                     <p class="story-desc mb-5">{!! $bottomAbout->long_description ?? '' !!}</p>
                 </div>
             </div>
