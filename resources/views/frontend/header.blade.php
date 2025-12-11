@@ -26,7 +26,7 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('find-us') }}">Find Us</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('contact') }}">Contact</a></li>
             </ul>
-            <a href="https://www.propertakeaways.com/order" class="btn btn-gradient ms-3 fw-semibold">
+            <a href="https://www.propertakeaways.com/menu" class="btn btn-gradient ms-3 fw-semibold" target="_blank">
                 <i class="fa-solid fa-bag-shopping me-1"></i> Order Now
             </a>
         </div>
@@ -146,14 +146,20 @@ function updateShopStatus() {
     const minute = now.getMinutes();
     let open = false;
 
-    // Define opening hours
-    // Monday - Saturday: 16:00 - 22:00
-    // Sunday: 16:00 - 22:00
-    const openingHour = 16;
-    const closingHour = 22;
+    const currentMinutes = hour * 60 + minute;
 
-    if (hour >= openingHour && hour < closingHour) {
-        open = true;
+    if (day === 0) {
+        const openTime = 16 * 60 + 30;
+        const closeTime = 22 * 60;
+        if (currentMinutes >= openTime && currentMinutes < closeTime) {
+            open = true;
+        }
+    } else if (day >= 1 && day <= 6) {
+        const openTime = 16 * 60 + 30;
+        const closeTime = 23 * 60 + 30;
+        if (currentMinutes >= openTime && currentMinutes < closeTime) {
+            open = true;
+        }
     }
 
     if(open) {
@@ -167,9 +173,7 @@ function updateShopStatus() {
     }
 }
 
-// Initial check
 updateShopStatus();
 
-// Optional: update every minute
 setInterval(updateShopStatus, 60000);
 </script>

@@ -20,6 +20,7 @@ use Stripe\Checkout\Session;
 use App\Models\ContentCategory;
 use App\Models\CompanyDetails;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Response;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -189,28 +190,23 @@ class FrontendController extends Controller
     public function sitemap()
     {
         $urls = [];
-        
+
+        $company = CompanyDetails::first();
+        $companyLastMod = $company ? $company->updated_at->toDateString() : now()->toDateString();
+
         $staticPages = [
             ['loc' => url('/'), 'lastmod' => now()->toDateString(), 'changefreq' => 'daily', 'priority' => '1.0'],
-            ['loc' => url('/about-us'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.8'],
-            ['loc' => url('/menu'), 'lastmod' => now()->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
-            ['loc' => url('/gallery'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
-            ['loc' => url('/services'), 'lastmod' => now()->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
-            ['loc' => url('/book-now'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['loc' => url('/about-us'), 'lastmod' => $companyLastMod, 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['loc' => url('/menu'), 'lastmod' => now()->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.7'],
+            ['loc' => url('/our-story'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.6'],
+            ['loc' => url('/find-us'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.6'],
             ['loc' => url('/contact'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
+            ['loc' => url('/privacy-policy'), 'lastmod' => $companyLastMod, 'changefreq' => 'yearly', 'priority' => '0.3'],
+            ['loc' => url('/terms-and-conditions'), 'lastmod' => $companyLastMod, 'changefreq' => 'yearly', 'priority' => '0.3'],
+            ['loc' => url('/frequently-asked-questions'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.5'],
         ];
 
         $urls = array_merge($urls, $staticPages);
-
-        $services = Product::where('status', 1)->get();
-        foreach ($services as $service) {
-            $urls[] = [
-                'loc' => url('/service/' . $service->slug),
-                'lastmod' => $service->updated_at->toDateString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.9',
-            ];
-        }
 
         $content = view('frontend.sitemap', compact('urls'))->render();
         return Response::make($content, 200)->header('Content-Type', 'application/xml');
