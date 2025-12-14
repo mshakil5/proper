@@ -16,7 +16,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $products = Product::select(['id','title','price','status','image','category_id','show_in_menu'])
+            $products = Product::select(['id','title','price','status','image','category_id','show_in_menu','stock_status'])
             ->with('category')
             ->when($request->category_id, function($q) use ($request) {
                 $q->where('category_id', $request->category_id);
@@ -40,6 +40,18 @@ class ProductController extends Controller
                                 <input type="checkbox" class="form-check-input toggle-status" 
                                        id="customSwitchStatus'.$row->id.'" data-id="'.$row->id.'" '.$checked.'>
                                 <label class="form-check-label" for="customSwitchStatus'.$row->id.'"></label>
+                            </div>';
+                })
+                ->addColumn('stock_status', function($row){
+                    $badge = $row->stock_status === 'in_stock' ? 'success' : 'danger';
+                    $text = $row->stock_status === 'in_stock' ? 'In Stock' : 'Out of Stock';
+                    $checked = $row->stock_status === 'in_stock' ? 'checked' : '';
+                    return '<div class="form-check form-switch" dir="ltr">
+                                <input type="checkbox" class="form-check-input toggle-stock-status" 
+                                    id="customSwitchStock'.$row->id.'" data-id="'.$row->id.'" data-status="'.$row->stock_status.'" '.$checked.'>
+                                <label class="form-check-label" for="customSwitchStock'.$row->id.'">
+                                    <span class="badge bg-'.$badge.'">'.$text.'</span>
+                                </label>
                             </div>';
                 })
                 ->addColumn('sidebar', function($row){
@@ -83,7 +95,7 @@ class ProductController extends Controller
                         </div>
                     ';
                 })
-                ->rawColumns(['status','action','image','sidebar'])
+                ->rawColumns(['status','action','image','sidebar','stock_status'])
                 ->make(true);
         }
 
@@ -94,7 +106,6 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-
         $request->merge([
             'title' => trim($request->title),
         ]);
@@ -106,7 +117,10 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'short_description' => 'nullable|string',
             'long_description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'has_attribute' => 'nullable|boolean',
+            'attribute_name' => 'nullable|string|max:255',
+            'attribute_price' => 'nullable|numeric|min:0'
         ]);
 
         $product = new Product();
@@ -117,6 +131,13 @@ class ProductController extends Controller
         $product->price = $request->price;
         $product->short_description = $request->short_description;
         $product->long_description = $request->long_description;
+        
+        // Attribute fields
+        $product->has_attribute = $request->has_attribute ? 1 : 0;
+        if ($request->has_attribute) {
+            $product->attribute_name = $request->attribute_name;
+            $product->attribute_price = $request->attribute_price ?? 0;
+        }
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
@@ -144,7 +165,6 @@ class ProductController extends Controller
 
     public function update(Request $request)
     {
-
         $request->merge([
             'title' => trim($request->title),
         ]);
@@ -156,7 +176,10 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'short_description' => 'nullable|string',
             'long_description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'has_attribute' => 'nullable|boolean',
+            'attribute_name' => 'nullable|string|max:255',
+            'attribute_price' => 'nullable|numeric|min:0'
         ]);
 
         $product = Product::findOrFail($request->codeid);
@@ -167,6 +190,16 @@ class ProductController extends Controller
         $product->price = $request->price;
         $product->short_description = $request->short_description;
         $product->long_description = $request->long_description;
+        
+        // Attribute fields
+        $product->has_attribute = $request->has_attribute ? 1 : 0;
+        if ($request->has_attribute) {
+            $product->attribute_name = $request->attribute_name;
+            $product->attribute_price = $request->attribute_price ?? 0;
+        } else {
+            $product->attribute_name = null;
+            $product->attribute_price = 0;
+        }
 
         if ($request->hasFile('image')) {
             if($product->image && $product->image != '/placeholder.webp' && file_exists(public_path($product->image))){
@@ -212,6 +245,14 @@ class ProductController extends Controller
         $product = Product::findOrFail($request->product_id);
         $product->update(['show_in_menu' => $request->show_in_menu]);
         return response()->json(['message' => 'Visibility updated successfully.'], 200);
+    }
+
+    public function toggleStockStatus(Request $request)
+    {
+        $product = Product::findOrFail($request->product_id);
+        $newStatus = $request->stock_status === 'in_stock' ? 'out_of_stock' : 'in_stock';
+        $product->update(['stock_status' => $newStatus]);
+        return response()->json(['message' => 'Stock status updated successfully.'], 200);
     }
 
     public function removeImage($id)

@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="container-fluid">
-    <div class="row mb-3">
+    <div class="row mb-3" id="newBtnSection">
         <div class="col-2 mt-2">
             <a href="{{ url()->previous() }}" class="btn btn-primary"> Back</a>
         </div>
@@ -17,7 +17,6 @@
         </div>
     </div>
 
-    <!-- Add/Edit Option Form -->
     <div class="row justify-content-center mb-4" id="formContainer" style="display:none;">
         <div class="col-xl-10">
             <div class="card">
@@ -30,7 +29,6 @@
                         <input type="hidden" id="option_id" name="option_id">
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
 
-                        <!-- Option Settings -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label">Category <span class="text-danger">*</span></label>
@@ -75,12 +73,11 @@
 
                         <hr>
 
-                        <!-- Products Table -->
                         <div class="row mb-3">
                             <div class="col-12">
                                 <h6 class="mb-3">Products from Category</h6>
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-hover" id="productsTable">
+                                    <table class="table table-sm" id="productsTable">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>Product Name</th>
@@ -108,7 +105,6 @@
         </div>
     </div>
 
-    <!-- Options Table -->
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0">Options List</h5>
@@ -169,30 +165,32 @@ function initDataTable() {
 function bindEvents() {
     $('#newOptionBtn').click(function() {
         clearForm();
-        selectedProducts = {};
         $('#formContainer').slideDown(300);
+        $('#newBtnSection').slideUp(300);
         pageTop();
     });
 
     $('#cancelFormBtn').click(function() {
         $('#formContainer').slideUp(300);
+        $('#newBtnSection').slideDown(300);
     });
 
     $(document).on('click', '.editBtn', function() {
         currentOptionId = $(this).data('id');
         $.get('/admin/product-options/' + currentOptionId + '/edit', function(data) {
+            clearForm();
             $('#option_id').val(data.id);
-            $('#category_id').val(data.category_id);
+            $('#category_id').val(data.category_id).trigger('change');
             $('#name').val(data.name);
             $('#type').val(data.type).trigger('change');
             $('#max_select').val(data.max_select);
             $('#is_required').prop('checked', data.is_required == 1);
-            
-            // Load products and pre-select
+
             loadCategoryProducts(data.id);
             
             $('#formTitle').text('Edit Option');
             $('#formContainer').slideDown(300);
+            $('#newBtnSection').slideUp(300);
             pageTop();
         });
     });
@@ -207,7 +205,6 @@ function bindEvents() {
         let url = optionId ? '/admin/product-options/' + optionId : '/admin/product-options';
         let formData = new FormData($('#optionForm')[0]);
 
-        // Add products data
         for (let productId in selectedProducts) {
             formData.append('products[' + productId + ']', selectedProducts[productId]);
         }
@@ -221,9 +218,9 @@ function bindEvents() {
             success: function(d) {
                 showSuccess(d.message);
                 $('#formContainer').slideUp(300);
+                $('#newBtnSection').slideDown(300);
                 reloadTable('#optionsTable');
                 clearForm();
-                selectedProducts = {};
             },
             error: function(xhr) {
                 pageTop();
@@ -242,19 +239,23 @@ function bindEvents() {
     $(document).on('change', '.price-input', function() {
         let productId = $(this).data('product-id');
         let price = $(this).val();
-        if (price) {
-            selectedProducts[productId] = price;
+        
+        if (price && price !== '') {
+            selectedProducts[productId] = parseFloat(price);
         } else {
             delete selectedProducts[productId];
         }
     });
 
-    $(document).on('click', '.delete-product-row', function() {
+    $(document).on('click', '.delete-product-row', function(e) {
+        e.preventDefault();
         let productId = $(this).data('product-id');
+        
         delete selectedProducts[productId];
         $(this).closest('tr').remove();
         
-        if (Object.keys(selectedProducts).length === 0) {
+        let remainingRows = $('#productsTableBody tr:not(#emptyRow)').length;
+        if (remainingRows === 0) {
             $('#productsTableBody').html('<tr id="emptyRow"><td colspan="4" class="text-center text-muted">No products selected</td></tr>');
         }
     });
@@ -264,52 +265,56 @@ function loadCategoryProducts(optionId = null) {
     let categoryId = $('#category_id').val();
     if (!categoryId) {
         $('#productsTableBody').html('<tr id="emptyRow"><td colspan="4" class="text-center text-muted">Select a category to load products</td></tr>');
+        selectedProducts = {};
         return;
     }
 
     let productId = "{{ $product->id }}";
-    $.get('/admin/product/' + productId + '/category/' + categoryId + '/products', function(products) {
-        let html = '';
+    let url = '/admin/product/' + productId + '/category/' + categoryId + '/products';
+    if (optionId) {
+        url += '/' + optionId;
+    }
+    
+    $.get(url, function(products) {
+        $('#productsTableBody').html('');
+        selectedProducts = {};
         
         if (products.length === 0) {
-            html = '<tr><td colspan="4" class="text-center text-muted">No products in this category</td></tr>';
-        } else {
-            products.forEach(p => {
-                let price = selectedProducts[p.id] || p.price;
-                html += `
-                    <tr data-product-id="${p.id}">
-                        <td>${p.title}</td>
-                        <td>£${parseFloat(p.price).toFixed(2)}</td>
-                        <td>
-                            <input type="number" class="form-control form-control-sm price-input" 
-                                data-product-id="${p.id}" 
-                                value="${price}" 
-                                step="0.01" 
-                                min="0" 
-                                required>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-danger delete-product-row" 
-                                data-product-id="${p.id}">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
+            $('#productsTableBody').html('<tr id="emptyRow"><td colspan="4" class="text-center text-muted">No products in this category</td></tr>');
+            return;
         }
+
+        let html = '';
+        
+        products.forEach(p => {
+            let rowClass = p.is_selected ? 'table-success' : '';
+            
+            html += `
+                <tr data-product-id="${p.id}" class="${rowClass}">
+                    <td>${p.title}</td>
+                    <td>£${parseFloat(p.price).toFixed(2)}</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm price-input" 
+                            data-product-id="${p.id}" 
+                            value="${parseFloat(p.override_price).toFixed(2)}" 
+                            step="0.01" 
+                            min="0" 
+                            required>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger delete-product-row" 
+                            data-product-id="${p.id}">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            selectedProducts[p.id] = parseFloat(p.override_price);
+        });
         
         $('#productsTableBody').html(html);
-        
-        // If editing, restore selected products
-        if (optionId) {
-            $.get('/admin/product-options/' + optionId + '/edit', function(data) {
-                data.items.forEach(item => {
-                    selectedProducts[item.product_id] = item.override_price;
-                    $('[data-product-id="' + item.product_id + '"]').find('.price-input').val(item.override_price);
-                });
-            });
-        }
+
     }).fail(function() {
         showError('Failed to load products');
     });
@@ -332,7 +337,9 @@ function clearForm() {
     $('#formTitle').text('Add New Option');
     $('#productsTableBody').html('<tr id="emptyRow"><td colspan="4" class="text-center text-muted">Select a category to load products</td></tr>');
     currentOptionId = null;
+    selectedProducts = {};
     toggleMaxSelect();
+    $('#category_id').val(null).trigger('change');
 }
 </script>
 @endsection

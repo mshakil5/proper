@@ -79,6 +79,36 @@
                                     <textarea class="form-control summernote" id="long_description" name="long_description"
                                         placeholder="Enter long description (optional)"></textarea>
                                 </div>
+
+                                <!-- ATTRIBUTE SECTION -->
+                                <div class="col-md-12">
+                                    <hr>
+                                    <h6 class="mb-3">Product Attribute (Optional)</h6>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="has_attribute" name="has_attribute" value="1" onchange="toggleAttributeFields()">
+                                        <label class="form-check-label" for="has_attribute">
+                                            This product has an attribute option (e.g., Make it a Meal)
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6" id="attributeNameField" style="display: none;">
+                                    <label class="form-label">Attribute Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="attribute_name" name="attribute_name" 
+                                        placeholder="e.g., Make it a Meal">
+                                </div>
+
+                                <div class="col-md-6" id="attributePriceField" style="display: none;">
+                                    <label class="form-label">Extra Price <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">£</span>
+                                        <input type="number" class="form-control" id="attribute_price" name="attribute_price" 
+                                            step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -94,17 +124,17 @@
     <div class="container-fluid" id="contentContainer">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-    <h4 class="card-title mb-0">Products List</h4>
+                <h4 class="card-title mb-0">Products List</h4>
 
-    <div style="width:200px;">
-        <select id="filterCategory" class="form-control select2">
-            <option value="">All Categories</option>
-            @foreach ($categories as $cat)
-                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-            @endforeach
-        </select>
-    </div>
-</div>
+                <div style="width:200px;">
+                    <select id="filterCategory" class="form-control select2">
+                        <option value="">All Categories</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
 
             <div class="card-body">
                 <table id="productTable" class="table table-bordered table-striped">
@@ -116,6 +146,7 @@
                             <th>Price</th>
                             <th>Category</th>
                             <th>Status</th>
+                            <th>Stock</th>
                             <th>Show in Menu</th>
                             <th>Action</th>
                         </tr>
@@ -165,6 +196,12 @@
                         searchable: false
                     },
                     {
+                        data: 'stock_status',
+                        name: 'stock_status',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
                         data: 'sidebar',
                         name: 'sidebar',
                         orderable: false,
@@ -194,6 +231,19 @@
                     reloadTable('#productTable');
                     showSuccess(d.message);
                 }).fail(() => showError('Failed to update status'));
+            });
+
+            $(document).on('change', '.toggle-stock-status', function() {
+                var product_id = $(this).data('id');
+                var stock_status = $(this).data('status');
+                $.post('/admin/products-toggle-stock', {
+                    _token: '{{ csrf_token() }}',
+                    product_id: product_id,
+                    stock_status: stock_status
+                }, function(d) {
+                    reloadTable('#productTable');
+                    showSuccess(d.message);
+                }).fail(() => showError('Failed to update stock status'));
             });
 
             $(document).on('change', '.toggle-sidebar', function() {
@@ -240,6 +290,11 @@
                 form_data.append("price", $("#price").val());
                 form_data.append("short_description", $("#short_description").val());
                 form_data.append("long_description", $(".summernote").summernote('code'));
+                
+                // Attribute fields
+                form_data.append("has_attribute", $("#has_attribute").is(':checked') ? 1 : 0);
+                form_data.append("attribute_name", $("#attribute_name").val());
+                form_data.append("attribute_price", $("#attribute_price").val());
                 
                 var imageInput = document.getElementById('image');
                 if (imageInput.files && imageInput.files[0]) {
@@ -334,6 +389,15 @@
                 $("#price").val(data.price);
                 $("#short_description").val(data.short_description);
                 $(".summernote").summernote('code', data.long_description);
+                
+                // Populate attribute fields
+                $("#has_attribute").prop('checked', data.has_attribute == 1);
+                $("#attribute_name").val(data.attribute_name || '');
+                $("#attribute_price").val(data.attribute_price || '0.00');
+                
+                // Toggle visibility of attribute fields
+                toggleAttributeFields();
+                
                 $("#codeid").val(data.id);
                 
                 $("#preview-image").attr('src', data.image);
@@ -357,11 +421,25 @@
                 $("#tag_id").val(null).trigger('change');
                 $("#preview-image").attr('src', '/placeholder.webp');
                 $("#removeImageBtn").hide();
+                $("#has_attribute").prop('checked', false);
+                $("#attribute_name").val('');
+                $("#attribute_price").val('');
+                toggleAttributeFields();
                 $("#addBtn").val('Create').html('Create');
                 $("#cardTitle").text('Add new Product');
                 currentProductId = null;
             }
         });
+
+        function toggleAttributeFields() {
+            if ($("#has_attribute").is(':checked')) {
+                $("#attributeNameField").slideDown(200);
+                $("#attributePriceField").slideDown(200);
+            } else {
+                $("#attributeNameField").slideUp(200);
+                $("#attributePriceField").slideUp(200);
+            }
+        }
     </script>
 
 @endsection

@@ -110,6 +110,7 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('product.destroy');
     Route::post('/products-status', [ProductController::class, 'toggleStatus']);
     Route::post('/products-toggle-sidebar', [ProductController::class, 'toggleSidebar']);
+    Route::post('/products-toggle-stock', [ProductController::class, 'toggleStockStatus']);
     Route::post('/products/{id}/remove-image', [ProductController::class, 'removeImage']);
 
     // Product Option
@@ -119,13 +120,7 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::post('/product-options/{id}', [ProductOptionController::class, 'update']);
     Route::delete('/product-options/{id}', [ProductOptionController::class, 'destroy'])->name('product-option.destroy');
 
-    // Product Option Items Routes
-    Route::get('/product-options/{optionId}/items', [ProductOptionController::class, 'getOptionItems']);
-    Route::post('/product-option-items', [ProductOptionController::class, 'storeItem']);
-    Route::post('/product-option-items/{id}', [ProductOptionController::class, 'updateItem']);
-    Route::delete('/product-option-items/{id}', [ProductOptionController::class, 'destroyItem']);
-
     // Helper Routes
-    Route::get('/product/{productId}/category/{categoryId}/products', [ProductOptionController::class, 'getCategoryProducts']);
+    Route::get('/product/{productId}/category/{categoryId}/products/{optionId?}', [ProductOptionController::class, 'getCategoryProducts']);
 
 });

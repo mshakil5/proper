@@ -166,13 +166,29 @@ class ProductOptionController extends Controller
         return response()->json(['message' => 'Option deleted successfully!'], 200);
     }
 
-    public function getCategoryProducts($productId, $categoryId)
+    public function getCategoryProducts($productId, $categoryId, $optionId = null)
     {
+        $selectedProductIds = [];
+        $selectedProductsPrices = [];
+        
+        if ($optionId) {
+            $items = ProductOptionItem::where('product_option_id', $optionId)->get();
+            foreach ($items as $item) {
+                $selectedProductIds[] = $item->product_id;
+                $selectedProductsPrices[$item->product_id] = $item->override_price;
+            }
+        }
+
         $products = Product::where('category_id', $categoryId)
             ->where('status', 1)
             ->select('id', 'title', 'price')
             ->where('show_in_menu', 1)
-            ->get();
+            ->get()
+            ->map(function($product) use ($selectedProductIds, $selectedProductsPrices) {
+                $product->is_selected = in_array($product->id, $selectedProductIds);
+                $product->override_price = $selectedProductsPrices[$product->id] ?? $product->price;
+                return $product;
+            });
 
         return response()->json($products);
     }
