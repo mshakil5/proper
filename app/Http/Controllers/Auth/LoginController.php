@@ -31,11 +31,11 @@ class LoginController extends Controller
         if ($chksts) {
             if ($chksts->status == 1) {
                 if (auth()->attempt(['email' => $input['email'], 'password' => $input['password']])) {
-                    if (auth()->user()->is_type == '1') {
+                    if (auth()->user()->user_type == '1') {
                         return redirect()->route('admin.dashboard');
-                    } elseif (auth()->user()->is_type == '2') {
+                    } elseif (auth()->user()->user_type == '2') {
                         return redirect()->route('manager.dashboard');
-                    } elseif (auth()->user()->is_type == '3') {
+                    } elseif (auth()->user()->user_type == '3') {
                         return redirect()->route('user.dashboard');
                     }
                 } else {

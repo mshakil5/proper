@@ -2,32 +2,48 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller; 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ContactEmail;
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Validator;
+use DataTables;
 
 class ContactMailController extends Controller
 {
-    public function getContactEmail(Request $request)
+    public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = ContactEmail::latest();
-
-            return DataTables::of($data)
+            $emails = ContactEmail::select(['id', 'email', 'email_holder', 'created_at'])->latest();
+            
+            return DataTables::of($emails)
                 ->addIndexColumn()
-                ->addColumn('email', function ($row) {
-                    return $row->email ?? '';
-                })
-                ->addColumn('email_holder', function ($row) {
-                    return $row->email_holder ?? '';
-                })
-                ->addColumn('action', function ($row) {
+                ->addColumn('action', function($row){
                     return '
-                        <button class="btn btn-sm btn-info edit" data-id="' . $row->id . '"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger delete" data-id="' . $row->id . '"><i class="fas fa-trash-alt"></i></button>
+                        <div class="dropdown">
+                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-more-fill align-middle"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" id="EditBtn" rid="'.$row->id.'">
+                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                    </button>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item deleteBtn" 
+                                        data-delete-url="'.route('contactemail.destroy',$row->id).'" 
+                                        data-method="DELETE" 
+                                        data-table="#contactEmailTable">
+                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     ';
+                })
+                ->editColumn('created_at', function($row){
+                    return $row->created_at->format('d M Y');
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -36,81 +52,48 @@ class ContactMailController extends Controller
         return view('admin.contact_email.index');
     }
 
-    public function contactEmailStore(Request $request)
+    public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'email' => 'required|email|unique:contact_emails,email',
             'email_holder' => 'required|string|max:255',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
-        }
+        ContactEmail::create([
+            'email' => $request->email,
+            'email_holder' => $request->email_holder,
+            'created_by' => auth()->id()
+        ]);
 
-        $data = new ContactEmail;
-        $data->email = $request->email;
-        $data->email_holder = $request->email_holder;
-        $data->created_by = auth()->id();
-
-        if ($data->save()) {
-            return response()->json([
-                'status' => 200,
-                'message' => 'Contact email created successfully.'
-            ], 201);
-        } else {
-            return response()->json([
-                'status' => 500,
-                'message' => 'Server error.'
-            ], 500);
-        }
+        return response()->json(['message' => 'Contact email created successfully!'], 200);
     }
 
-    public function contactEmailEdit($id)
+    public function edit($id)
     {
-        return response()->json(ContactEmail::find($id));
+        $email = ContactEmail::findOrFail($id);
+        return response()->json($email);
     }
 
-    public function contactEmailUpdate(Request $request)
+    public function update(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'email' => 'required|email|unique:contact_emails,email,'.$request->codeid,
             'email_holder' => 'required|string|max:255',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
-        }
+        $email = ContactEmail::findOrFail($request->codeid);
+        $email->update([
+            'email' => $request->email,
+            'email_holder' => $request->email_holder,
+            'updated_by' => auth()->id()
+        ]);
 
-        $data = ContactEmail::find($request->codeid);
-        $data->email = $request->email;
-        $data->email_holder = $request->email_holder;
-        $data->updated_by = auth()->id();
-
-        if ($data->save()) {
-            return response()->json([
-                'status' => 200,
-                'message' => 'Contact email updated successfully.'
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => 500,
-                'message' => 'Server error.'
-            ], 500);
-        }
+        return response()->json(['message' => 'Contact email updated successfully!'], 200);
     }
 
-    public function contactEmailDelete($id)
+    public function destroy($id)
     {
-        $contactEmail = ContactEmail::find($id);
-        
-        if (!$contactEmail) {
-            return response()->json(['success' => false, 'message' => 'Not found.'], 404);
-        }
-
-        if ($contactEmail->delete()) {
-            return response()->json(['success' => true, 'message' => 'Deleted successfully.']);
-        } else {
-            return response()->json(['success' => false, 'message' => 'Failed to delete.'], 500);
-        }
+        ContactEmail::findOrFail($id)->delete();
+        return response()->json(['message' => 'Contact email deleted successfully.'], 200);
     }
 }

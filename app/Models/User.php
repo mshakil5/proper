@@ -24,11 +24,4 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
-    protected function type(): Attribute
-    {
-        return new Attribute(
-            get: fn ($value) => ["1", "2", "3"][$value],
-        );
-    }
 }

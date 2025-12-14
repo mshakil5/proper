@@ -1,242 +1,223 @@
-@extends('admin.master')
-
+@extends('admin.pages.master')
+@section('title', 'Contact Emails')
 @section('content')
-
-<!-- Main content -->
-<section class="content" id="newBtnSection">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-2">
-                <button type="button" class="btn btn-secondary my-3" id="newBtn">Add new</button>
+    <div class="container-fluid" id="newBtnSection">
+        <div class="row mb-3">
+            <div class="col-auto">
+                <button type="button" class="btn btn-primary" id="newBtn">
+                    Add New Email
+                </button>
             </div>
         </div>
     </div>
-</section>
 
-<section class="content mt-3" id="addThisFormContainer">
-    <div class="container-fluid">
-        <div class="row justify-content-md-center">
-            <div class="col-md-8">
-                <div class="card card-secondary">
-                    <div class="card-header">
-                        <h3 class="card-title" id="cardTitle">Add new contact email</h3>
+    <div class="container-fluid" id="addThisFormContainer">
+        <div class="row justify-content-center">
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header align-items-center d-flex">
+                        <h4 class="card-title mb-0 flex-grow-1" id="cardTitle">Add New Contact Email</h4>
                     </div>
                     <div class="card-body">
                         <form id="createThisForm">
                             @csrf
-                            <input type="hidden" class="form-control" id="codeid" name="codeid">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div class="form-group">
-                                        <label>Email <span class="text-danger">*</span></label>
-                                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
-                                    </div>
+                            <input type="hidden" id="codeid" name="codeid">
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
                                 </div>
-                                <div class="col-sm-12">
-                                    <div class="form-group">
-                                        <label>Email Holder <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="email_holder" name="email_holder" placeholder="Enter email holder name" required>
-                                    </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email Holder <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="email_holder" name="email_holder" placeholder="Enter holder name">
                                 </div>
                             </div>
                         </form>
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" id="addBtn" class="btn btn-secondary" value="Create">Create</button>
-                        <button type="submit" id="FormCloseBtn" class="btn btn-default">Cancel</button>
+                    <div class="card-footer text-end">
+                        <button type="submit" id="addBtn" class="btn btn-primary">Create</button>
+                        <button type="button" id="FormCloseBtn" class="btn btn-light">Cancel</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
 
-<section class="content" id="contentContainer">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card card-secondary">
-                    <div class="card-header">
-                        <h3 class="card-title">All Contact Emails</h3>
-                    </div>
-                    <div class="card-body">
-                        <table id="example1" class="table cell-border table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Sl</th>
-                                    <th>Email</th>
-                                    <th>Email Holder</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
+    <div class="container-fluid" id="contentContainer">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Contact Emails List</h4>
+            </div>
+            <div class="card-body">
+                <table id="contactEmailTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sl</th>
+                            <th>Email</th>
+                            <th>Email Holder</th>
+                            <th>Created At</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
         </div>
     </div>
-</section>
 
 @endsection
 
 @section('script')
-<script>
-  $(document).ready(function () {
-      $("#addThisFormContainer").hide();
-      $("#newBtn").click(function(){
-          clearform();
-          $("#newBtn").hide(100);
-          $("#addThisFormContainer").show(300);
-      });
-      $("#FormCloseBtn").click(function(){
-          $("#addThisFormContainer").hide(200);
-          $("#newBtn").show(100);
-          clearform();
-      });
+    <script>
+        $(document).ready(function() {
+            $('#contactEmailTable').DataTable({
+                processing: true,
+                serverSide: true,
+                pageLength: 25,
+                ajax: "{{ route('contactemail.index') }}",
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'email',
+                        name: 'email'
+                    },
+                    {
+                        data: 'email_holder',
+                        name: 'email_holder'
+                    },
+                    {
+                        data: 'created_at',
+                        name: 'created_at'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
+            });
 
-      $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
-      
-      var url = "{{URL::to('/admin/contact-email')}}";
-      var upurl = "{{URL::to('/admin/contact-email-update')}}";
+            $("#addThisFormContainer").hide();
+            $("#newBtn").click(function() {
+                clearform();
+                $("#addThisFormContainer").slideDown(300);
+                $("#newBtn").hide();
+            });
+            $("#FormCloseBtn").click(function() {
+                $("#addThisFormContainer").slideUp(300);
+                setTimeout(() => {
+                    $("#newBtn").show();
+                }, 300);
+            });
 
-      let table = $('#example1').DataTable({
-          processing: true,
-          serverSide: true,
-          ajax: {
-              url: "{{ route('allcontactemail') }}",
-              type: "GET",
-              error: function (xhr, status, error) {
-                  console.error(xhr.responseText);
-              }
-          },
-          columns: [
-              { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-              { data: 'email', name: 'email' },
-              { data: 'email_holder', name: 'email_holder' },
-              { data: 'action', name: 'action', orderable: false, searchable: false },
-          ],
-          responsive: true,
-          lengthChange: false,
-          autoWidth: false,
-      });
+            var url = "{{ URL::to('/admin/contact-email') }}";
+            var upurl = "{{ URL::to('/admin/contact-email-update') }}";
 
-      function reloadTable() {
-          table.ajax.reload(null, false);
-      }
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
 
-      $("#addBtn").click(function(){
-          var form_data = new FormData();
-          form_data.append("email", $("#email").val());
-          form_data.append("email_holder", $("#email_holder").val());
+            $("#addBtn").click(function() {
+                var form_data = new FormData();
+                form_data.append("email", $("#email").val());
+                form_data.append("email_holder", $("#email_holder").val());
 
-          if($(this).val() == 'Create') {
-              // Create
-              $.ajax({
-                  url: url,
-                  method: "POST",
-                  contentType: false,
-                  processData: false,
-                  data: form_data,
-                  success: function(res) {
-                      clearform();
-                      success(res.message);
-                      pageTop();
-                      reloadTable();
-                  },
-                  error: function(xhr) {
-                      console.error(xhr.responseText);
-                      pageTop();
-                      if (xhr.responseJSON && xhr.responseJSON.errors)
-                          error(Object.values(xhr.responseJSON.errors)[0][0]);
-                      else
-                          error();
-                  }
-              });
-          } else {
-              // Update
-              form_data.append("codeid", $("#codeid").val());
-              
-              $.ajax({
-                  url: upurl,
-                  type: "POST",
-                  dataType: 'json',
-                  contentType: false,
-                  processData: false,
-                  data: form_data,
-                  success: function(res) {
-                      clearform();
-                      success(res.message);
-                      pageTop();
-                      reloadTable();
-                  },
-                  error: function(xhr) {
-                      console.error(xhr.responseText);
-                      pageTop();
-                      if (xhr.responseJSON && xhr.responseJSON.errors)
-                          error(Object.values(xhr.responseJSON.errors)[0][0]);
-                      else
-                          error();
-                  }
-              });
-          }
-      });
+                if ($(this).val() == 'Create') {
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: form_data,
+                        contentType: false,
+                        processData: false,
+                        success: function(d) {
+                            showSuccess(d.message);
+                            $("#addThisFormContainer").slideUp(300);
+                            setTimeout(() => {
+                                $("#newBtn").show();
+                            }, 300);
+                            reloadTable('#contactEmailTable');
+                            clearform();
+                        },
+                        error: function(xhr) {
+                            showError(xhr.responseJSON?.message ?? "Something went wrong!");
+                        }
+                    });
+                }
 
-      //Edit
-      $("#contentContainer").on('click','.edit', function(){
-          $("#cardTitle").text('Update this contact email');
-          let codeid = $(this).data('id');
-          info_url = url + '/'+codeid+'/edit';
-          $.get(info_url,{},function(d){
-              populateForm(d);
-              pageTop();
-          });
-      });
-      //Edit  end
+                if ($(this).val() == 'Update') {
+                    form_data.append("codeid", $("#codeid").val());
+                    $.ajax({
+                        url: upurl,
+                        type: "POST",
+                        data: form_data,
+                        contentType: false,
+                        processData: false,
+                        success: function(d) {
+                            showSuccess(d.message);
+                            $("#addThisFormContainer").slideUp(300);
+                            setTimeout(() => {
+                                $("#newBtn").show();
+                            }, 300);
+                            reloadTable('#contactEmailTable');
+                            clearform();
+                        },
+                        error: function(xhr) {
+                            showError(xhr.responseJSON?.message ?? "Something went wrong!");
+                        }
+                    });
+                }
+            });
 
-      //Delete
-      $("#contentContainer").on('click', '.delete', function() {
-          if(!confirm('Are you sure you want to delete this contact email?')) return;
-          codeid = $(this).data('id');
-          info_url = url + '/'+codeid;
-          $.ajax({
-              url: info_url,
-              method: "GET",
-              success: function(res) {
-                  clearform();
-                  success(res.message);
-                  pageTop();
-                  reloadTable();
-              },
-              error: function(xhr) {
-                  console.error(xhr.responseText);
-                  pageTop();
-                  if (xhr.responseJSON && xhr.responseJSON.errors)
-                      error(Object.values(xhr.responseJSON.errors)[0][0]);
-                  else
-                      error();
-              }
-          });
-      });
-      //Delete  
-      
-      function populateForm(data){
-          $("#email").val(data.email);
-          $("#email_holder").val(data.email_holder);
-          $("#codeid").val(data.id);
-          $("#addBtn").val('Update');
-          $("#addBtn").html('Update');
-          $("#addThisFormContainer").show(300);
-          $("#newBtn").hide(100);
-      }
-      
-      function clearform(){
-          $('#createThisForm')[0].reset();
-          $("#addBtn").val('Create');
-          $("#addBtn").html('Create');
-          $("#addThisFormContainer").slideUp(200);
-          $("#newBtn").slideDown(200);
-          $("#cardTitle").text('Add new contact email');
-      }
-  });
-</script>
+            $("#contentContainer").on('click', '#EditBtn', function() {
+                $("#cardTitle").text('Update this data');
+                codeid = $(this).attr('rid');
+                $.get(url + '/' + codeid + '/edit', {}, function(d) {
+                    populateForm(d);
+                });
+            });
+
+            // Delete button handler (using your existing deleteBtn pattern)
+            $(document).on('click', '.deleteBtn', function() {
+                if(!confirm('Are you sure you want to delete this contact email?')) return;
+                
+                var deleteUrl = $(this).data('delete-url');
+                var method = $(this).data('method');
+                var table = $(this).data('table');
+                
+                $.ajax({
+                    url: deleteUrl,
+                    type: method,
+                    success: function(d) {
+                        showSuccess(d.message);
+                        reloadTable(table);
+                    },
+                    error: function(xhr) {
+                        showError(xhr.responseJSON?.message ?? "Something went wrong!");
+                    }
+                });
+            });
+
+            function populateForm(data) {
+                $("#email").val(data.email);
+                $("#email_holder").val(data.email_holder);
+                $("#codeid").val(data.id);
+                $("#addBtn").val('Update').html('Update');
+                $("#addThisFormContainer").show();
+                $("#newBtn").hide();
+            }
+
+            function clearform() {
+                $('#createThisForm')[0].reset();
+                $("#addBtn").val('Create').html('Create');
+                $("#cardTitle").text('Add new Contact Email');
+            }
+        });
+    </script>
 @endsection

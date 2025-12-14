@@ -5,110 +5,138 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
-use Yajra\DataTables\Facades\DataTables;
-use Validator;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Cache;
+use DataTables;
 
 class CategoryController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Category::latest();
-            return DataTables::of($data)
+            $categories = Category::select(['id','sl','name','description','status','show_in_menu'])->orderBy('sl');
+            return DataTables::of($categories)
                 ->addIndexColumn()
-                ->addColumn('sl', function($row) {
-                    return $row->sl;
+                ->addColumn('status', function($row){
+                    $checked = $row->status == 1 ? 'checked' : '';
+                    return '<div class="form-check form-switch" dir="ltr">
+                                <input type="checkbox" class="form-check-input toggle-status" 
+                                       id="customSwitchStatus'.$row->id.'" data-id="'.$row->id.'" '.$checked.'>
+                                <label class="form-check-label" for="customSwitchStatus'.$row->id.'"></label>
+                            </div>';
                 })
-                ->addColumn('status', fn($row) => 
-                    '<div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input toggle-status" id="status'.$row->id.'" data-id="'.$row->id.'" '.($row->status ? 'checked' : '').'>
-                        <label class="custom-control-label" for="status'.$row->id.'"></label>
-                    </div>'
-                )
-                ->addColumn('action', fn($row) => '
-                    <a href="'.route('categories.sort').'" class="btn btn-sm btn-warning sort-btn" title="Sort Categories">
-                        <i class="fas fa-sort"></i>
-                    </a>
-                    <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'"><i class="fas fa-trash-alt"></i></button>
-                ')
-                ->rawColumns(['status','action'])
+                ->addColumn('sidebar', function($row){
+                    $checked = $row->show_in_menu == 1 ? 'checked' : '';
+                    return '<div class="form-check form-switch" dir="ltr">
+                                <input type="checkbox" class="form-check-input toggle-sidebar" 
+                                       id="customSwitchSidebar'.$row->id.'" data-id="'.$row->id.'" '.$checked.'>
+                                <label class="form-check-label" for="customSwitchSidebar'.$row->id.'"></label>
+                            </div>';
+                })
+                ->addColumn('sl', function($row){
+                    return '<span class="serial-text">'.$row->sl.'</span>';
+                })
+                ->addColumn('action', function($row){
+                    return '
+                        <div class="dropdown">
+                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-more-fill align-middle"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" id="EditBtn" rid="'.$row->id.'">
+                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                    </button>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item deleteBtn" 
+                                        data-delete-url="'.route('categories.destroy',$row->id).'" 
+                                        data-method="DELETE" 
+                                        data-table="#categoryTable">
+                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    ';
+                })
+                ->rawColumns(['status','sidebar','sl','action'])
                 ->make(true);
         }
 
-        return view('admin.categories.index');
+        $categories = Category::orderBy('sl')->get();
+        return view('admin.category.index', compact('categories'));
     }
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')]
+        $request->validate([
+            'name' => 'required|unique:categories,name',
+            'description' => 'nullable'
         ]);
 
-        if ($validator->fails())
-            return response()->json(['status'=>422,'errors'=>$validator->errors()],422);
-
+        $lastSl = Category::max('sl');
+        
         Category::create([
             'name' => $request->name,
+            'description' => $request->description,
+            'sl' => $lastSl ? $lastSl + 1 : 1,
             'status' => 1,
+            'show_in_menu' => 0
         ]);
 
-        return response()->json(['status'=>200,'message'=>'Category created successfully']);
+        return response()->json(['message' => 'Category created successfully!'], 200);
     }
 
     public function edit($id)
     {
-        return response()->json(Category::findOrFail($id));
+        $category = Category::findOrFail($id);
+        return response()->json($category);
     }
 
     public function update(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')->ignore($request->codeid)]
+        $request->validate([
+            'name' => 'required|unique:categories,name,'.$request->codeid,
+            'description' => 'nullable'
         ]);
-
-        if ($validator->fails())
-            return response()->json(['status'=>422,'errors'=>$validator->errors()],422);
 
         $category = Category::findOrFail($request->codeid);
         $category->update([
-            'name' => $request->name
+            'name' => $request->name,
+            'description' => $request->description
         ]);
 
-        return response()->json(['status'=>200,'message'=>'Category updated successfully']);
+        return response()->json(['message' => 'Category updated successfully!'], 200);
     }
 
     public function destroy($id)
     {
-        $category = Category::find($id);
-        if (!$category) return response()->json(['success'=>false,'message'=>'Category not found'],404);
-        $category->delete();
-        return response()->json(['success'=>true,'message'=>'Category deleted successfully']);
+        Category::findOrFail($id)->delete();
+        return response()->json(['message' => 'Category deleted successfully.'], 200);
     }
 
     public function toggleStatus(Request $request)
     {
-        $category = Category::find($request->category_id);
-        if (!$category) return response()->json(['status'=>404,'message'=>'Category not found']);
-        $category->status = $request->status;
-        $category->save();
-        return response()->json(['status'=>200,'message'=>'Status updated']);
+        $category = Category::findOrFail($request->category_id);
+        $category->update(['status' => $request->status]);
+        return response()->json(['message' => 'Category status updated successfully.'], 200);
     }
 
-    public function sortCategories()
+    public function toggleSidebar(Request $request)
     {
-        $categories = Category::orderBy('sl')->get();
-        return view('admin.categories.sort', compact('categories'));
+        $category = Category::findOrFail($request->category_id);
+        $category->update(['show_in_menu' => $request->show_in_menu]);
+        return response()->json(['message' => 'Visibility updated successfully.'], 200);
     }
 
     public function updateCategoryOrder(Request $request)
     {
         $order = $request->order;
-        foreach ($order as $index => $id) {
+        foreach($order as $index => $id){
             Category::where('id', $id)->update(['sl' => $index + 1]);
         }
-
-        return response()->json(['status' => 'success', 'message' => 'Category order updated successfully']);
+        return response()->json(['success' => true, 'message' => 'Category order updated successfully!']);
     }
 }

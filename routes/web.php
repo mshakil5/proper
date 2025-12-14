@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\FrontendController;
-use App\Http\Controllers\SitemapController;
 
 // cache clear
 Route::get('/clear', function() {
@@ -49,10 +48,6 @@ Route::get('/frequently-asked-questions', [FrontendController::class, 'frequentl
 Route::get('/sitemap.xml', [FrontendController::class, 'sitemap']);
 
 Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
-
-Route::group(['prefix' =>'manager/', 'middleware' => ['auth', 'is_manager']], function(){
-    Route::get('/dashboard', [HomeController::class, 'managerHome'])->name('manager.dashboard');
-});
 
 Route::group(['prefix' =>'user/', 'middleware' => ['auth', 'is_user']], function(){
     Route::get('/dashboard', [HomeController::class, 'userHome'])->name('user.dashboard');

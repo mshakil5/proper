@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Slider;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use DataTables;
 use Intervention\Image\Facades\Image;
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
 
 class SliderController extends Controller
@@ -16,175 +16,167 @@ class SliderController extends Controller
     public function getSlider(Request $request)
     {
         if ($request->ajax()) {
-            $data = Slider::latest();
-
-            return DataTables::of($data)
+            $sliders = Slider::select(['id','title','image','serial','status'])->orderBy('serial');
+            return DataTables::of($sliders)
                 ->addIndexColumn()
-                ->addColumn('image', function ($row) {
-                    if ($row->image) {
-                        return '<a href="' . asset("images/slider/" . $row->image) . '" target="_blank">
-                                    <img src="' . asset("images/slider/" . $row->image) . '" style="max-width:100px; height:auto;">
-                                </a>';
-                    }
-                    return '';
+                ->addColumn('image', function($row){
+                    return $row->image 
+                        ? '<img src="'.asset($row->image).'" class="img-thumbnail" style="width:50px;height:50px;">'
+                        : '';
                 })
-                ->addColumn('title', function ($row) {
-                    return $row->title ?? '';
-                })
-                ->addColumn('status', function ($row) {
+                ->addColumn('status', function($row){
                     $checked = $row->status == 1 ? 'checked' : '';
-                    return '<div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input toggle-status" id="customSwitchStatus' . $row->id . '" data-id="' . $row->id . '" ' . $checked . '>
-                                <label class="custom-control-label" for="customSwitchStatus' . $row->id . '"></label>
+                    return '<div class="form-check form-switch" dir="ltr">
+                                <input type="checkbox" class="form-check-input toggle-status" 
+                                       id="customSwitchStatus'.$row->id.'" data-id="'.$row->id.'" '.$checked.'>
+                                <label class="form-check-label" for="customSwitchStatus'.$row->id.'"></label>
                             </div>';
                 })
-                ->addColumn('action', function ($row) {
+                ->addColumn('serial', function($row){
+                    return '<span class="serial-text">'.$row->serial.'</span>';
+                })
+                ->addColumn('action', function($row){
                     return '
-                        <button class="btn btn-sm btn-info edit" data-id="' . $row->id . '"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger delete" data-id="' . $row->id . '"><i class="fas fa-trash-alt"></i></button>
+                        <div class="dropdown">
+                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-more-fill align-middle"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" id="EditBtn" rid="'.$row->id.'">
+                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                    </button>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item deleteBtn" 
+                                        data-delete-url="'.route('slider.delete',$row->id).'" 
+                                        data-method="DELETE" 
+                                        data-table="#sliderTable">
+                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     ';
                 })
-                ->rawColumns(['image', 'status', 'action'])
+                ->rawColumns(['image','status','serial','action'])
                 ->make(true);
         }
 
-        return view('admin.slider.index');
+        $sliders = Slider::orderBy('serial')->get();
+        return view('admin.slider.index', compact('sliders'));
     }
 
     public function sliderStore(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'nullable|string|max:255',
-            'image' => 'required|image|mimes:jpeg,png,webp|max:2048',
+        $request->validate([
+            'title'=>'nullable|unique:sliders,title',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
-        }
-
-        $data = new Slider;
+        $data = new Slider();
         $data->title = $request->title;
-        $data->sub_title = $request->sub_title;
         $data->link = $request->link;
-        $data->slug = Str::slug($request->title);
-        $data->created_by = auth()->id(); 
+        $data->created_by = auth()->id();
 
-        $uploadedFile = $request->file('image');
-        $randomName = mt_rand(10000000, 99999999) . '.webp';
-        $destinationPath = public_path('images/slider/');
+        $lastSerial = Slider::max('serial');
+        $data->serial = $lastSerial ? $lastSerial + 1 : 1;
 
-        if (!file_exists($destinationPath)) {
-            mkdir($destinationPath, 0755, true);
-        }
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $name = mt_rand(10000000,99999999).'.webp';
+            $path = public_path('uploads/sliders/');
+            if(!file_exists($path)) mkdir($path,0755,true);
 
-        Image::make($uploadedFile)
-            // ->resize(1000, 700, function ($constraint) {
-            //     $constraint->aspectRatio();
-            //     $constraint->upsize();
-            // })
-            // ->fit(1000, 700)
-            ->encode('webp', 50)
-            ->save($destinationPath . $randomName);
+            Image::make($file)
+                ->resize(1200,null,fn($c)=>$c->aspectRatio())
+                ->encode('webp',50)
+                ->save($path.$name);
 
-        $data->image = $randomName;
-
-        if ($data->save()) {
-            Cache::forget('active_sliders');
-            return response()->json([
-                'status' => 200,
-                'message' => 'Slider created successfully.'
-            ], 201);
+            $data->image = '/uploads/sliders/'.$name;
         } else {
-            return response()->json([
-                'status' => 500,
-                'message' => 'Server error.'
-            ], 500);
+            $data->image = '/placeholder.webp';
         }
+
+        $data->save();
+        return response()->json(['message'=>'Slider created successfully!'],200);
     }
 
     public function sliderEdit($id)
     {
-        return response()->json(Slider::find($id));
+        $slider = Slider::findOrFail($id);
+        return response()->json($slider);
     }
 
     public function sliderUpdate(Request $request)
     {
-        $slider = Slider::find($request->codeid);
+        $request->validate([
+            'title'=>'nullable|unique:sliders,title,'.$request->codeid,
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+        ]);
+
+        $slider = Slider::findOrFail($request->codeid);
         $slider->title = $request->title;
-        $slider->sub_title = $request->sub_title;
         $slider->link = $request->link;
         $slider->updated_by = auth()->id();
 
         if ($request->hasFile('image')) {
-            $uploadedFile = $request->file('image');
-
-            if ($slider->image && file_exists(public_path('images/slider/' . $slider->image))) {
-                unlink(public_path('images/slider/' . $slider->image));
+            if($slider->image && $slider->image != '/placeholder.webp' && file_exists(public_path($slider->image))){
+                @unlink(public_path($slider->image));
             }
+            $file = $request->file('image');
+            $name = mt_rand(10000000,99999999).'.webp';
+            $path = public_path('uploads/sliders/');
+            if(!file_exists($path)) mkdir($path,0755,true);
 
-            $randomName = mt_rand(10000000, 99999999) . '.webp';
-            $destinationPath = public_path('images/slider/');
+            Image::make($file)
+                ->resize(1200,null,fn($c)=>$c->aspectRatio())
+                ->encode('webp',50)
+                ->save($path.$name);
 
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-
-            Image::make($uploadedFile)
-              // ->resize(1000, 700, function ($constraint) {
-              //     $constraint->aspectRatio();
-              //     $constraint->upsize();
-              // })
-              // ->fit(1000, 700)
-              ->encode('webp', 50)
-              ->save($destinationPath . $randomName);
-            $slider->image = $randomName;
+            $slider->image = '/uploads/sliders/'.$name;
         }
 
-        if ($slider->save()) {
-            Cache::forget('active_sliders');
-            return response()->json([
-                'status' => 200,
-                'message' => 'Slider created successfully.'
-            ], 201);
-        } else {
-            return response()->json([
-                'status' => 500,
-                'message' => 'Server error.'
-            ], 500);
-        }
+        $slider->save();
+        return response()->json(['message'=>'Slider updated successfully!'],200);
     }
 
     public function sliderDelete($id)
     {
-        $slider = Slider::find($id);
-        
-        if (!$slider) {
-            return response()->json(['success' => false, 'message' => 'Not found.'], 404);
+        $slider = Slider::findOrFail($id);
+        if($slider->image && $slider->image != '/placeholder.webp' && file_exists(public_path($slider->image))){
+            @unlink(public_path($slider->image));
         }
-
-        if ($slider->image && file_exists(public_path('images/slider/' . $slider->image))) {
-            unlink(public_path('images/slider/' . $slider->image));
-        }
-
-        if ($slider->delete()) {
-            Cache::forget('active_sliders');
-            return response()->json(['success' => true, 'message' => 'Deleted successfully.']);
-        } else {
-            return response()->json(['success' => false, 'message' => 'Failed to delete.'], 500);
-        }
+        $slider->delete();
+        return response()->json(['message'=>'Slider deleted successfully.'],200);
     }
 
     public function toggleStatus(Request $request)
     {
-        $brand = Slider::find($request->brand_id);
-        if (!$brand) {
-            return response()->json(['status' => 404, 'message' => 'Brand not found']);
+        $slider = Slider::findOrFail($request->slider_id);
+        $slider->status = $request->status;
+        $slider->save();
+        return response()->json(['message'=>'Slider status updated successfully.'],200);
+    }
+
+    public function updateOrder(Request $request)
+    {
+        $order = $request->order;
+        foreach($order as $index=>$id){
+            Slider::where('id',$id)->update(['serial'=>$index+1]);
         }
+        return response()->json(['success'=>true,'message'=>'Slider order updated successfully!']);
+    }
 
-        $brand->status = $request->status;
-        $brand->save();
-        Cache::forget('active_sliders');
-
-        return response()->json(['status' => 200, 'message' => 'Status updated successfully']);
+    public function removeImage($id)
+    {
+        $slider = Slider::findOrFail($id);
+        if($slider->image && $slider->image != '/placeholder.webp' && file_exists(public_path($slider->image))){
+            @unlink(public_path($slider->image));
+        }
+        $slider->update(['image' => '/placeholder.webp']);
+        return response()->json(['message' => 'Image removed successfully!'], 200);
     }
 }

@@ -4,7 +4,7 @@
             @if(isset($company->company_logo) && $company->company_logo != '')
                 <img 
                     id="company_logo_preview"
-                    src="{{ asset('images/company/' . $company->company_logo) }}"
+                    src="{{ asset('uploads/company/' . $company->company_logo) }}"
                     alt="Company Logo"
                     class="me-2"
                     style="width:180px; height:40px; object-fit:contain;"
@@ -20,11 +20,21 @@
 
         <div class="collapse navbar-collapse" id="navMenu">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('menu') }}">Menu</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('our-story') }}">Our Story</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('find-us') }}">Find Us</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('contact') }}">Contact</a></li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('menu') ? 'active' : '' }}" href="{{ route('menu') }}">Menu</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('our-story') ? 'active' : '' }}" href="{{ route('our-story') }}">Our Story</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('find-us') ? 'active' : '' }}" href="{{ route('find-us') }}">Find Us</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
+            </li>
             </ul>
             <a href="https://www.propertakeaways.com/menu" class="btn btn-gradient ms-3 fw-semibold" target="_blank">
                 <i class="fa-solid fa-bag-shopping me-1"></i> Order Now
@@ -57,7 +67,7 @@
         </div>
     </div>
 </div>
-<!-- Floating Shop Status -->
+
 <div class="floating-shop-status swing" id="shopStatus">
     OPEN
 </div>
@@ -113,7 +123,6 @@
     z-index: 0;
 }
 
-/* Open/Closed colors */
 .floating-shop-status.open {
     color: green;
     border-color: green;
@@ -124,7 +133,6 @@
     border-color: red;
 }
 
-/* Swing animation */
 .swing {
     animation: swingBoard 3s ease-in-out infinite;
 }
@@ -137,43 +145,43 @@
 </style>
 
 <script>
-const shopStatus = document.getElementById('shopStatus');
+    const shopStatus = document.getElementById('shopStatus');
 
-function updateShopStatus() {
-    const now = new Date();
-    const day = now.getDay(); // 0 = Sunday, 1 = Monday ... 6 = Saturday
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    let open = false;
+    function updateShopStatus() {
+        const now = new Date();
+        const day = now.getDay();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        let open = false;
 
-    const currentMinutes = hour * 60 + minute;
+        const currentMinutes = hour * 60 + minute;
 
-    if (day === 0) {
-        const openTime = 16 * 60 + 30;
-        const closeTime = 22 * 60;
-        if (currentMinutes >= openTime && currentMinutes < closeTime) {
-            open = true;
+        if (day === 0) {
+            const openTime = 16 * 60 + 30;
+            const closeTime = 22 * 60;
+            if (currentMinutes >= openTime && currentMinutes < closeTime) {
+                open = true;
+            }
+        } else if (day >= 1 && day <= 6) {
+            const openTime = 16 * 60 + 30;
+            const closeTime = 23 * 60 + 30;
+            if (currentMinutes >= openTime && currentMinutes < closeTime) {
+                open = true;
+            }
         }
-    } else if (day >= 1 && day <= 6) {
-        const openTime = 16 * 60 + 30;
-        const closeTime = 23 * 60 + 30;
-        if (currentMinutes >= openTime && currentMinutes < closeTime) {
-            open = true;
+
+        if(open) {
+            shopStatus.classList.add('open');
+            shopStatus.classList.remove('closed');
+            shopStatus.textContent = "OPEN";
+        } else {
+            shopStatus.classList.add('closed');
+            shopStatus.classList.remove('open');
+            shopStatus.textContent = "CLOSED";
         }
     }
 
-    if(open) {
-        shopStatus.classList.add('open');
-        shopStatus.classList.remove('closed');
-        shopStatus.textContent = "OPEN";
-    } else {
-        shopStatus.classList.add('closed');
-        shopStatus.classList.remove('open');
-        shopStatus.textContent = "CLOSED";
-    }
-}
+    updateShopStatus();
 
-updateShopStatus();
-
-setInterval(updateShopStatus, 60000);
+    setInterval(updateShopStatus, 60000);
 </script>

@@ -20,7 +20,6 @@ use Stripe\Checkout\Session;
 use App\Models\ContentCategory;
 use App\Models\CompanyDetails;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Response;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -35,9 +34,7 @@ class FrontendController extends Controller
       $company = CompanyDetails::first();
       $hero = Master::firstOrCreate(['name' => 'hero']);
       $findUs = Master::firstOrCreate(['name' => 'find-us']);
-      $sliders = Cache::remember('active_sliders', now()->addDay(), function () {
-          return Slider::where('status', 1)->latest()->get();
-      });
+      $sliders = Slider::where('status', 1)->latest()->get();
 
       $sections = Section::where('status', 1)
           ->orderBy('sl', 'asc')
@@ -47,27 +44,10 @@ class FrontendController extends Controller
           $company?->meta_title ?? '',
           $company?->meta_description ?? '',
           $company?->meta_keywords ?? '',
-          $company?->meta_image ? asset('images/company/meta/' . $company->meta_image) : null
+          $company?->meta_image ? asset('uploads/company/meta/' . $company->meta_image) : null
       );
 
       return view('frontend.index', compact('hero', 'findUs', 'sliders','sections','company'));
-    }
-
-    public function aboutUs()
-    {
-        $companyDetails = CompanyDetails::select('about_us')->first();
-        $banner =  Banner::firstOrCreate(['page' => 'About']);
-        $about1 = Master::firstOrCreate(['name' => 'About-Section-1']);
-        $about2 = Master::firstOrCreate(['name' => 'About-Section-2']);
-        $about3 = Master::firstOrCreate(['name' => 'About-Section-3']);
-        $about4 = Master::firstOrCreate(['name' => 'About-Section-4']);
-        $this->seo(
-            $about1->meta_title,
-            $about1->meta_description,
-            $about1->meta_keywords,
-            $about1->meta_image ? asset('images/meta_image/' . $about1->meta_image) : null
-        );
-        return view('frontend.about', compact('companyDetails', 'banner', 'about1', 'about2', 'about3', 'about4'));
     }
 
     public function menu()
@@ -77,7 +57,7 @@ class FrontendController extends Controller
             $menu->meta_title,
             $menu->meta_description,
             $menu->meta_keywords,
-            $menu->meta_image ? asset('images/meta_image/' . $menu->meta_image) : null
+            $menu->meta_image ? asset('uploads/meta_image/' . $menu->meta_image) : null
         );
        return view('frontend.menu');
     }
@@ -89,7 +69,7 @@ class FrontendController extends Controller
             $menu->meta_title,
             $menu->meta_description,
             $menu->meta_keywords,
-            $menu->meta_image ? asset('images/meta_image/' . $menu->meta_image) : null
+            $menu->meta_image ? asset('uploads/meta_image/' . $menu->meta_image) : null
         );
         return view('frontend.our-story');
     }
@@ -101,7 +81,7 @@ class FrontendController extends Controller
             $menu->meta_title,
             $menu->meta_description,
             $menu->meta_keywords,
-            $menu->meta_image ? asset('images/meta_image/' . $menu->meta_image) : null
+            $menu->meta_image ? asset('uploads/meta_image/' . $menu->meta_image) : null
         );
         return view('frontend.find-us');
     }
@@ -113,7 +93,7 @@ class FrontendController extends Controller
             $menu->meta_title,
             $menu->meta_description,
             $menu->meta_keywords,
-            $menu->meta_image ? asset('images/meta_image/' . $menu->meta_image) : null
+            $menu->meta_image ? asset('uploads/meta_image/' . $menu->meta_image) : null
         );
       return view('frontend.contact');
     }
@@ -132,7 +112,6 @@ class FrontendController extends Controller
         $contact->name    = $request->input('name');
         $contact->email   = $request->input('email');
         $contact->phone   = $request->input('phone');
-        $contact->company = $request->input('company');
         $contact->message = $request->input('message');
         $contact->save();
 
@@ -155,12 +134,6 @@ class FrontendController extends Controller
     {
         $terms = CompanyDetails::select('terms_and_conditions')->first();
         return view('frontend.terms', compact('terms'));
-    }
-
-    public function frequentlyAskedQuestions()
-    {   
-        $faqs = FaqQuestion::orderBy('id', 'asc')->get();
-        return view('frontend.faq', compact('faqs'));
     }
 
     private function seo($title = null, $description = null, $keywords = null, $image = null)
@@ -190,23 +163,28 @@ class FrontendController extends Controller
     public function sitemap()
     {
         $urls = [];
-
-        $company = CompanyDetails::first();
-        $companyLastMod = $company ? $company->updated_at->toDateString() : now()->toDateString();
-
+        
         $staticPages = [
             ['loc' => url('/'), 'lastmod' => now()->toDateString(), 'changefreq' => 'daily', 'priority' => '1.0'],
-            ['loc' => url('/about-us'), 'lastmod' => $companyLastMod, 'changefreq' => 'monthly', 'priority' => '0.8'],
-            ['loc' => url('/menu'), 'lastmod' => now()->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.7'],
-            ['loc' => url('/our-story'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.6'],
-            ['loc' => url('/find-us'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.6'],
+            ['loc' => url('/about-us'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['loc' => url('/menu'), 'lastmod' => now()->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
+            ['loc' => url('/gallery'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
+            ['loc' => url('/services'), 'lastmod' => now()->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
+            ['loc' => url('/book-now'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['loc' => url('/contact'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
-            ['loc' => url('/privacy-policy'), 'lastmod' => $companyLastMod, 'changefreq' => 'yearly', 'priority' => '0.3'],
-            ['loc' => url('/terms-and-conditions'), 'lastmod' => $companyLastMod, 'changefreq' => 'yearly', 'priority' => '0.3'],
-            ['loc' => url('/frequently-asked-questions'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.5'],
         ];
 
         $urls = array_merge($urls, $staticPages);
+
+        $services = Product::where('status', 1)->get();
+        foreach ($services as $service) {
+            $urls[] = [
+                'loc' => url('/service/' . $service->slug),
+                'lastmod' => $service->updated_at->toDateString(),
+                'changefreq' => 'weekly',
+                'priority' => '0.9',
+            ];
+        }
 
         $content = view('frontend.sitemap', compact('urls'))->render();
         return Response::make($content, 200)->header('Content-Type', 'application/xml');

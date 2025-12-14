@@ -14,10 +14,8 @@ class HomeController extends Controller
         if (Auth::check()) {
             $user = auth()->user();
 
-            if ($user->is_type == '1') {
+            if ($user->user_type == '1') {
                 return redirect()->route('admin.dashboard');
-            } elseif ($user->is_type == '2') {
-                return redirect()->route('manager.dashboard');
             } else {
                 return redirect()->route('user.dashboard');
             }
@@ -30,12 +28,7 @@ class HomeController extends Controller
     {
         $productsCount = Product::all()->count();
         $unreadMessagesCount = Contact::where('status', 0)->count();
-        return view('admin.dashboard', compact('productsCount', 'unreadMessagesCount'));
-    }
-
-    public function managerHome()
-    {
-        return view('home');
+        return view('admin.pages.dashboard', compact('productsCount', 'unreadMessagesCount'));
     }
 
     public function userHome()

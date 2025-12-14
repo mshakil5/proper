@@ -16,7 +16,7 @@
     <meta name="google-site-verification" content="{{ $company->google_site_verification }}">
     @endif
 
-    <link href="{{ asset('images/company/' . $company->fav_icon) }}" rel="icon">
+    <link href="{{ asset('uploads/company/' . $company->fav_icon) }}" rel="icon">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     

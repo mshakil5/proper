@@ -29,9 +29,6 @@
                     <td style="padding:32px 24px 16px 24px;" class="p-32" align="left">
                         <p style="margin:12px 0;font-size:15px;line-height:1.6;color:#444;">
                             <strong>Name:</strong> {{ $name }}<br>
-                            @if($company)
-                            <strong>Company:</strong> {{ $company }}<br>
-                            @endif
                             <strong>Email:</strong> {{ $email }}<br>
                             <strong>Phone:</strong> {{ $phone }}<br>
                             <strong>Message:</strong>

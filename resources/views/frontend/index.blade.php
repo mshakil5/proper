@@ -19,7 +19,7 @@
 
                             <h1 class="banner-title display-1 fw-bold">
                                 {{ $hero->short_title ?? '' }} <br />
-                                <span class="highlight">{{ $hero->long_title ?? '' }}</span> <br /> {{ $hero->short_description ?? '' }}
+                                <span class="highlight">{{ $hero->long_title ?? '' }}</span> <br /> {!! $hero->short_description ?? '' !!}
                             </h1>
 
                             <p class="text-secondary mt-3 pe-5 mb-4 fs-5 fw-bold">
@@ -82,7 +82,7 @@
                                 <div class="carousel-inner rounded-4 shadow-lg">
                                     @foreach($sliders as $key => $slider)
                                         <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
-                                            <img src="{{ asset('images/slider/' . $slider->image) }}" class="d-block w-100" alt="{{ $slider->title }}">
+                                            <img src="{{ asset($slider->image) }}" class="d-block w-100" alt="{{ $slider->title }}">
                                         </div>
                                     @endforeach
                                 </div>
@@ -134,7 +134,7 @@
             <div class="row">
 
             <div class="col-lg-5 mb-4 mb-lg-0 d-flex">
-                <img src="{{ asset('images/meta_image/' . $bottomAbout->meta_image) }}" 
+                <img src="{{ asset('uploads/meta_image/' . $bottomAbout->meta_image) }}" 
                     alt="Bottom About Image" 
                     style="width:100%; flex:1; object-fit:cover; border-radius:16px; 
                             transition: transform 0.5s ease; 

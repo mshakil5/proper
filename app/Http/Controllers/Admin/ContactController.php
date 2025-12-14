@@ -13,29 +13,30 @@ class ContactController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Contact::orderBy('status', 'asc')->orderBy('id', 'desc');
-            return DataTables::of($data)
+            $contacts = Contact::select(['id','name','email','subject','message','status','created_at'])
+                ->orderBy('status','asc')->orderByDesc('id');
+
+            return DataTables::of($contacts)
                 ->addIndexColumn()
-                ->addColumn('full_name', function($row) {
-                    return $row->name;
-                })
-                ->addColumn('date', function($row) {
-                    return Carbon::parse($row->created_at)->format('d-m-Y');
-                })
-                ->addColumn('status', function($row) {
-                    $checked = $row->status == 1 ? 'checked' : '';
-                    return '<div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input toggle-status" id="customSwitchStatus'.$row->id.'" data-id="'.$row->id.'" '.$checked.'>
-                                <label class="custom-control-label" for="customSwitchStatus'.$row->id.'"></label>
+                ->addColumn('date', fn($row) => Carbon::parse($row->created_at)->format('d-m-Y'))
+                ->addColumn('status', function($row){
+                    $checked = $row->status ? 'checked' : '';
+                    return '<div class="form-check form-switch">
+                                <input class="form-check-input toggle-status" data-id="'.$row->id.'" type="checkbox" '.$checked.'>
                             </div>';
                 })
-                ->addColumn('action', function($row) {
+                ->addColumn('action', function($row){
                     return '
-                      <button class="btn btn-sm btn-info view" data-id="'.$row->id.'"><i class="fas fa-eye"></i></button>
-                      <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'"><i class="fas fa-trash-alt"></i></button>
-                    ';
+                        <div class="dropdown">
+                          <button class="btn btn-soft-secondary btn-sm" data-bs-toggle="dropdown"><i class="ri-more-fill"></i></button>
+                          <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button class="dropdown-item viewBtn" data-id="'.$row->id.'"><i class="ri-eye-fill me-2"></i>View</button></li>
+                            <li class="dropdown-divider"></li>
+                            <li><button class="dropdown-item deleteBtn" data-delete-url="'.route('contacts.delete',$row->id).'" data-method="DELETE" data-table="#contactTable"><i class="ri-delete-bin-fill me-2"></i>Delete</button></li>
+                          </ul>
+                        </div>';
                 })
-                ->rawColumns(['status', 'action'])
+                ->rawColumns(['status','action'])
                 ->make(true);
         }
 
@@ -45,41 +46,29 @@ class ContactController extends Controller
     public function show($id)
     {
         $contact = Contact::find($id);
-        if (!$contact) {
-            return response()->json([
-                'status' => 404,
-                'message' => 'Contact not found'
-            ], 404);
-        }
-        $contact->formatted_created_at = $contact->created_at->format('d-m-Y | H:i:s');
+        if (!$contact) return response()->json(['message' => 'Not found'], 404);
+
+        $contact->formatted_date = $contact->created_at->format('d-m-Y | H:i:s');
         return response()->json($contact);
     }
 
     public function destroy($id)
     {
         $contact = Contact::find($id);
-        
-        if (!$contact) {
-            return response()->json(['success' => false, 'message' => 'Contact not found.'], 404);
-        }
+        if (!$contact) return response()->json(['message' => 'Not found'], 404);
 
-        if ($contact->delete()) {
-            return response()->json(['success' => true, 'message' => 'Contact deleted successfully.']);
-        }
-
-        return response()->json(['success' => false, 'message' => 'Failed to delete contact.'], 500);
+        $contact->delete();
+        return response()->json(['message' => 'Deleted successfully.']);
     }
 
     public function toggleStatus(Request $request)
     {
-        $contact = Contact::find($request->contact_id);
-        if (!$contact) {
-            return response()->json(['status' => 404, 'message' => 'Contact not found']);
-        }
+        $contact = Contact::find($request->id);
+        if (!$contact) return response()->json(['message' => 'Not found'], 404);
 
         $contact->status = $request->status;
         $contact->save();
 
-        return response()->json(['status' => 200, 'message' => 'Status updated successfully']);
+        return response()->json(['message' => 'Status updated successfully.']);
     }
 }

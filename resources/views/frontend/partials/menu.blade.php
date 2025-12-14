@@ -1,7 +1,7 @@
 @php
     $categories = App\Models\Category::with([
         'products' => function ($q) {
-            $q->where('status', 1)->with('productTag');
+            $q->where('status', 1)->with('tag');
         },
     ])
         ->where('status', 1)
@@ -9,6 +9,8 @@
         ->get();
     $firstCategory = $categories->first();
     $firstCategoryName = $firstCategory ? strtolower($firstCategory->name) : 'all';
+
+    $menu = App\Models\Master::firstOrCreate(['name' => 'Menu']);
 @endphp
 <section id="product" class="section bg-light">
     <div class="container-fluid">
@@ -31,18 +33,18 @@
                     <div class="food-card rounded-xl" data-cat="{{ strtolower($category->name) }}"
                         style="display: {{ strtolower($category->name) === $firstCategoryName ? 'block' : 'none' }};">
                         <div class="img-wrap">
-                            <img src="{{ asset('images/products/' . $product->image) }}" alt="{{ $product->title }}">
-                            @if ($product->productTag)
-                                @if (strtolower($product->productTag->name) == 'veg')
-                                    <div class="badge-top veg">{{ $product->productTag->name }}</div>
+                            <img src="{{ asset($product->image) }}" alt="{{ $product->title }}">
+                            @if ($product->tag)
+                                @if (strtolower($product->tag->name) == 'veg')
+                                    <div class="badge-top veg">{{ $product->tag->name }}</div>
                                 @else
-                                    <div class="badge-top">{{ $product->productTag->name }}</div>
+                                    <div class="badge-top">{{ $product->tag->name }}</div>
                                 @endif
                             @endif
                         </div>
                         <div class="card-body">
                             <h3 class="card-title">{{ $product->title }}</h3>
-                            <div class="card-desc">{{ $product->short_description }}</div>
+                            <div class="card-desc">{!! $product->short_description !!}</div>
                             <div class="card-foot">
                                 <div class="tag">{{ $category->name }}</div>
                                 <div style="display:flex;align-items:center;gap:18px;">

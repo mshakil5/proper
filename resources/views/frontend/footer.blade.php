@@ -26,7 +26,7 @@
                         <div>
                             @if (isset($company->company_logo) && $company->company_logo != '')
                                 <img id="footer_logo_preview"
-                                    src="{{ asset('images/company/' . $company->company_logo) }}" alt="Footer Logo"
+                                    src="{{ asset('uploads/company/' . $company->company_logo) }}" alt="Footer Logo"
                                     style="width:260px; height:60px; object-fit:contain;">
                             @endif
                             <p style="margin-top:8px;color:#c0c0c0">{{ $company->footer_content ?? '' }}</p>

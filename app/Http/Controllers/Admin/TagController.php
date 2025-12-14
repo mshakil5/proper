@@ -5,105 +5,105 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Tag;
-use Yajra\DataTables\Facades\DataTables;
-use Validator;
-use Str;
+use Illuminate\Support\Str;
+use DataTables;
 
 class TagController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Tag::latest();
-            return DataTables::of($data)
+            $tags = Tag::select(['id','name','slug','status'])->latest();
+            return DataTables::of($tags)
                 ->addIndexColumn()
-                ->addColumn('status', function($row) {
+                ->addColumn('status', function($row){
                     $checked = $row->status == 1 ? 'checked' : '';
-                    return '<div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input toggle-status" 
-                                       id="customSwitch'.$row->id.'" 
-                                       data-id="'.$row->id.'" '.$checked.'>
-                                <label class="custom-control-label" for="customSwitch'.$row->id.'"></label>
+                    return '<div class="form-check form-switch" dir="ltr">
+                                <input type="checkbox" class="form-check-input toggle-status" 
+                                       id="customSwitchStatus'.$row->id.'" data-id="'.$row->id.'" '.$checked.'>
+                                <label class="form-check-label" for="customSwitchStatus'.$row->id.'"></label>
                             </div>';
                 })
-                ->addColumn('action', function($row) {
+                ->addColumn('action', function($row){
                     return '
-                      <button class="btn btn-sm btn-info edit" data-id="'.$row->id.'"><i class="fas fa-edit"></i></button>
-                      <button class="btn btn-sm btn-danger delete" data-id="'.$row->id.'"><i class="fas fa-trash-alt"></i></button>
+                        <div class="dropdown">
+                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-more-fill align-middle"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" id="EditBtn" rid="'.$row->id.'">
+                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                    </button>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item deleteBtn" 
+                                        data-delete-url="'.route('tag.destroy',$row->id).'" 
+                                        data-method="DELETE" 
+                                        data-table="#tagTable">
+                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     ';
                 })
                 ->rawColumns(['status','action'])
                 ->make(true);
         }
-        return view('admin.tags.index');
+
+        return view('admin.tag.index');
     }
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:tags,name',
+        $request->validate([
+            'name' => 'required|unique:tags,name'
         ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status'=>422,'errors'=>$validator->errors()],422);
-        }
 
         Tag::create([
-            'name'=>$request->name,
-            'slug'=>Str::slug($request->name),
-            'status'=>1,
-            'created_by'=>auth()->id()
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'created_by' => auth()->id()
         ]);
 
-        return response()->json(['status'=>200,'message'=>'Tag created successfully.']);
+        return response()->json(['message' => 'Tag created successfully!'], 200);
     }
 
     public function edit($id)
     {
-        $tag = Tag::find($id);
-        if(!$tag) return response()->json(['status'=>404,'message'=>'Tag not found'],404);
+        $tag = Tag::findOrFail($id);
         return response()->json($tag);
     }
 
     public function update(Request $request)
     {
-        $tag = Tag::find($request->codeid);
-        if(!$tag) return response()->json(['status'=>404,'message'=>'Tag not found'],404);
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:tags,name,'.$tag->id,
+        $request->validate([
+            'name' => 'required|unique:tags,name,'.$request->codeid
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['status'=>422,'errors'=>$validator->errors()],422);
-        }
-
+        $tag = Tag::findOrFail($request->codeid);
         $tag->update([
-            'name'=>$request->name,
-            'slug'=>Str::slug($request->name),
-            'updated_by'=>auth()->id()
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'updated_by' => auth()->id()
         ]);
 
-        return response()->json(['status'=>200,'message'=>'Tag updated successfully.']);
+        return response()->json(['message' => 'Tag updated successfully!'], 200);
     }
 
     public function destroy($id)
     {
-        $tag = Tag::find($id);
-        if(!$tag) return response()->json(['success'=>false,'message'=>'Tag not found'],404);
-
-        $tag->delete();
-        return response()->json(['success'=>true,'message'=>'Tag deleted successfully.']);
+        Tag::findOrFail($id)->delete();
+        return response()->json(['message' => 'Tag deleted successfully.'], 200);
     }
 
     public function toggleStatus(Request $request)
     {
-        $tag = Tag::find($request->id);
-        if(!$tag) return response()->json(['status'=>404,'message'=>'Tag not found']);
-
-        $tag->status = $request->status;
-        $tag->save();
-
-        return response()->json(['status'=>200,'message'=>'Status updated successfully']);
+        $tag = Tag::findOrFail($request->tag_id);
+        $tag->update(['status' => $request->status]);
+        return response()->json(['message' => 'Tag status updated successfully.'], 200);
     }
 }

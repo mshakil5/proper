@@ -57,17 +57,6 @@ return new class extends Migration
             $table->string('vat_number')->nullable();
             $table->time('opening_time')->nullable();
             $table->time('closing_time')->nullable();
-            // Breakfast
-            $table->time('breakfast_start')->nullable();
-            $table->time('breakfast_end')->nullable();
-
-            // Lunch & Dinner
-            $table->time('lunch_dinner_start')->nullable();
-            $table->time('lunch_dinner_end')->nullable();
-
-            // Event Booking
-            $table->time('event_booking_start')->nullable();
-            $table->time('event_booking_end')->nullable();
             $table->string('google_site_verification')->nullable();
             $table->string('meta_title')->nullable();
             $table->longText('meta_description')->nullable();

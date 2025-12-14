@@ -29,7 +29,7 @@
 
                     <div class="col-12">
                         <div class="collage-item" style="height: 200px;">
-                            <img src="{{ asset('pizza.jpg') }}"
+                            <img src="{{ asset('burger.jpg') }}"
                                 alt="table" class="w-100 h-100">
                         </div>
                     </div>

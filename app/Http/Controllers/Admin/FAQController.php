@@ -4,23 +4,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FaqQuestion;
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class FAQController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = FaqQuestion::orderBy('id', 'DESC');
-            return DataTables::of($data)
+            $faqs = FaqQuestion::orderByDesc('id');
+            return DataTables::of($faqs)
                 ->addIndexColumn()
-                ->addColumn('action', function ($row) {
+                ->addColumn('action', function($row){
                     return '
-                        <button class="btn btn-sm btn-info edit" data-id="' . $row->id . '"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger delete" data-id="' . $row->id . '"><i class="fas fa-trash-alt"></i></button>
-                    ';
+                        <div class="dropdown">
+                            <button class="btn btn-soft-secondary btn-sm" data-bs-toggle="dropdown"><i class="ri-more-fill"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button class="dropdown-item EditBtn" data-id="'.$row->id.'"><i class="ri-pencil-fill me-2"></i>Edit</button></li>
+                                <li class="dropdown-divider"></li>
+                                <li><button class="dropdown-item deleteBtn" data-delete-url="'.route('faq.delete', $row->id).'"><i class="ri-delete-bin-fill me-2"></i>Delete</button></li>
+                            </ul>
+                        </div>';
                 })
                 ->rawColumns(['action', 'answer'])
                 ->make(true);
@@ -31,34 +35,18 @@ class FAQController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'question' => 'required|string|max:255',
-            'answer'   => 'required|string',
+            'answer' => 'required|string',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 422,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        $faq = FaqQuestion::create([
+            'question' => $request->question,
+            'answer' => $request->answer,
+            'created_by' => auth()->id(),
+        ]);
 
-        $data = new FaqQuestion;
-        $data->question = $request->question;
-        $data->answer = $request->answer;
-        $data->created_by = auth()->id();
-
-        if ($data->save()) {
-            return response()->json([
-                'status' => 200,
-                'message' => 'Created successfully.'
-            ], 201);
-        } else {
-            return response()->json([
-                'status' => 500,
-                'message' => 'Server error.'
-            ], 500);
-        }
+        return response()->json(['message' => 'FAQ created successfully.'], 201);
     }
 
     public function edit($id)
@@ -69,51 +57,26 @@ class FAQController extends Controller
 
     public function update(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
+            'id' => 'required|exists:faq_questions,id',
             'question' => 'required|string|max:255',
-            'answer'   => 'required|string',
-            'codeid'       => 'required|exists:faq_questions,id',
+            'answer' => 'required|string',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 422,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        $faq = FaqQuestion::findOrFail($request->id);
+        $faq->update([
+            'question' => $request->question,
+            'answer' => $request->answer,
+            'updated_by' => auth()->id(),
+        ]);
 
-        $faq = FaqQuestion::findOrFail($request->codeid);
-        $faq->question = $request->question;
-        $faq->answer = $request->answer;
-        $faq->updated_by = auth()->id();
-
-        if ($faq->save()) {
-            return response()->json([
-                'status' => 200,
-                'message' => 'Updated successfully.'
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => 500,
-                'message' => 'Server error.'
-            ], 500);
-        }
+        return response()->json(['message' => 'FAQ updated successfully.'], 200);
     }
 
-    public function delete($id)
+    public function destroy($id)
     {
         $faq = FaqQuestion::findOrFail($id);
-
-        if ($faq->delete()) {
-            return response()->json([
-                'status' => 200,
-                'message' => 'Deleted successfully.'
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => 500,
-                'message' => 'Server error.'
-            ], 500);
-        }
+        $faq->delete();
+        return response()->json(['message' => 'FAQ deleted successfully.'], 200);
     }
 }

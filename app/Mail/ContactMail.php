@@ -25,7 +25,6 @@ class ContactMail extends Mailable
                     ->view('emails.contact')
                     ->with([
                         'name'           => $this->contact->name,
-                        'company'        => $this->contact->company,
                         'email'          => $this->contact->email,
                         'phone'          => $this->contact->phone,
                         'subjectText'    => $this->contact->subject ?? 'New query from website',

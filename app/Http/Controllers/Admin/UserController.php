@@ -13,7 +13,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $users = User::where('is_type', 3)->latest()->get();
+            $users = User::where('user_type', 2)->latest()->get();
             return DataTables::of($users)
                 ->addIndexColumn()
                 ->addColumn('status', function ($row) {
@@ -49,7 +49,7 @@ class UserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
-            'is_type' => 3,
+            'user_type' => 2,
             'status' => 1,
         ]);
 

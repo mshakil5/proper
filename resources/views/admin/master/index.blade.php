@@ -1,399 +1,255 @@
-@extends('admin.master')
+@extends('admin.pages.master')
+@section('title', 'Master')
 
 @section('content')
-<!-- Main content -->
-<section class="content" id="newBtnSection">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-2">
-            <button type="button" class="btn btn-secondary my-3" id="newBtn">Add new</button>
-        </div>
-      </div>
+    <div class="container-fluid mb-3" id="newBtnSection">
+        <button class="btn btn-primary" id="newBtn">Add New</button>
     </div>
-</section>
-<!-- /.content -->
 
-<!-- Main content -->
-<section class="content mt-3" id="addThisFormContainer">
-  <div class="container-fluid">
-    <div class="row justify-content-md-center">
-      <!-- right column -->
-      <div class="col-md-12">
-        <!-- general form elements disabled -->
-        <div class="card card-secondary border-theme border-2">
-          <div class="card-header">
-            <h3 class="card-title" id="cardTitle">Add new</h3>
-          </div>
-          <!-- /.card-header -->
-          <div class="card-body">
-            <div class="ermsg"></div>
-            <form id="createThisForm">
-              @csrf
-              <input type="hidden" class="form-control" id="codeid" name="codeid">     
+    <div class="container-fluid" id="addThisFormContainer" style="display:none;">
+        <div class="row justify-content-center">
+            <div class="col-xl-10">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 id="cardTitle">Add New</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="createThisForm" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" id="codeid" name="id">
 
-              <div class="row">
-                <div class="col-sm-6">
-                  <div class="form-group">
-                    <label>Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="name" name="name" placeholder="Enter name">
-                  </div>
-                </div>
-                <div class="col-sm-6">
-                  <div class="form-group">
-                    <label>Short Title</label>
-                    <input type="text" class="form-control" id="short_title" name="short_title" placeholder="Enter short title">
-                  </div>
-                </div>
-                <div class="col-sm-12">
-                  <div class="form-group">
-                    <label>Long Title</label>
-                    <input type="text" class="form-control" id="long_title" name="long_title" placeholder="Enter long title">
-                  </div>
-                </div>
-                <div class="col-sm-12">
-                    <div class="form-group">
-                        <label>Short Description</label>
-                        <textarea class="form-control" id="short_description" name="short_description" placeholder="Enter short description" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="col-sm-12">
-                  <div class="form-group">
-                        <label>Long Description</label>
-                        <textarea class="form-control summernote" id="long_description" name="long_description" placeholder="Enter long description"></textarea>
-                    </div>
-                </div>
-                <div class="col-sm-12">
-                    <div class="form-group">
-                        <label>Meta Title</label>
-                        <input type="text" class="form-control" id="meta_title" name="meta_title" placeholder="Enter meta title">
-                    </div>
-                </div>
-                <div class="col-sm-12">
-                  <div class="form-group">
-                        <label>Meta Description</label>
-                        <textarea class="form-control" id="meta_description" name="meta_description" placeholder="Enter meta description" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="col-sm-12">
-                    <div class="form-group">
-                        <label>Meta Keywords (comma separated)</label>
-                        <input type="text" class="form-control" id="meta_keywords" name="meta_keywords" placeholder="e.g. service, business, company">
-                    </div>
-                </div>
-                <div class="col-sm-12">
-                    <div class="form-group">
-                        <label>Meta Image</label>
-                        <input type="file" id="meta_image" name="meta_image" class="form-control" onchange="previewMetaImage(event)" accept="image/*">
-                    </div>
-                    <img id="meta_image_preview" src="#" alt="Meta Image Preview" class="pt-3" style="max-width: 150px; height: auto; display: none;"/>
-                </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="name" name="name">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Short Title</label>
+                                    <input type="text" class="form-control" id="short_title" name="short_title">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label>Long Title</label>
+                                    <input type="text" class="form-control" id="long_title" name="long_title">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label>Short Description</label>
+                                    <textarea class="form-control" id="short_description" name="short_description"></textarea>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label>Long Description</label>
+                                    <textarea class="form-control summernote" id="long_description" name="long_description"></textarea>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label>Meta Title</label>
+                                    <input type="text" class="form-control" id="meta_title" name="meta_title">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label>Meta Description</label>
+                                    <textarea class="form-control" id="meta_description" name="meta_description"></textarea>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label>Meta Keywords</label>
+                                    <input type="text" class="form-control" id="meta_keywords" name="meta_keywords">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label>Meta Image</label>
+                                    <input type="file" class="form-control" id="meta_image" name="meta_image"
+                                        onchange="previewImage(event, '#meta_image_preview')">
+                                    <img id="meta_image_preview" src="#" class="img-thumbnail mt-3">
+                                </div>
+                            </div>
 
-                <div class="col-sm-12">
-                    <div class="form-group">
-                        <label>Video (Max: 20MB)</label>
-                        <input type="file" id="video" name="video" class="form-control" onchange="previewVideo(event)" accept="video/*">
-                        <small class="form-text text-muted">Allowed formats: MP4, AVI, MOV, WMV, FLV, MKV. Maximum size: 20MB</small>
+                            <div class="text-end">
+                                <button type="button" id="addBtn" class="btn btn-primary" value="Create">Create</button>
+                                <button type="button" id="FormCloseBtn" class="btn btn-light">Cancel</button>
+                            </div>
+                        </form>
                     </div>
-                    <video id="video_preview" controls class="pt-3" style="max-width: 300px; height: auto; display: none;">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div id="video_name" class="pt-2" style="display: none;"></div>
                 </div>
-
-              </div>      
-            </form>
-          </div>
- 
-          <!-- /.card-body -->
-          <div class="card-footer">
-            <button type="submit" id="addBtn" class="btn btn-secondary" value="Create">Create</button>
-            <button type="submit" id="FormCloseBtn" class="btn btn-default">Cancel</button>
-          </div>
-          <!-- /.card-footer -->
-          <!-- /.card-body -->
+            </div>
         </div>
-      </div>
-      <!--/.col (right) -->
     </div>
-    <!-- /.row -->
-  </div><!-- /.container-fluid -->
-</section>
-<!-- /.content -->
 
-<!-- Main content -->
-<section class="content" id="contentContainer">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-12">
-          <!-- /.card -->
-          <div class="card card-secondary border-theme border-2">
+    <div class="container-fluid" id="contentContainer">
+        <div class="card">
             <div class="card-header">
-              <h3 class="card-title">All Data</h3>
+                <h4>All Masters</h4>
             </div>
-            <!-- /.card-header -->
             <div class="card-body">
-              <table id="example1" class="table cell-border table-striped">
-                <thead>
-                <tr>
-                  <th>Sl</th>
-                  <th>Name</th>
-                  <th>Short Title</th>
-                  <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                  @foreach ($data as $key => $data)
-                  <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{$data->name}}</td>
-                    <td>{{$data->short_title}}</td>
-                    <td>
-                      <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
-                        <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
-                    </td>
-                  </tr>
-                  @endforeach
-                </tbody>
-              </table>
+                <table id="masterTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sl</th>
+                            <th>Name</th>
+                            <th>Short Title</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
-            <!-- /.card-body -->
-          </div>
-          <!-- /.card -->
         </div>
-        <!-- /.col -->
-      </div>
-      <!-- /.row -->
     </div>
-    <!-- /.container-fluid -->
-</section>
-<!-- /.content -->
-
 @endsection
+
 @section('script')
-
-<script>
-    $(function () {
-      $("#example1").DataTable();
-    });
-</script>
-
-<script>
-    function previewMetaImage(event) {
-        var output = document.getElementById('meta_image_preview');
-        output.src = URL.createObjectURL(event.target.files[0]);
-        output.style.display = 'block';
-    }
-
-    function previewVideo(event) {
-        var file = event.target.files[0];
-        var videoPreview = document.getElementById('video_preview');
-        var videoName = document.getElementById('video_name');
-        
-        if (file) {
-            // Check file size (20MB = 20 * 1024 * 1024 bytes)
-            if (file.size > 20 * 1024 * 1024) {
-                alert('Video size must be less than 20MB');
-                event.target.value = '';
-                videoPreview.style.display = 'none';
-                videoName.style.display = 'none';
-                return;
+    <script>
+        $(function() {
+            // Initialize summernote editors
+            function initializeSummernote() {
+                $('.summernote').summernote({
+                    height: 150,
+                    toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'italic', 'underline', 'clear']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['insert', ['link', 'picture', 'video']],
+                        ['view', ['fullscreen', 'codeview', 'help']]
+                    ]
+                });
             }
             
-            // Check file type
-            var allowedTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-ms-wmv', 'video/x-flv', 'video/x-matroska'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('Please select a valid video file (MP4, AVI, MOV, WMV, FLV, MKV)');
-                event.target.value = '';
-                videoPreview.style.display = 'none';
-                videoName.style.display = 'none';
-                return;
+            // Clear summernote editors
+            function clearSummernote() {
+                $('.summernote').summernote('code', '');
             }
             
-            videoPreview.src = URL.createObjectURL(file);
-            videoPreview.style.display = 'block';
-            videoName.innerHTML = '<strong>Selected file:</strong> ' + file.name;
-            videoName.style.display = 'block';
-        }
-    }
+            // Get summernote content
+            function getSummernoteContent() {
+                let content = {};
+                $('.summernote').each(function() {
+                    content[$(this).attr('name')] = $(this).summernote('code');
+                });
+                return content;
+            }
 
-    $(document).ready(function() {
-        $('.summernote').summernote({
-            height: 200, 
-        });
-    });
-</script>
-
-<script>
-  $(document).ready(function () {
-      $("#addThisFormContainer").hide();
-      $("#newBtn").click(function(){
-        clearform();
-        $("#newBtn").hide(100);
-        $("#addThisFormContainer").show(300);
-      });
-      $("#FormCloseBtn").click(function(){
-          $("#addThisFormContainer").hide(200);
-          $("#newBtn").show(100);
-          clearform();
-      });
-      //header for csrf-token is must in laravel
-      $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
-      var url = "{{URL::to('/admin/master')}}";
-      var upurl = "{{URL::to('/admin/master-update')}}";
-      // console.log(url);
-      $("#addBtn").click(function(){
-      //   alert("#addBtn");
-          if($(this).val() == 'Create') {
-              var form_data = new FormData();
-              form_data.append("name", $("#name").val());
-              form_data.append("short_title", $("#short_title").val());
-              form_data.append("long_title", $("#long_title").val());
-              form_data.append("short_description", $("#short_description").val());
-              form_data.append("long_description", $("#long_description").summernote('code'));
-              form_data.append("meta_title", $("#meta_title").val());
-              form_data.append("meta_description", $("#meta_description").val());
-              form_data.append("meta_keywords", $("#meta_keywords").val());
-              form_data.append("meta_image", $("#meta_image")[0].files[0]);
-              form_data.append("video", $("#video")[0].files[0]);
-              $.ajax({
-                url: url,
-                method: "POST",
-                contentType: false,
-                processData: false,
-                data:form_data,
-                success: function (d) {
-                    if (d.status == 303) {
-                      pageTop();
-                      $(".ermsg").html(d.message);
-                    }else if(d.status == 300){
-                      $(".ermsg").html(d.message);
-                      pageTop();
-                      window.setTimeout(function(){location.reload()},2000)
-                      }
-                },
-                error: function(xhr, status, error) {
-                     console.error(xhr.responseText);
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
-          }
-          //create  end
-          //Update
-          if($(this).val() == 'Update'){
-              var form_data = new FormData();
-              form_data.append("name", $("#name").val());
-              form_data.append("short_title", $("#short_title").val());
-              form_data.append("long_title", $("#long_title").val());
-              form_data.append("short_description", $("#short_description").val());
-              form_data.append("long_description", $("#long_description").val());
-              form_data.append("meta_title", $("#meta_title").val());
-              form_data.append("meta_description", $("#meta_description").val());
-              form_data.append("meta_keywords", $("#meta_keywords").val());
-              form_data.append("meta_image", $("#meta_image")[0].files[0]);
-              form_data.append("codeid", $("#codeid").val());
-              form_data.append("video", $("#video")[0].files[0]);
-              
-              $.ajax({
-                  url:upurl,
-                  type: "POST",
-                  dataType: 'json',
-                  contentType: false,
-                  processData: false,
-                  data:form_data,
-                  success: function(d){
-                      console.log(d);
-                      if (d.status == 303) {
-                        pageTop();
-                        $(".ermsg").html(d.message);
-                      }else if(d.status == 300){
-                      $(".ermsg").html(d.message);
-                      pageTop();
-                      window.setTimeout(function(){location.reload()},2000)
-                      }
-                  },
-                  error: function(xhr, status, error) {
-                     console.error(xhr.responseText);
-                }
-              });
-          }
-          //Update
-      });
-      //Edit
-      $("#contentContainer").on('click','#EditBtn', function(){
-          //alert("btn work");
-          codeid = $(this).attr('rid');
-          //console.log($codeid);
-          info_url = url + '/'+codeid+'/edit';
-          //console.log($info_url);
-          $.get(info_url,{},function(d){
-            populateForm(d);
-          });
-      });
-      //Edit  end
-      //Delete
-      $("#contentContainer").on('click','#deleteBtn', function(){
-            if(!confirm('Sure?')) return;
-            codeid = $(this).attr('rid');
-            info_url = url + '/'+codeid;
-            $.ajax({
-                url:info_url,
-                method: "GET",
-                type: "DELETE",
-                data:{
-                },
-                success: function(d){
-                    if (d.status === 300) {
-                      alert(d.message);
-                      pageTop();
-                      location.reload();
+
+            const table = $('#masterTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('master.index') }}",
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'short_title',
+                        name: 'short_title'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
                     }
-                },
-                error:function(d){
-                  console.log(d);
+                ]
+            });
+
+            // Initialize summernote on page load
+            initializeSummernote();
+
+            $('#newBtn').click(function() {
+                $('#createThisForm')[0].reset();
+                clearSummernote(); // Clear summernote content
+                $('#codeid').val('');
+                $('#cardTitle').text('Add New');
+                $('#addBtn').val('Create').text('Create');
+                $('#addThisFormContainer').show(300);
+                $('#newBtn').hide();
+                $('#meta_image_preview').hide();
+                $('#name').prop('readonly', false);
+            });
+
+            $('#FormCloseBtn').click(function() {
+                $('#addThisFormContainer').hide(200);
+                $('#newBtn').show(100);
+                $('#createThisForm')[0].reset();
+                clearSummernote(); // Clear summernote content
+                $('#meta_image_preview').hide();
+                $('#name').prop('readonly', false);
+            });
+
+            $('#addBtn').click(function() {
+                var btn = this;
+                var url = $(btn).val() === 'Create' ? "{{ route('master.store') }}" : "{{ route('master.update') }}";
+                var form = document.getElementById('createThisForm');
+                var fd = new FormData(form);
+                
+                // Get summernote content and append to FormData
+                var summernoteContent = getSummernoteContent();
+                for (var key in summernoteContent) {
+                    fd.append(key, summernoteContent[key]);
                 }
+                
+                if ($(btn).val() !== 'Create') fd.append('id', $('#codeid').val());
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: fd,
+                    contentType: false,
+                    processData: false,
+                    success: function(res) {
+                        showSuccess(res.message);
+                        $('#addThisFormContainer').hide();
+                        $('#newBtn').show();
+                        table.ajax.reload(null, false);
+                        $('#createThisForm')[0].reset();
+                        clearSummernote(); // Clear summernote content
+                        $('#meta_image_preview').hide();
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422 && xhr.responseJSON) {
+                            let first = Object.values(xhr.responseJSON.errors)[0][0];
+                            showError(first);
+                        } else {
+                            showError(xhr.responseJSON?.message ?? 'Something went wrong');
+                        }
+                    }
+                });
+            });
+
+            $(document).on('click', '.EditBtn', function() {
+                var id = $(this).data('id');
+                $.get("{{ url('/admin/master') }}/" + id + "/edit", {}, function(res) {
+                    $('#codeid').val(res.id);
+                    $('#name').val(res.name).prop('readonly', true);
+                    $('#short_title').val(res.short_title);
+                    $('#long_title').val(res.long_title);
+                    $('#meta_title').val(res.meta_title);
+                    $('#meta_keywords').val(res.meta_keywords);
+                    $('#short_description').val(res.short_description);
+                    
+                    if (res.long_description) {
+                        $('#long_description').summernote('code', res.long_description);
+                    } else {
+                        $('#long_description').summernote('code', '');
+                    }
+
+                    $('#meta_description').val(res.meta_description);
+                    
+                    if (res.meta_image) {
+                        $('#meta_image_preview').attr('src', '/uploads/meta_image/' + res.meta_image).show();
+                    } else {
+                        $('#meta_image_preview').hide();
+                    }
+
+                    $('#cardTitle').text('Update');
+                    $('#addBtn').val('Update').text('Update');
+                    $('#addThisFormContainer').show(300);
+                    $('#newBtn').hide();
+                });
             });
         });
-      //Delete  
-      function populateForm(data){
-        $("#name").val(data.name).prop('readonly', true);
-        $("#short_title").val(data.short_title);
-        $("#long_title").val(data.long_title);
-        $("#short_description").val(data.short_description);
-        $("#long_description").summernote('code', data.long_description);
-        $("#meta_title").val(data.meta_title);
-        $("#meta_description").val(data.meta_description);
-        $("#meta_keywords").val(data.meta_keywords);
-        if (data.meta_image) {
-            var imageUrl = '/images/meta_image/' + data.meta_image;
-            $("#meta_image_preview").attr("src", imageUrl).show();
-        } else {
-            $("#meta_image_preview").attr("src", "").hide();
-        }
-
-        if (data.video) {
-            var videoUrl = '/images/meta_video/' + data.video;
-            $("#video_preview").attr("src", videoUrl).show();
-            $("#video_name").html('<strong>Current file:</strong> ' + data.video).show();
-        } else {
-            $("#video_preview").attr("src", "").hide();
-            $("#video_name").hide();
-        }
-        $("#codeid").val(data.id);
-        $("#addBtn").val('Update');
-        $("#addBtn").html('Update');
-        $("#addThisFormContainer").show(300);
-        $("#newBtn").hide(100);
-        $("#cardTitle").html('Update');
-      }
-      function clearform(){
-        $('#createThisForm')[0].reset();
-        $("#addBtn").val('Create');
-        $("#addBtn").html('Create');
-        $("#long_description").summernote('code', '');
-        $('#meta_image_preview').attr('src', '#').hide();
-        $("#cardTitle").html('Add new');
-        $("#name").prop('readonly', false);
-        $('#video_preview').attr('src', '#').hide();
-      }
-  });
-</script>
+    </script>
 @endsection

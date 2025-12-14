@@ -5,173 +5,95 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Master;
+use Yajra\DataTables\Facades\DataTables;
 
 class MasterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Master::orderBy('id', 'DESC')->get();
-        return view('admin.master.index', compact('data'));
+        if ($request->ajax()) {
+            $data = Master::orderByDesc('id');
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function($row){
+                    return '
+                        <div class="dropdown">
+                            <button class="btn btn-soft-secondary btn-sm" data-bs-toggle="dropdown"><i class="ri-more-fill"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button class="dropdown-item EditBtn" data-id="'.$row->id.'"><i class="ri-pencil-fill me-2"></i>Edit</button></li>
+                                <li class="dropdown-divider"></li>
+                                <li><button class="dropdown-item deleteBtn" data-delete-url="'.route('master.delete', $row->id).'"><i class="ri-delete-bin-fill me-2"></i>Delete</button></li>
+                            </ul>
+                        </div>';
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('admin.master.index');
     }
 
     public function store(Request $request)
     {
-        if(empty($request->name)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Name \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
+        $request->validate([
+            'name' => 'required|string|max:255|unique:masters,name,' . $request->id,
+        ]);
 
-        if ($request->hasFile('video')) {
-            $video = $request->file('video');
-            $videoSize = $video->getSize(); // Size in bytes
-            $maxSize = 20 * 1024 * 1024; // 20MB in bytes
-            
-            if ($videoSize > $maxSize) {
-                $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Video size must be less than 20MB.</b></div>";
-                return response()->json(['status'=> 303, 'message'=>$message]);
-                exit();
-            }
-            
-            $allowedExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'];
-            $videoExtension = $video->getClientOriginalExtension();
-            
-            if (!in_array(strtolower($videoExtension), $allowedExtensions)) {
-                $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Invalid video format. Allowed formats: MP4, AVI, MOV, WMV, FLV, MKV.</b></div>";
-                return response()->json(['status'=> 303, 'message'=>$message]);
-                exit();
-            }
-        }
-        
-        $data = new Master;
-        $data->name = $request->name;
-        $data->short_title = $request->short_title;
-        $data->long_title = $request->long_title;
-        $data->short_description = $request->short_description;
-        $data->long_description = $request->long_description;
-        $data->meta_title = $request->meta_title;
-        $data->meta_description = $request->meta_description;
-        $data->meta_keywords = $request->meta_keywords;
-        $data->created_by =  auth()->id();
+        $data = new Master();
+        $data->fill($request->except('meta_image'));
+        $data->created_by = auth()->id();
 
         if ($request->hasFile('meta_image')) {
             $image = $request->file('meta_image');
-            $imageName = rand(10000000, 99999999) . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('images/meta_image'), $imageName);
+            $imageName = uniqid().'.'.$image->getClientOriginalExtension();
+            $image->move(public_path('uploads/meta_image'), $imageName);
             $data->meta_image = $imageName;
         }
 
-        if ($request->hasFile('video')) {
-            $video = $request->file('video');
-            $videoName = 'video_' . rand(10000000, 99999999) . '.' . $video->getClientOriginalExtension();
-            $video->move(public_path('images/meta_video'), $videoName);
-            $data->video = $videoName;
-        }
+        $data->save();
 
-        if ($data->save()) {
-            $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Created successfully.</b></div>";
-            return response()->json(['status'=> 300,'message'=>$message]);
-        }else{
-            return response()->json(['status'=> 303,'message'=>'Server Error!!']);
-        }
+        return response()->json(['message' => 'Master data created successfully.'], 201);
     }
 
     public function edit($id)
     {
-        return response()->json(Master::find($id));
+        $data = Master::findOrFail($id);
+        return response()->json($data);
     }
 
     public function update(Request $request)
     {
-        $data = Master::find($request->codeid);
+        $request->validate([
+            'id'   => 'required|exists:masters,id',
+            'name' => 'required|string|max:255|unique:masters,name,' . $request->id,
+        ]);
 
-        if (!$data) {
-            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Record not found!</b></div>";
-            return response()->json(['status' => 404, 'message' => $message]);
-        }
-
-        if(empty($request->name)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Name \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-
-        if ($request->hasFile('video')) {
-            $video = $request->file('video');
-            $videoSize = $video->getSize();
-            $maxSize = 20 * 1024 * 1024; // 20MB
-            
-            if ($videoSize > $maxSize) {
-                $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Video size must be less than 20MB.</b></div>";
-                return response()->json(['status'=> 303, 'message'=>$message]);
-                exit();
-            }
-            
-            $allowedExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'];
-            $videoExtension = $video->getClientOriginalExtension();
-            
-            if (!in_array(strtolower($videoExtension), $allowedExtensions)) {
-                $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Invalid video format. Allowed formats: MP4, AVI, MOV, WMV, FLV, MKV.</b></div>";
-                return response()->json(['status'=> 303, 'message'=>$message]);
-                exit();
-            }
-        }
+        $data = Master::findOrFail($request->id);
+        $data->fill($request->except('meta_image'));
+        $data->updated_by = auth()->id();
 
         if ($request->hasFile('meta_image')) {
-            if ($data->meta_image) {
-                $oldImagePath = public_path('images/meta_image/' . $data->meta_image);
-                if (file_exists($oldImagePath)) {
-                    unlink($oldImagePath);
-                }
+            if ($data->meta_image && file_exists(public_path('uploads/meta_image/'.$data->meta_image))) {
+                unlink(public_path('uploads/meta_image/'.$data->meta_image));
             }
-
             $image = $request->file('meta_image');
-            $imageName = rand(10000000, 99999999) . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('images/meta_image'), $imageName);
+            $imageName = uniqid().'.'.$image->getClientOriginalExtension();
+            $image->move(public_path('uploads/meta_image'), $imageName);
             $data->meta_image = $imageName;
         }
 
-        if ($request->hasFile('video')) {
-            // Delete old video if exists
-            if ($data->video) {
-                $oldVideoPath = public_path('images/meta_video/' . $data->video);
-                if (file_exists($oldVideoPath)) {
-                    unlink($oldVideoPath);
-                }
-            }
+        $data->save();
 
-            $video = $request->file('video');
-            $videoName = 'video_' . rand(10000000, 99999999) . '.' . $video->getClientOriginalExtension();
-            $video->move(public_path('images/meta_video'), $videoName);
-            $data->video = $videoName;
-        }
-
-        $data->name = $request->name;
-        $data->short_title = $request->short_title;
-        $data->long_title = $request->long_title;
-        $data->short_description = $request->short_description;
-        $data->long_description = $request->long_description;
-        $data->meta_title = $request->meta_title;
-        $data->meta_description = $request->meta_description;
-        $data->meta_keywords = $request->meta_keywords;
-        $data->updated_by = auth()->id();
-
-        if ($data->save()) {
-            $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Updated successfully.</b></div>";
-            return response()->json(['status'=> 300,'message'=>$message]);
-        }else{
-            return response()->json(['status'=> 303,'message'=>'Server Error!!']);
-        }
+        return response()->json(['message' => 'Master data updated successfully.'], 200);
     }
 
-    public function delete($id)
+    public function destroy($id)
     {
-        $data = Master::find($id);
-        if ($data->delete()) {
-            return response()->json(['status' => 300, 'message' => 'Data deleted successfully.']);
-        } else {
-            return response()->json(['status' => 303, 'message' => 'Server Error!']);
+        $data = Master::findOrFail($id);
+        if ($data->meta_image && file_exists(public_path('uploads/meta_image/'.$data->meta_image))) {
+            unlink(public_path('uploads/meta_image/'.$data->meta_image));
         }
+        $data->delete();
+        return response()->json(['message' => 'Master data deleted successfully.'], 200);
     }
-
 }

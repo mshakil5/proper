@@ -3,11 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use SoftDeletes;
 
     protected $guarded = [];
 
@@ -23,33 +21,13 @@ class Product extends Model
       });
     }
 
-    public function features()
-    {
-        return $this->hasMany(ProductFeature::class);
-    }
-
-    public function faqs()
-    {
-        return $this->hasMany(ProductFaq::class);
-    }
-
-    public function clients()
-    {
-        return $this->hasMany(ProductClient::class);
-    }
-
-    public function process()
-    {
-        return $this->hasOne(ProductProcess::class, 'product_id');
-    }
-
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function productTag()
+    public function tag()
     {
-        return $this->belongsTo(ProductTag::class);
+        return $this->belongsTo(Tag::class);
     }
 }
