@@ -26,6 +26,7 @@ use Illuminate\Http\Request;
 use App\Models\ContactEmail;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ContactMail;
+use Illuminate\Support\Facades\Response;
 
 class FrontendController extends Controller
 {
@@ -188,6 +189,19 @@ class FrontendController extends Controller
 
         $content = view('frontend.sitemap', compact('urls'))->render();
         return Response::make($content, 200)->header('Content-Type', 'application/xml');
+    }
+
+    public function product(Request $request)
+    {
+        $product = Product::with('category', 'tag')->find($request->id);
+
+        if (!$product) {
+            return response()->json(['error' => 'Product not found'], 404);
+        }
+
+        $html = view('frontend.product', compact('product'))->render();
+
+        return response()->json(['html' => $html]);
     }
 
 }
