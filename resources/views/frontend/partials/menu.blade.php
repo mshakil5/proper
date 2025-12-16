@@ -49,7 +49,7 @@
                                 <div class="tag">{{ $category->name }}</div>
                                 <div style="display:flex;align-items:center;gap:18px;">
                                     <div class="price">£{{ number_format($product->price, 2) }}</div>
-                                    <a href="#" class="add-link d-none">Add to Order</a>
+                                    <a href="javascript:void(0)" class="btn btn-gradient open-product" data-id="{{ $product->id }}">Add to Order</a>
                                 </div>
                             </div>
                         </div>

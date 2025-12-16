@@ -30,4 +30,9 @@ class Product extends Model
     {
         return $this->belongsTo(Tag::class);
     }
+
+    public function options()
+    {
+        return $this->hasMany(ProductOption::class);
+    }
 }

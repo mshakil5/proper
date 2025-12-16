@@ -146,7 +146,6 @@
     max-width: 650px;
     width: 100%;
     max-height: 85vh;
-    overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.12);
 }
 

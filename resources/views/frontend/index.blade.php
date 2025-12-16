@@ -72,26 +72,30 @@
 
                                 <!-- Indicators -->
                                 <div class="carousel-indicators">
-                                    @foreach($sliders as $key => $slider)
-                                        <button type="button" data-bs-target="#heroSlider" data-bs-slide-to="{{ $key }}" 
-                                                class="{{ $key == 0 ? 'active' : '' }}"></button>
+                                    @foreach ($sliders as $key => $slider)
+                                        <button type="button" data-bs-target="#heroSlider"
+                                            data-bs-slide-to="{{ $key }}"
+                                            class="{{ $key == 0 ? 'active' : '' }}"></button>
                                     @endforeach
                                 </div>
 
                                 <!-- Slides -->
                                 <div class="carousel-inner rounded-4 shadow-lg">
-                                    @foreach($sliders as $key => $slider)
+                                    @foreach ($sliders as $key => $slider)
                                         <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
-                                            <img src="{{ asset($slider->image) }}" class="d-block w-100" alt="{{ $slider->title }}">
+                                            <img src="{{ asset($slider->image) }}" class="d-block w-100"
+                                                alt="{{ $slider->title }}">
                                         </div>
                                     @endforeach
                                 </div>
 
                                 <!-- Prev/Next -->
-                                <button class="carousel-control-prev" type="button" data-bs-target="#heroSlider" data-bs-slide="prev">
+                                <button class="carousel-control-prev" type="button" data-bs-target="#heroSlider"
+                                    data-bs-slide="prev">
                                     <span class="carousel-control-prev-icon"></span>
                                 </button>
-                                <button class="carousel-control-next" type="button" data-bs-target="#heroSlider" data-bs-slide="next">
+                                <button class="carousel-control-next" type="button" data-bs-target="#heroSlider"
+                                    data-bs-slide="next">
                                     <span class="carousel-control-next-icon"></span>
                                 </button>
 
@@ -133,22 +137,22 @@
         <div class="container">
             <div class="row">
 
-            <div class="col-lg-5 mb-4 mb-lg-0 d-flex">
-                <img src="{{ asset('uploads/meta_image/' . $bottomAbout->meta_image) }}" 
-                    alt="Bottom About Image" 
-                    style="width:100%; flex:1; object-fit:cover; border-radius:16px; 
+                <div class="col-lg-5 mb-4 mb-lg-0 d-flex">
+                    <img src="{{ asset('uploads/meta_image/' . $bottomAbout->meta_image) }}" alt="Bottom About Image"
+                        style="width:100%; flex:1; object-fit:cover; border-radius:16px; 
                             transition: transform 0.5s ease; 
                             box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
-            </div>
-
-            <div class="col-lg-7 d-flex flex-column" style="text-align: center;">
-                <div>
-                    <h2 class="story-title mb-4">{{ $bottomAbout->short_title ?? '' }} 
-                    </h2>
-                    <h3 class="accent fw-bold" style="font-size:25px; color:var(--orange)">{{ $bottomAbout->long_title ?? '' }}</h3>
-                    <p class="story-desc mb-5">{!! $bottomAbout->long_description ?? '' !!}</p>
                 </div>
-            </div>
+
+                <div class="col-lg-7 d-flex flex-column" style="text-align: center;">
+                    <div>
+                        <h2 class="story-title mb-4">{{ $bottomAbout->short_title ?? '' }}
+                        </h2>
+                        <h3 class="accent fw-bold" style="font-size:25px; color:var(--orange)">
+                            {{ $bottomAbout->long_title ?? '' }}</h3>
+                        <p class="story-desc mb-5">{!! $bottomAbout->long_description ?? '' !!}</p>
+                    </div>
+                </div>
 
             </div>
         </div>

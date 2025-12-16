@@ -193,7 +193,7 @@ class FrontendController extends Controller
 
     public function product(Request $request)
     {
-        $product = Product::with('category', 'tag')->find($request->id);
+        $product = Product::with('category', 'tag', 'options.items.product')->find($request->id);
 
         if (!$product) {
             return response()->json(['error' => 'Product not found'], 404);

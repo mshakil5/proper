@@ -47,6 +47,8 @@ Route::get('/frequently-asked-questions', [FrontendController::class, 'frequentl
 
 Route::get('/sitemap.xml', [FrontendController::class, 'sitemap']);
 
+Route::get('/product', [FrontendController::class, 'product']);
+
 Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
 
 Route::group(['prefix' =>'user/', 'middleware' => ['auth', 'is_user']], function(){
