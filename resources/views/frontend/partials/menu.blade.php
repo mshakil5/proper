@@ -15,7 +15,7 @@
 <section id="product" class="section bg-light">
     <div class="container-fluid">
         <section class="section-head">
-            <h2 class="big-title">Popular <span class="accent">Picks</span></h2>
+            <h1 class="big-title">Popular <span class="accent">Picks</span></h1>
             <p class="subtxt">Discover our most-loved dishes, crafted with the finest ingredients and bursting with
                 flavour</p>
         </section>

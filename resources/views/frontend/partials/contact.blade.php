@@ -8,7 +8,7 @@
             <!-- Left Card: Contact Info -->
             <div class="col-lg-6">
                 <div class="card shadow-sm p-4 h-100">
-                    <h3>Get in <span style="color:var(--orange)">Touch</span></h3>
+                    <h1>Get in <span style="color:var(--orange)">Touch</span></h1>
                     <p>Have questions or want to place an order? Fill out the form, and we’ll get back to you promptly.</p>
 
                     <div class="info-card d-flex align-items-start mb-3">

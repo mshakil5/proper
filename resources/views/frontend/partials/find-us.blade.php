@@ -5,7 +5,7 @@
 
 <section class="find-us container p-3  align-items-center">
     {{-- <div class="eyebrow">{{ $findUs->short_title ?? '' }}</div> --}}
-    <h2 class="big-title">{{ $findUs->long_title ?? '' }} <span style="color:var(--orange)">{!! $findUs->short_description ?? '' !!}</span></h2>
+    <h1 class="big-title">{{ $findUs->long_title ?? '' }} <span style="color:var(--orange)">{!! $findUs->short_description ?? '' !!}</span></h1>
     <p class="subtitle">{!! $findUs->long_description ?? '' !!}</p>
 
     <div class="row align-items-start gy-4">

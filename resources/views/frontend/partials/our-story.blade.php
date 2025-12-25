@@ -53,7 +53,7 @@
             <!-- RIGHT: content -->
             <div class="col-md-6 ps-md-5 pe-md-4 ps-lg-5 pe-lg-4 mt-5 mt-md-0">
                 {{-- <div class="eyebrow mb-2">{{ $ourStory->short_title ?? '' }}</div> --}}
-                <h2 class="story-title mb-4">{{ $ourStory->long_title ?? '' }} <span class="accent">{{ $ourStory->short_description }}</span></h2>
+                <h1 class="story-title mb-4">{{ $ourStory->long_title ?? '' }} <span class="accent">{{ $ourStory->short_description }}</span></h1>
                 <p class="story-desc mb-5">{!! $ourStory->long_description ?? '' !!}</p>
 
                 <div class="stats-row mb-5">
