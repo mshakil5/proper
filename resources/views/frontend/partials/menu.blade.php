@@ -1,7 +1,7 @@
 @php
     $categories = App\Models\Category::with([
         'products' => function ($q) {
-            $q->where('status', 1)->with('tag');
+            $q->where('status', 1)->with('tag')->withCount('options');
         },
     ])
         ->where('status', 1)
@@ -49,7 +49,18 @@
                                 <div class="tag">{{ $category->name }}</div>
                                 <div style="display:flex;align-items:center;gap:18px;">
                                     <div class="price">£{{ number_format($product->price, 2) }}</div>
-                                    <a href="javascript:void(0)" class="btn btn-gradient open-product" data-id="{{ $product->id }}">Add to Order</a>
+                                    @if($product->stock_status === 'in_stock')
+                                    <a href="javascript:void(0)" 
+                                        class="btn btn-gradient open-product"
+                                        data-id="{{ $product->id }}"
+                                        data-price="{{ $product->price }}"
+                                        data-title="{{ $product->title }}"
+                                        data-image="{{ $product->image }}"
+                                        data-has-options="{{ $product->options()->exists() ? 1 : 0 }}"
+                                        >Add to Order</a>
+                                    @else
+                                    <a href="javascript:void(0)" class="btn btn-outline-dark fw-bold btn-rounded">Out of Stock</a>
+                                    @endif
                                 </div>
                             </div>
                         </div>

@@ -33,6 +33,8 @@ Route::get('/menu', [FrontendController::class, 'menu'])->name('menu');
 
 Route::get('/our-story', [FrontendController::class, 'ourStory'])->name('our-story');
 
+Route::get('/checkout', [FrontendController::class, 'checkout'])->name('checkout');
+
 Route::get('/find-us', [FrontendController::class, 'findUs'])->name('find-us');
 
 Route::get('/contact', [FrontendController::class, 'contact'])->name('contact');

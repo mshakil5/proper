@@ -51,6 +51,19 @@ class FrontendController extends Controller
       return view('frontend.index', compact('hero', 'findUs', 'sliders','sections','company'));
     }
 
+    public function product(Request $request)
+    {
+        $product = Product::with('category', 'tag', 'options.items.product')->find($request->id);
+
+        if (!$product) {
+            return response()->json(['error' => 'Product not found'], 404);
+        }
+
+        $html = view('frontend.product', compact('product'))->render();
+
+        return response()->json(['html' => $html]);
+    }
+
     public function menu()
     {
         $menu = Master::firstOrCreate(['name' => 'Menu']);
@@ -73,6 +86,11 @@ class FrontendController extends Controller
             $menu->meta_image ? asset('uploads/meta_image/' . $menu->meta_image) : null
         );
         return view('frontend.our-story');
+    }
+
+    public function checkout()
+    {
+        return view('frontend.checkout');
     }
 
     public function findUs()
@@ -189,19 +207,6 @@ class FrontendController extends Controller
 
         $content = view('frontend.sitemap', compact('urls'))->render();
         return Response::make($content, 200)->header('Content-Type', 'application/xml');
-    }
-
-    public function product(Request $request)
-    {
-        $product = Product::with('category', 'tag', 'options.items.product')->find($request->id);
-
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
-        }
-
-        $html = view('frontend.product', compact('product'))->render();
-
-        return response()->json(['html' => $html]);
     }
 
 }

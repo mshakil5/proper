@@ -35,7 +35,7 @@ class ProductOptionController extends Controller
                     return '<span class="badge bg-secondary">'.$row->items()->count().'</span>';
                 })
                 ->addColumn('required_badge', function($row) {
-                    return $row->is_required ? '<span class="badge bg-danger">Required</span>' : '<span class="badge bg-light">Optional</span>';
+                    return $row->is_required ? '<span class="badge bg-danger">Required</span>' : '<span class="badge bg-info">Optional</span>';
                 })
                 ->addColumn('action', function($row) {
                     return '

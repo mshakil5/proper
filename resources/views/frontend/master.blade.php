@@ -22,6 +22,9 @@
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 
+    <link href="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet"
+        type="text/css" />
+
     <link href="{{ asset('resources/frontend/css/custom.css') }}" rel="stylesheet">
 </head>
 
@@ -30,6 +33,8 @@
     @include('frontend.header')
 
     @yield('content')
+
+    @include('frontend.cart')
 
     @include('frontend.footer')
 
@@ -40,6 +45,8 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <script src="{{ asset('resources/frontend/js/custom.js') }}"></script>
 

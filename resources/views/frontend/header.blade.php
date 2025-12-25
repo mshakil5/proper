@@ -77,7 +77,7 @@
     position: fixed;
     top: 200px;
     right: 20px;
-    z-index: 9999;
+    z-index: 998;
     background: #fff;
     border: 2px solid;
     border-radius: 5px;
