@@ -51,7 +51,7 @@
                                     <div class="price">£{{ number_format($product->price, 2) }}</div>
                                     @if($product->stock_status === 'in_stock')
                                     <a href="javascript:void(0)" 
-                                        class="btn btn-gradient open-product"
+                                        class="btn btn-gradient open-product d-none"
                                         data-id="{{ $product->id }}"
                                         data-price="{{ $product->price }}"
                                         data-title="{{ $product->title }}"

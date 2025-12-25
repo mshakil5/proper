@@ -206,6 +206,7 @@ class CompanyDetailsController extends Controller
     {
         $request->validate([
             'google_site_verification' => 'nullable|string|max:255',
+            'google_analytics_id' => 'nullable|string|max:255',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'meta_keywords' => 'nullable|string',
@@ -218,6 +219,7 @@ class CompanyDetailsController extends Controller
         }
 
         $companyDetails->google_site_verification = $request->google_site_verification;
+        $companyDetails->google_analytics_id = $request->google_analytics_id;
         $companyDetails->meta_title = $request->meta_title;
         $companyDetails->meta_description = $request->meta_description;
         $companyDetails->meta_keywords = $request->meta_keywords;

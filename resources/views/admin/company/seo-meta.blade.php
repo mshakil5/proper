@@ -41,6 +41,16 @@
                                 </div>
                                 <div class="col-sm-12">
                                     <div class="form-group">
+                                        <label>Google Analytics ID</label>
+                                        <input type="text"
+                                            class="form-control @error('google_analytics_id') is-invalid @enderror"
+                                            name="google_analytics_id"
+                                            value="{{ old('google_analytics_id', $companyDetails->google_analytics_id ?? '') }}"
+                                            placeholder="Enter google analytics id">
+                                    </div>
+                                </div>
+                                <div class="col-sm-12">
+                                    <div class="form-group">
                                         <label>Meta Title</label>
                                         <input type="text" class="form-control @error('meta_title') is-invalid @enderror"
                                             name="meta_title"

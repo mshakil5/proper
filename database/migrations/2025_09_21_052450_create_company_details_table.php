@@ -58,6 +58,7 @@ return new class extends Migration
             $table->time('opening_time')->nullable();
             $table->time('closing_time')->nullable();
             $table->string('google_site_verification')->nullable();
+            $table->string('google_analytics_id')->nullable();
             $table->string('meta_title')->nullable();
             $table->longText('meta_description')->nullable();
             $table->longText('meta_keywords')->nullable(); // comma-separated

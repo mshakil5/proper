@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'inertia' => env('SEO_TOOLS_INERTIA', false),
 
     'meta' => [
         'defaults' => [
@@ -10,9 +9,10 @@ return [
             'description' => false,
             'separator'   => ' - ',
             'keywords'    => [],
-            'canonical'   => false,
-            'robots'      => false,
+            'canonical'   => true,
+            'robots'      => 'index,follow',
         ],
+
         'webmaster_tags' => [
             'google'    => null,
             'bing'      => null,
@@ -21,6 +21,7 @@ return [
             'yandex'    => null,
             'norton'    => null,
         ],
+
         'add_notranslate_class' => false,
     ],
 

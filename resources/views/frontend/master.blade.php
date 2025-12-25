@@ -10,10 +10,22 @@
     {!! SEOMeta::generate() !!}
     {!! OpenGraph::generate() !!}
     {!! Twitter::generate() !!}
-    <meta property="og:type" content="website">
+
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="{{ url()->current() }}">
 
     @if($company->google_site_verification)
     <meta name="google-site-verification" content="{{ $company->google_site_verification }}">
+    @endif
+
+    @if($company->google_analytics_id)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $company->google_analytics_id }}"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ $company->google_analytics_id }}');
+        </script>
     @endif
 
     <link href="{{ asset('uploads/company/' . $company->fav_icon) }}" rel="icon">
