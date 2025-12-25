@@ -109,44 +109,139 @@ $(function () {
     function updateTotalPrice() {
         let basePrice = Number($('#totalPrice').data('base-price')) || 0;
         let extraPrice = 0;
+        let attributePrice = 0;
 
-        $('.option-input:checked').each(function () {
-            extraPrice += Number($(this).data('price')) || 0;
-        });
+        // Check if has attribute
+        let attributeSelect = $('input[name="attribute_select"]:checked').val();
+        let hasAttribute = $('[name="attribute_select"]').length > 0;
+
+        // Add attribute price if "with_options" selected
+        if (hasAttribute && attributeSelect === 'with_options') {
+            attributePrice = Number($('[data-attribute-price]').data('attribute-price')) || 0;
+        }
+
+        // Get option prices
+        if (hasAttribute && attributeSelect === 'with_options') {
+            $('#optionsContainer').find('.option-input:checked').each(function () {
+                extraPrice += Number($(this).data('price')) || 0;
+            });
+        } else if (!hasAttribute) {
+            $('.option-input:checked').each(function () {
+                extraPrice += Number($(this).data('price')) || 0;
+            });
+        }
 
         let qty = Number($('#quantity').val()) || 1;
-        let total = (basePrice + extraPrice) * qty;
+        let total = (basePrice + extraPrice + attributePrice) * qty;
         if (Number.isFinite(total)) {
             $('#totalPrice').text('£' + total.toFixed(2));
         }
     }
 
+    /* UPDATED: Handle form submit with attribute logic and pinpoint validation */
     $(document).on('submit', '#productForm', function (e) {
         e.preventDefault();
 
+        let attributeSelect = $('input[name="attribute_select"]:checked').val();
+        let hasAttribute = $('[name="attribute_select"]').length > 0;
+
+        // Case 1: Has attribute and selected "On its own" (standalone)
+        if (hasAttribute && attributeSelect === 'standalone') {
+            let cart = sanitizeCart();
+            let productId = $('#productTitle').text() + '-standalone-' + Date.now();
+            let attributePrice = Number($('[data-attribute-price]').data('attribute-price')) || 0;
+            let basePrice = Number($('#totalPrice').data('base-price')) || 0;
+            let qty = Number($('#quantity').val()) || 1;
+
+            cart.push({
+                id: productId,
+                title: String($('#productTitle').text() || '').trim(),
+                image: String($('#productImage').attr('src') || '').trim(),
+                price: basePrice + attributePrice,
+                quantity: qty,
+                type: "direct_with_attribute",
+                attribute: true
+            });
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartUI();
+            bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+            showSuccess('Added to cart!');
+            return;
+        }
+
+        // Case 2: Has attribute and selected "With options" OR no attribute at all
+        // Validate required options with pinpoint error messages
         let valid = true;
-        $('.product-section').each(function () {
-            if ($(this).data('required') && $(this).find('input:checked').length === 0) {
-                showError('Please select required options');
-                valid = false;
-                return false;
+        let missingOptions = [];
+        
+        if (hasAttribute && attributeSelect === 'with_options') {
+            // Validate only options in container for attribute case
+            $('#optionsContainer').find('.product-section').each(function () {
+                let isRequired = Number($(this).data('required'));
+                let hasSelection = $(this).find('input:checked').length > 0;
+                
+                if (isRequired && !hasSelection) {
+                    let optionName = $(this).find('.product-section-title').text().trim();
+                    missingOptions.push(optionName);
+                    valid = false;
+                }
+            });
+        } else if (!hasAttribute) {
+            // Validate all options for non-attribute case
+            $('.product-section').each(function () {
+                let isRequired = Number($(this).data('required'));
+                let hasSelection = $(this).find('input:checked').length > 0;
+                
+                if (isRequired && !hasSelection) {
+                    let optionName = $(this).find('.product-section-title').text().trim();
+                    missingOptions.push(optionName);
+                    valid = false;
+                }
+            });
+        }
+
+        if (!valid) {
+            if (missingOptions.length === 1) {
+                showError(`Please select: ${missingOptions[0]}`);
+            } else {
+                showError(`Please select: ${missingOptions.join(', ')}`);
             }
-        });
-        if (!valid) return;
+            return;
+        }
 
         let cart = sanitizeCart();
         let options = {};
         let extraPrice = 0;
+        let attributePrice = 0;
 
-        $('.option-input:checked').each(function () {
-            let label = $(this).data('title');
-            let price = Number($(this).data('price')) || 0;
-            extraPrice += price;
+        // Get attribute price if "with options" is selected
+        if (hasAttribute && attributeSelect === 'with_options') {
+            attributePrice = Number($('[data-attribute-price]').data('attribute-price')) || 0;
+        }
 
-            let name = $(this).attr('name');
-            if (!options[name]) options[name] = [];
-            options[name].push({ title: label, price: price });
-        });
+        // Get selected options
+        if (hasAttribute && attributeSelect === 'with_options') {
+            $('#optionsContainer').find('.option-input:checked').each(function () {
+                let label = $(this).data('title');
+                let price = Number($(this).data('price')) || 0;
+                extraPrice += price;
+
+                let name = $(this).attr('name');
+                if (!options[name]) options[name] = [];
+                options[name].push({ title: label, price: price });
+            });
+        } else if (!hasAttribute) {
+            $('.option-input:checked').each(function () {
+                let label = $(this).data('title');
+                let price = Number($(this).data('price')) || 0;
+                extraPrice += price;
+
+                let name = $(this).attr('name');
+                if (!options[name]) options[name] = [];
+                options[name].push({ title: label, price: price });
+            });
+        }
 
         let qty = Number($('#quantity').val()) || 1;
         let basePrice = Number($('#totalPrice').data('base-price')) || 0;
@@ -155,10 +250,12 @@ $(function () {
             id: $('#productTitle').text() + '-' + Date.now(),
             title: String($('#productTitle').text() || '').trim(),
             image: String($('#productImage').attr('src') || '').trim(),
-            price: basePrice + extraPrice,
+            price: basePrice + extraPrice + attributePrice,
             quantity: qty,
             options: options,
-            type: "custom"
+            type: "custom",
+            attribute: hasAttribute && attributeSelect === 'with_options' ? true : false,
+            attributePrice: attributePrice
         });
 
         localStorage.setItem('cart', JSON.stringify(cart));
@@ -268,6 +365,20 @@ $(function () {
     $('#cartCloseBtn, #cartOverlay').on('click', function () {
         $('#cartOffcanvas').removeClass('open');
         $('#cartOverlay').removeClass('open');
+    });
+
+    // Handle attribute selection - show/hide options
+    $(document).on('change', 'input[name="attribute_select"]', function() {
+        if ($(this).val() === 'with_options') {
+            $('#optionsContainer').slideDown();
+            // Clear previous selections
+            $('.attribute-input').not(this).prop('checked', false);
+        } else {
+            $('#optionsContainer').slideUp();
+            // Clear all options
+            $('#optionsContainer').find('.option-input').prop('checked', false);
+        }
+        updateTotalPrice();
     });
 
     function updateCartUI() {
