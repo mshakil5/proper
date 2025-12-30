@@ -145,43 +145,49 @@
 </style>
 
 <script>
-    const shopStatus = document.getElementById('shopStatus');
+    const ShopStatus = {
+        isOpen() {
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const currentMinutes = hour * 60 + minute;
 
-    function updateShopStatus() {
-        const now = new Date();
-        const day = now.getDay();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
-        let open = false;
-
-        const currentMinutes = hour * 60 + minute;
-
-        if (day === 0) {
-            const openTime = 16 * 60 + 30;
-            const closeTime = 22 * 60;
-            if (currentMinutes >= openTime && currentMinutes < closeTime) {
-                open = true;
+            if (day === 0) {
+                const openTime = 16 * 60 + 30;
+                const closeTime = 22 * 60;
+                return currentMinutes >= openTime && currentMinutes < closeTime;
+            } else if (day >= 1 && day <= 6) {
+                const openTime = 16 * 60 + 30;
+                const closeTime = 23 * 60 + 30;
+                return currentMinutes >= openTime && currentMinutes < closeTime;
             }
-        } else if (day >= 1 && day <= 6) {
-            const openTime = 16 * 60 + 30;
-            const closeTime = 23 * 60 + 30;
-            if (currentMinutes >= openTime && currentMinutes < closeTime) {
-                open = true;
+            return false;
+        },
+
+        getStatus() {
+            return this.isOpen() ? 'OPEN' : 'CLOSED';
+        },
+
+        updateDisplay() {
+            const element = document.getElementById('shopStatus');
+            if (element) {
+                element.textContent = this.getStatus();
+                element.classList.remove('open', 'closed');
+                element.classList.add(this.isOpen() ? 'open' : 'closed');
             }
         }
+    };
 
-        if(open) {
-            shopStatus.classList.add('open');
-            shopStatus.classList.remove('closed');
-            shopStatus.textContent = "OPEN";
-        } else {
-            shopStatus.classList.add('closed');
-            shopStatus.classList.remove('open');
-            shopStatus.textContent = "CLOSED";
-        }
-    }
+    window.ShopStatus = ShopStatus;
 
-    updateShopStatus();
-
-    setInterval(updateShopStatus, 60000);
+    document.addEventListener('DOMContentLoaded', () => {
+        const update = () => {
+            ShopStatus.updateDisplay();
+            if (!ShopStatus.isOpen())
+                document.querySelectorAll('.open-product').forEach(b => b.remove());
+        };
+        update();
+        setInterval(update, 60000);
+    });
 </script>

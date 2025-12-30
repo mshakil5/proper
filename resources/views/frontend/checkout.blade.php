@@ -1,90 +1,89 @@
 @extends('frontend.master')
 
 @section('content')
-<div class="checkout-container">
-    <div class="container py-5">
+<div class="checkout-wrapper">
+    <div class="container py-4">
         <div class="row g-4">
-            <!-- Left Column: Forms -->
+            <!-- Left Column: Customer & Delivery Details -->
             <div class="col-lg-8">
+                <!-- Customer Details Card -->
                 <div class="checkout-card">
-                    <h5 class="checkout-title">Delivery Details</h5>
-                    <form>
+                    <h5 class="checkout-title">Customer Details</h5>
+                    <form id="customerForm">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">First Name</label>
-                                <input type="text" class="form-control" placeholder="John">
+                                <label class="form-label">First Name <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="firstName" placeholder="John" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" class="form-control" placeholder="Doe">
+                                <label class="form-label">Last Name <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="lastName" placeholder="Doe" required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" placeholder="john@example.com">
+                                <label class="form-label">Email <span class="required">*</span></label>
+                                <input type="email" class="form-control" id="email" placeholder="john@example.com" required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Phone</label>
-                                <input type="tel" class="form-control" placeholder="+44 123 456 7890">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Address</label>
-                                <input type="text" class="form-control" placeholder="123 Main Street">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">City</label>
-                                <input type="text" class="form-control" placeholder="London">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Postal Code</label>
-                                <input type="text" class="form-control" placeholder="SW1A 1AA">
+                                <label class="form-label">Phone <span class="required">*</span></label>
+                                <input type="tel" class="form-control" id="phone" placeholder="+44 123 456 7890" required>
                             </div>
                         </div>
                     </form>
                 </div>
 
+                <!-- Delivery Address Card -->
                 <div class="checkout-card">
-                    <h5 class="checkout-title">Payment Method</h5>
-                    <div class="payment-options">
-                        <div class="payment-option active">
-                            <input type="radio" name="payment" id="card" value="card" checked>
-                            <label for="card" class="payment-label">
-                                <i class="fas fa-credit-card"></i>
-                                <span>Credit / Debit Card</span>
-                            </label>
+                    <h5 class="checkout-title">Delivery Address</h5>
+                    <form id="addressForm">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Address <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="address" placeholder="123 Main Street" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="city" placeholder="London" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Postal Code <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="postalCode" placeholder="SW1A 1AA" required>
+                            </div>
                         </div>
-                        <div class="payment-option">
-                            <input type="radio" name="payment" id="paypal" value="paypal">
-                            <label for="paypal" class="payment-label">
-                                <i class="fab fa-paypal"></i>
-                                <span>PayPal</span>
-                            </label>
+                    </form>
+                </div>
+
+                <!-- Delivery & Collection Details Card -->
+                <div class="checkout-card">
+                    <h5 class="checkout-title">Delivery & Collection Details</h5>
+                    <div id="deliveryDetailsDisplay" style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                        <div class="delivery-detail-row">
+                            <span class="detail-label">Type:</span>
+                            <span class="detail-value" id="deliveryTypeDisplay">-</span>
                         </div>
-                        <div class="payment-option">
-                            <input type="radio" name="payment" id="apple" value="apple">
-                            <label for="apple" class="payment-label">
-                                <i class="fab fa-apple"></i>
-                                <span>Apple Pay</span>
-                            </label>
+                        <div class="delivery-detail-row">
+                            <span class="detail-label">Time:</span>
+                            <span class="detail-value" id="deliveryTimeDisplay">-</span>
+                        </div>
+                        <div class="delivery-detail-row" id="postcodeRow" style="display: none;">
+                            <span class="detail-label">Postcode:</span>
+                            <span class="detail-value" id="deliveryPostcodeDisplay">-</span>
+                        </div>
+                        <div class="delivery-detail-row">
+                            <span class="detail-label">Delivery Charge:</span>
+                            <span class="detail-value" id="deliveryChargeDisplay">£0.00</span>
                         </div>
                     </div>
+                </div>
 
-                    <div id="cardPayment" class="payment-form">
-                        <div class="row g-3 mt-3">
-                            <div class="col-12">
-                                <label class="form-label">Cardholder Name</label>
-                                <input type="text" class="form-control" placeholder="John Doe">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Card Number</label>
-                                <input type="text" class="form-control" placeholder="1234 5678 9012 3456">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Expiry Date</label>
-                                <input type="text" class="form-control" placeholder="MM/YY">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">CVV</label>
-                                <input type="text" class="form-control" placeholder="123">
+                <!-- Payment Method Card -->
+                <div class="checkout-card">
+                    <h5 class="checkout-title">Payment Method</h5>
+                    <div class="payment-method">
+                        <div class="payment-badge">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <div class="payment-info">
+                                <strong>Cash on Delivery</strong>
+                                <small>Pay when your order arrives</small>
                             </div>
                         </div>
                     </div>
@@ -93,56 +92,34 @@
 
             <!-- Right Column: Order Summary -->
             <div class="col-lg-4">
-                <div class="order-summary">
+                <div class="order-summary-card">
                     <h5 class="checkout-title">Order Summary</h5>
 
                     <!-- Cart Items -->
-                    <div class="summary-items">
-                        <div class="summary-item">
-                            <div class="item-details">
-                                <span class="item-name">French Vanilla Fantasy</span>
-                                <span class="item-qty">x2</span>
-                            </div>
-                            <span class="item-price">£25.66</span>
-                        </div>
-                        <div class="summary-item">
-                            <div class="item-details">
-                                <span class="item-name">Chocolate Bliss</span>
-                                <span class="item-qty">x1</span>
-                            </div>
-                            <span class="item-price">£12.83</span>
-                        </div>
+                    <div class="checkout-cart-body" id="summaryItemsContainer">
+                        <!-- Items loaded from localStorage -->
                     </div>
 
                     <div class="summary-divider"></div>
 
-                    <!-- Pricing Breakdown -->
+                    <!-- Pricing -->
                     <div class="summary-row">
                         <span>Subtotal</span>
-                        <span>£38.49</span>
+                        <span id="summarySubtotal">£0.00</span>
                     </div>
                     <div class="summary-row">
-                        <span>Delivery</span>
-                        <span>£2.50</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Tax</span>
-                        <span>£8.20</span>
+                        <span>Delivery Charge</span>
+                        <span id="summaryDeliveryCharge">£0.00</span>
                     </div>
 
                     <div class="summary-divider"></div>
 
                     <div class="summary-row total">
                         <span>Total</span>
-                        <span>£49.19</span>
+                        <span id="summaryTotal">£0.00</span>
                     </div>
 
-                    <button class="btn-place-order">Place Order</button>
-
-                    <div class="secure-badge">
-                        <i class="fas fa-lock"></i>
-                        <span>Secure & Encrypted</span>
-                    </div>
+                    <button id="confirmOrderBtn" class="btn-place-order">Confirm Order</button>
                 </div>
             </div>
         </div>
@@ -150,238 +127,241 @@
 </div>
 @endsection
 
-<style>
-.checkout-container {
-    background: linear-gradient(135deg, #fff8f0, #fff3e7);
-    min-height: 100vh;
-    padding: 40px 0;
-}
+@section('script')
+<script>
+$(function() {
+    let checkoutData = JSON.parse(localStorage.getItem('checkoutData')) || null;
 
-.checkout-card {
-    background: white;
-    border-radius: 12px;
-    padding: 28px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    margin-bottom: 24px;
-    border: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-.checkout-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 20px;
-}
-
-.form-control {
-    border: 1px solid #E8E8E8;
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.form-control:focus {
-    border-color: #ff8a00;
-    box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.1);
-    outline: none;
-}
-
-.form-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 8px;
-}
-
-.payment-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.payment-option {
-    position: relative;
-}
-
-.payment-option input {
-    display: none;
-}
-
-.payment-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 16px;
-    border: 2px solid #E8E8E8;
-    border-radius: 10px;
-    cursor: pointer;
-    background: white;
-    transition: all 0.2s ease;
-    margin: 0;
-}
-
-.payment-label i {
-    font-size: 24px;
-    color: #666;
-}
-
-.payment-label span {
-    font-size: 12px;
-    font-weight: 600;
-    color: #666;
-    text-align: center;
-}
-
-.payment-option input:checked + .payment-label {
-    border-color: #ff8a00;
-    background: #fff8f0;
-}
-
-.payment-option input:checked + .payment-label i {
-    color: #ff8a00;
-}
-
-.payment-option input:checked + .payment-label span {
-    color: #ff8a00;
-}
-
-.order-summary {
-    background: white;
-    border-radius: 12px;
-    padding: 28px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    border: 1px solid rgba(0, 0, 0, 0.04);
-    position: sticky;
-    top: 20px;
-}
-
-.summary-items {
-    margin-bottom: 20px;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.summary-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 0;
-}
-
-.item-details {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-}
-
-.item-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1a1a1a;
-}
-
-.item-qty {
-    font-size: 12px;
-    color: #999;
-}
-
-.item-price {
-    font-size: 13px;
-    font-weight: 600;
-    color: #ff8a00;
-}
-
-.summary-divider {
-    height: 1px;
-    background: #E8E8E8;
-    margin: 16px 0;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 12px;
-}
-
-.summary-row span:last-child {
-    font-weight: 600;
-    color: #1a1a1a;
-}
-
-.summary-row.total {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-top: 16px;
-}
-
-.summary-row.total span:last-child {
-    color: #ff8a00;
-}
-
-.btn-place-order {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, #ff8a00, #ff5a00);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.2s ease;
-}
-
-.btn-place-order:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(255, 138, 0, 0.3);
-}
-
-.secure-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #E8E8E8;
-    font-size: 12px;
-    color: #666;
-}
-
-.secure-badge i {
-    color: #27AE60;
-}
-
-@media (max-width: 992px) {
-    .order-summary {
-        position: static;
-        top: auto;
-    }
-}
-
-@media (max-width: 576px) {
-    .checkout-card,
-    .order-summary {
-        padding: 20px;
+    if (!checkoutData) {
+        alert('No cart data found. Redirecting to cart...');
+        window.location.href = '/';
+        return;
     }
 
-    .payment-options {
-        grid-template-columns: 1fr;
+    function displayDeliveryDetails() {
+        let delivery = checkoutData.delivery;
+
+        if (delivery.type === 'delivery') {
+            $('#deliveryTypeDisplay').text('Home Delivery');
+            $('#postcodeRow').show();
+            $('#deliveryPostcodeDisplay').text(delivery.postcode);
+        } else {
+            $('#deliveryTypeDisplay').text('Collection');
+            $('#postcodeRow').hide();
+        }
+
+        $('#deliveryTimeDisplay').text(delivery.time);
+        $('#deliveryChargeDisplay').text('£' + delivery.charge.toFixed(2));
     }
 
-    .checkout-title {
-        font-size: 16px;
-        margin-bottom: 16px;
+    function displaySummaryItems() {
+        let itemsHTML = '';
+
+        checkoutData.cart.forEach(item => {
+            let optionsHTML = '';
+
+            if (item.type === 'custom' && item.options) {
+                optionsHTML = '<ul class="cart-item-options">';
+                Object.values(item.options).forEach(optArr => {
+                    optArr.forEach(opt => {
+                        optionsHTML += `<li>${escapeHtml(opt.title)}</li>`;
+                    });
+                });
+                optionsHTML += '</ul>';
+            }
+
+            itemsHTML += `
+                <div class="cart-item-row">
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px;">
+                        <div>
+                            <img src="${escapeHtml(item.image)}" class="cart-item-img" alt="${escapeHtml(item.title)}">
+                        </div>
+                        <div>
+                            <p class="cart-product-name">${escapeHtml(item.title)}</p>
+                            ${optionsHTML}
+                            <div class="cart-item-controls">
+                                <span class="cart-product-price">£${(item.price).toFixed(2)}</span>
+                                <span style="font-size: 12px; font-weight: 600; color: #666;">x${item.quantity}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        $('#summaryItemsContainer').html(itemsHTML);
     }
-}
-</style>
+
+    function displayTotals() {
+        $('#summarySubtotal').text('£' + checkoutData.subtotal.toFixed(2));
+        $('#summaryDeliveryCharge').text('£' + checkoutData.deliveryCharge.toFixed(2));
+        $('#summaryTotal').text('£' + checkoutData.total.toFixed(2));
+    }
+
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+
+    $('#confirmOrderBtn').on('click', function() {
+        let firstName = $('#firstName').val().trim();
+        let lastName = $('#lastName').val().trim();
+        let email = $('#email').val().trim();
+        let phone = $('#phone').val().trim();
+        let address = $('#address').val().trim();
+        let city = $('#city').val().trim();
+        let postalCode = $('#postalCode').val().trim();
+
+        if (!firstName || !lastName || !email || !phone || !address || !city || !postalCode) {
+            showError('Please fill in all required fields');
+            return;
+        }
+
+        // Build HubRise order items from cart
+        let hubRiseItems = [];
+        let totalPrice = 0;
+
+        checkoutData.cart.forEach(item => {
+            let itemPrice = Number(item.price);
+            let itemQuantity = Number(item.quantity);
+            
+            // Calculate options price for this item
+            let optionsPrice = 0;
+            if (item.type === 'custom' && item.options && Object.keys(item.options).length > 0) {
+                Object.entries(item.options).forEach(([optionName, optionValues]) => {
+                    optionValues.forEach(opt => {
+                        optionsPrice += Number(opt.price || 0);
+                    });
+                });
+            }
+
+            // Final price per item = base price (already includes options in your cart)
+            // So just use item.price as is
+            let itemTotal = itemPrice * itemQuantity;
+            totalPrice += itemTotal;
+
+            let priceValue = itemPrice.toFixed(2);
+
+            let hubRiseItem = {
+                product_name: item.title,
+                quantity: itemQuantity,
+                price: priceValue + ' BDT'
+            };
+
+            // Add options separately - DO NOT include in price
+            if (item.type === 'custom' && item.options && Object.keys(item.options).length > 0) {
+                hubRiseItem.options = [];
+                Object.entries(item.options).forEach(([optionName, optionValues]) => {
+                    optionValues.forEach(opt => {
+                        hubRiseItem.options.push({
+                            option_list_name: optionName,
+                            name: opt.title,
+                            price: (opt.price || 0).toFixed(2) + ' BDT'
+                        });
+                    });
+                });
+            }
+
+            hubRiseItems.push(hubRiseItem);
+        });
+
+        // Add delivery charge if applicable
+        totalPrice += checkoutData.deliveryCharge;
+
+        // Build HubRise order object matching documentation
+        let hubRiseOrder = {
+            status: 'new',
+            channel: 'Website',
+            service_type: checkoutData.delivery.type === 'delivery' ? 'delivery' : 'collection',
+            items: hubRiseItems,
+            payments: [
+                {
+                    amount: totalPrice.toFixed(2) + ' BDT'
+                }
+            ],
+            customer: {
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                phone_number: phone,
+                address: address
+            }
+        };
+
+        // Add delivery charge if applicable (as charges, not in items)
+        if (checkoutData.delivery.type === 'delivery') {
+            hubRiseOrder.charges = [
+                {
+                    name: 'Delivery',
+                    amount: checkoutData.deliveryCharge.toFixed(2) + ' BDT'
+                }
+            ];
+        }
+
+        console.log('HubRise Order:', hubRiseOrder);
+        console.log('Total Price:', totalPrice.toFixed(2) + ' BDT');
+
+        // Send to backend
+        $.ajax({
+            url: '/place-order',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: JSON.stringify({
+                hubRiseOrder: hubRiseOrder,
+                localOrder: {
+                    customer: {
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: email,
+                        phone: phone,
+                        address: address,
+                        city: city,
+                        postalCode: postalCode
+                    },
+                    cart: checkoutData.cart,
+                    delivery: checkoutData.delivery,
+                    subtotal: checkoutData.subtotal,
+                    deliveryCharge: checkoutData.deliveryCharge,
+                    total: totalPrice
+                }
+            }),
+            success: function(response) {
+                console.log('Order placed successfully:', response);
+
+                localStorage.removeItem('cart');
+                localStorage.removeItem('cartSummary');
+                localStorage.removeItem('deliveryOptions');
+                localStorage.removeItem('checkoutData');
+
+                showSuccess('Order placed successfully!');
+
+                setTimeout(() => {
+                    window.location.href = '/order-confirmation/' + response.orderId;
+                }, 1500);
+            },
+            error: function(err) {
+                console.error('Error placing order:', err);
+                if (err.responseJSON && err.responseJSON.message) {
+                    showError(err.responseJSON.message);
+                } else {
+                    showError('Error placing order. Please try again.');
+                }
+            }
+        });
+    });
+
+    displayDeliveryDetails();
+    displaySummaryItems();
+    displayTotals();
+});
+</script>
+@endsection

@@ -1,4 +1,5 @@
 <form id="productForm">
+    <input type="hidden" id="productId" value="{{ $product->id ?? '' }}">
     <div class="product-modal-wrapper">
         <div class="product-modal-header">
             <img src="{{ asset($product->image ?? '/placeholder.webp') }}" id="productImage" class="product-image"
@@ -62,7 +63,8 @@
                                     <input type="{{ $option->type === 'single' ? 'radio' : 'checkbox' }}"
                                         name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
                                         value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
-                                        data-title="{{ $item->product->title }}" class="option-input"
+                                        data-title="{{ $item->product->title }}" data-product-id="{{ $item->product_id }}"
+                                        class="option-input"
                                         id="option_{{ $option->id }}_{{ $item->product_id }}">
                                     <label for="option_{{ $option->id }}_{{ $item->product_id }}" class="option-label">
                                         {{ $item->product->title }}
@@ -102,7 +104,8 @@
                                 <input type="{{ $option->type === 'single' ? 'radio' : 'checkbox' }}"
                                     name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
                                     value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
-                                    data-title="{{ $item->product->title }}" class="option-input"
+                                    data-title="{{ $item->product->title }}" data-product-id="{{ $item->product_id }}"
+                                    class="option-input"
                                     id="option_{{ $option->id }}_{{ $item->product_id }}">
                                 <label for="option_{{ $option->id }}_{{ $item->product_id }}" class="option-label">
                                     {{ $item->product->title }}
@@ -137,7 +140,7 @@
                 <span id="totalPrice" class="price-value"
                     data-base-price="{{ $product->price }}">£{{ number_format($product->price, 2) }}</span>
             </div>
-            <button type="submit" class="btn-add-order">Add to Order</button>
+            <button type="submit" class="btn-add-order addToOrderBtn d-none">Add to Order</button>
         </div>
     </div>
 </form>

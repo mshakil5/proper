@@ -29,11 +29,15 @@ Auth::routes([
 
 Route::get('/', [FrontendController::class, 'index'])->name('home');
 
+Route::get('/product/{slug}', [FrontendController::class, 'productDetails'])->name('product.details');
+
 Route::get('/menu', [FrontendController::class, 'menu'])->name('menu');
 
 Route::get('/our-story', [FrontendController::class, 'ourStory'])->name('our-story');
 
 Route::get('/checkout', [FrontendController::class, 'checkout'])->name('checkout');
+
+Route::post('/place-order', [FrontendController::class, 'placeOrder'])->name('checkout.place-order');
 
 Route::get('/find-us', [FrontendController::class, 'findUs'])->name('find-us');
 
