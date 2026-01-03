@@ -60,12 +60,7 @@
 
                     <div class="delivery-time-section">
                         <label class="delivery-label">Delivery Time <span class="required">*</span></label>
-                        <select class="delivery-time-select">
-                            <option value="">Select Time</option>
-                            <option>04:45 - 05:05 PM</option>
-                            <option>05:10 - 05:30 PM</option>
-                            <option>05:35 - 05:55 PM</option>
-                            <option>06:00 - 06:20 PM</option>
+                        <select class="delivery-time-select" id="deliveryTimeSelect">
                         </select>
                     </div>
                 </div>
@@ -73,12 +68,7 @@
                 <div id="collectionMode" style="display: none;">
                     <div class="collection-time-section">
                         <label class="delivery-label">Collection Time <span class="required">*</span></label>
-                        <select class="delivery-time-select">
-                            <option value="">Select Time</option>
-                            <option>04:15 - 04:35 PM</option>
-                            <option>04:40 - 05:00 PM</option>
-                            <option>05:05 - 05:25 PM</option>
-                            <option>05:30 - 05:50 PM</option>
+                        <select class="delivery-time-select" id="collectionTimeSelect">
                         </select>
                     </div>
                 </div>

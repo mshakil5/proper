@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ContactMailController;
 use App\Http\Controllers\Admin\CompanyDetailsController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\DeliveryZoneController;
+use App\Http\Controllers\Admin\CouponController;
 
 Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], function(){
 
@@ -130,4 +131,12 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::post('/delivery-zones-update', [DeliveryZoneController::class, 'update'])->name('delivery-zone.update');
     Route::delete('/delivery-zones/{id}', [DeliveryZoneController::class, 'destroy'])->name('delivery-zone.delete');
     Route::post('/delivery-zones-status', [DeliveryZoneController::class, 'toggleStatus']);
+
+    Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index');
+    Route::post('/coupons', [CouponController::class, 'store'])->name('coupons.store');
+    Route::post('/coupons-update', [CouponController::class, 'update'])->name('coupons.update');
+    Route::delete('/coupons/{id}', [CouponController::class, 'delete'])->name('coupons.delete');
+    Route::post('/coupons-status', [CouponController::class, 'toggleStatus'])->name('coupons.status');
+    Route::post('/coupons/validate', [CouponController::class, 'validateCoupon'])->name('coupons.validate');
+    Route::get('/coupons/{id}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
 });

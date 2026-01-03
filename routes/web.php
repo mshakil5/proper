@@ -31,6 +31,8 @@ Route::get('/', [FrontendController::class, 'index'])->name('home');
 
 Route::get('/product/{slug}', [FrontendController::class, 'productDetails'])->name('product.details');
 
+Route::get('/check-delivery', [FrontendController::class, 'checkDelivery']);
+
 Route::get('/menu', [FrontendController::class, 'menu'])->name('menu');
 
 Route::get('/our-story', [FrontendController::class, 'ourStory'])->name('our-story');

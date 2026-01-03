@@ -29,6 +29,7 @@ use App\Mail\ContactMail;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\DeliveryZone;
 
 class FrontendController extends Controller
 {
@@ -67,6 +68,30 @@ class FrontendController extends Controller
         );
 
         return view('frontend.product-details', compact('product'));
+    }
+
+    public function checkDelivery(Request $request)
+    {
+        $request->validate([
+            'postcode' => 'required|string',
+        ]);
+
+        $postcode = strtoupper(str_replace(' ', '', $request->postcode));
+        $prefix = substr($postcode, 0, 3);
+        
+        $zone = DeliveryZone::where('postcode_prefix', $prefix)
+                            ->where('is_active', 1)
+                            ->first();
+        
+        if(!$zone) {
+            return response()->json(['available' => false], 422);
+        }
+
+        return response()->json([
+            'available' => true,
+            'delivery_charge' => (float) $zone->delivery_charge,
+            'message' => 'Delivery available'
+        ]);
     }
 
     public function product(Request $request)

@@ -1,20 +1,5 @@
 $(function () {
 
-    const POSTCODE_DATABASE = {
-        'LN5': { available: true, charge: 2.50 },
-        'LN6': { available: true, charge: 2.50 },
-        'LN7': { available: true, charge: 3.00 },
-        'LN8': { available: true, charge: 3.00 },
-        'LN9': { available: false, charge: 0 },
-        'NG1': { available: true, charge: 2.00 },
-        'NG2': { available: true, charge: 2.50 },
-        'NG3': { available: false, charge: 0 },
-        'SK1': { available: true, charge: 4.00 },
-        'SK2': { available: true, charge: 4.50 },
-        'DE1': { available: true, charge: 3.50 },
-        'DE2': { available: false, charge: 0 }
-    };
-
     let selectedDelivery = {
         type: 'delivery',
         postcode: '',
@@ -27,7 +12,6 @@ $(function () {
         let stored = localStorage.getItem('deliveryOptions');
         if (stored) {
             selectedDelivery = JSON.parse(stored);
-            // Restore UI based on stored data
             if (selectedDelivery.type === 'collection') {
                 $('input[name="deliveryType"][value="collection"]').prop('checked', true);
                 $('#deliveryMode').hide();
@@ -46,7 +30,6 @@ $(function () {
         }
     }
 
-    // Save delivery data to localStorage
     function saveDeliveryData() {
         localStorage.setItem('deliveryOptions', JSON.stringify(selectedDelivery));
     }
@@ -96,6 +79,57 @@ $(function () {
         }
         
         return productId + '::' + title + (optionString ? '::' + optionString : '');
+    }
+
+    function generateTimeSlots(startHour, startMinute) {
+        let slots = [];
+        let current = new Date();
+        current.setHours(startHour, startMinute, 0);
+        
+        let endTime = new Date();
+        endTime.setHours(23, 5, 0);
+        
+        while (current < endTime) {
+            let start = current.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            
+            let end = new Date(current);
+            end.setMinutes(end.getMinutes() + 20);
+            let endSlot = end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            
+            slots.push({
+                value: start + '-' + endSlot,
+                label: start + ' - ' + endSlot
+            });
+            
+            current.setMinutes(current.getMinutes() + 20);
+        }
+        
+        return slots;
+    }
+
+    function populateTimeSlots(selector, startHour, startMinute) {
+        let slots = generateTimeSlots(startHour, startMinute);
+        let today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        
+        let html = '<option value="">Select Time</option>';
+        slots.forEach(slot => {
+            html += `<option value="${slot.value}">${slot.label} (${today})</option>`;
+        });
+        
+        $(selector).html(html);
+    }
+
+    function updateDeliveryStartTimes() {
+        let deliverySlots = generateTimeSlots(16, 45);
+        let collectionSlots = generateTimeSlots(16, 15);
+        
+        if (deliverySlots.length > 0) {
+            $('#deliveryStartTime').text(deliverySlots[0].label.split(' - ')[0]);
+        }
+        
+        if (collectionSlots.length > 0) {
+            $('#collectionStartTime').text(collectionSlots[0].label.split(' - ')[0]);
+        }
     }
 
     $(document).on('click', '.open-product', function () {
@@ -482,7 +516,6 @@ $(function () {
         $('#cartOverlay').removeClass('open');
     });
 
-    // Collapsible delivery section
     $('#deliveryToggle').on('click', function() {
         const section = $(this).closest('.collapsible-section');
         const content = section.find('.collapsible-content');
@@ -491,7 +524,6 @@ $(function () {
         icon.toggleClass('open');
     });
 
-    // Collapsible products section
     $('#productsToggle').on('click', function() {
         const section = $(this).closest('.collapsible-section');
         const content = section.find('.collapsible-content');
@@ -500,19 +532,23 @@ $(function () {
         icon.toggleClass('open');
     });
 
-    // Delivery type toggle
     $(document).on('change', 'input[name="deliveryType"]', function() {
         selectedDelivery.type = $(this).val();
+        selectedDelivery.time = '';
         
         if ($(this).val() === 'delivery') {
             $('#deliveryMode').show();
             $('#collectionMode').hide();
+            populateTimeSlots('#deliveryMode .delivery-time-select', 16, 45);
+            $('#deliveryMode .delivery-time-select').val('');
             selectedDelivery.isValid = false;
             selectedDelivery.charge = 0;
             selectedDelivery.postcode = '';
         } else {
             $('#deliveryMode').hide();
             $('#collectionMode').show();
+            populateTimeSlots('#collectionMode .delivery-time-select', 16, 15);
+            $('#collectionMode .delivery-time-select').val('');
             selectedDelivery.isValid = true;
             selectedDelivery.charge = 0;
             selectedDelivery.postcode = '';
@@ -521,7 +557,6 @@ $(function () {
         updateCartUI();
     });
 
-    // Postcode Check
     $(document).on('click', '.postcode-check-btn', function(e) {
         e.preventDefault();
         let postcode = $('#deliveryPostcode').val().trim().toUpperCase();
@@ -531,26 +566,35 @@ $(function () {
             return;
         }
 
-        let postcodePrefix = postcode.substring(0, 3);
-        let found = POSTCODE_DATABASE[postcodePrefix];
-
-        if (found && found.available) {
-            selectedDelivery.postcode = postcode;
-            selectedDelivery.charge = found.charge;
-            selectedDelivery.isValid = true;
-            showSuccess('✓ Delivery available for ' + postcode + ' | Charge: £' + found.charge.toFixed(2));
-            saveDeliveryData();
-            updateCartUI();
-        } else {
-            selectedDelivery.isValid = false;
-            selectedDelivery.postcode = '';
-            selectedDelivery.charge = 0;
-            saveDeliveryData();
-            showError('✗ Delivery not available for ' + postcode);
-        }
+        $.ajax({
+            url: '/check-delivery',
+            type: 'GET',
+            data: {
+                postcode: postcode
+            },
+            success: function(res) {
+                console.log(res);
+                if (res.available) {
+                    selectedDelivery.postcode = postcode;
+                    selectedDelivery.charge = parseFloat(res.delivery_charge);
+                    selectedDelivery.isValid = true;
+                    showSuccess('✓ Delivery available for ' + postcode + ' | Charge: £' + parseFloat(res.delivery_charge).toFixed(2));
+                    saveDeliveryData();
+                    updateCartUI();
+                } else {
+                    selectedDelivery.isValid = false;
+                    selectedDelivery.postcode = '';
+                    selectedDelivery.charge = 0;
+                    saveDeliveryData();
+                    showError('✗ Delivery not available for ' + postcode);
+                }
+            },
+            error: function(xhr) {
+                showError('Postcode not in delivery area');
+            }
+        });
     });
 
-    // Delivery Time Select
     $(document).on('change', '.delivery-time-select', function() {
         if (selectedDelivery.type === 'delivery') {
             if ($('#deliveryMode .delivery-time-select').length) {
@@ -565,7 +609,6 @@ $(function () {
         updateCartUI();
     });
 
-    // Checkout validation and navigation
     $(document).on('click', '.cart-checkout-btn', function(e) {
         e.preventDefault();
         
@@ -585,11 +628,9 @@ $(function () {
             }
         }
 
-        // Save before checkout
         saveDeliveryData();
         let cart = sanitizeCart();
         
-        // Prepare checkout data
         let checkoutData = {
             cart: cart,
             delivery: selectedDelivery,
@@ -599,21 +640,17 @@ $(function () {
             timestamp: new Date().toISOString()
         };
 
-        // Save to localStorage for checkout page
         localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
 
-        // Log all data
         console.log('Checkout Data:', checkoutData);
         
         showSuccess('Proceeding to checkout...');
         
-        // Redirect to checkout page
         setTimeout(() => {
             window.location.href = '/checkout';
         }, 1000);
     });
 
-    // Handle attribute selection - show/hide options
     $(document).on('change', 'input[name="attribute_select"]', function() {
         if ($(this).val() === 'with_options') {
             $('#optionsContainer').slideDown();
@@ -638,7 +675,6 @@ $(function () {
         $('#cartDeliveryCharge').text('£' + selectedDelivery.charge.toFixed(2));
         $('#cartTotal').text('£' + total.toFixed(2));
 
-        // Save cart totals to localStorage
         let cartSummary = {
             subtotal: subtotal,
             deliveryCharge: selectedDelivery.charge,
@@ -648,8 +684,10 @@ $(function () {
         localStorage.setItem('cartSummary', JSON.stringify(cartSummary));
     }
 
-    // Initialize on page load
+    updateDeliveryStartTimes();
     loadDeliveryData();
+    populateTimeSlots('#deliveryMode .delivery-time-select', 16, 45);
+    populateTimeSlots('#collectionMode .delivery-time-select', 16, 15);
     updateCartUI();
 
 });
