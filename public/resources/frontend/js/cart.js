@@ -443,20 +443,32 @@ $(function () {
     $(document).on('click', '.cart-qty-minus', function () {
         let index = $(this).data('index');
         let cart = sanitizeCart();
-        if (cart[index].quantity > 1) cart[index].quantity -= 1;
-        else cart.splice(index, 1);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        renderCart();
-        updateCartUI();
+
+        if (cart[index].quantity > 1) {
+            cart[index].quantity -= 1;
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+            updateCartUI();
+        } else {
+            showConfirm('Remove this item from cart?', function () {
+                cart.splice(index, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+                updateCartUI();
+            });
+        }
     });
 
     $(document).on('click', '.cart-remove-btn', function () {
         let index = $(this).data('index');
         let cart = sanitizeCart();
-        cart.splice(index, 1);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        renderCart();
-        updateCartUI();
+
+        showConfirm('Remove this item from cart?', function () {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+            updateCartUI();
+        });
     });
 
     $('#cartFloatBtn').on('click', function () {

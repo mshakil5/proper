@@ -181,13 +181,13 @@
 
     window.ShopStatus = ShopStatus;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const update = () => {
-            ShopStatus.updateDisplay();
-            if (!ShopStatus.isOpen())
-                document.querySelectorAll('.open-product').forEach(b => b.remove());
-        };
-        update();
-        setInterval(update, 60000);
-    });
+    // document.addEventListener('DOMContentLoaded', () => {
+    //     const update = () => {
+    //         ShopStatus.updateDisplay();
+    //         if (!ShopStatus.isOpen())
+    //             document.querySelectorAll('.open-product').forEach(b => b.remove());
+    //     };
+    //     update();
+    //     setInterval(update, 60000);
+    // });
 </script>

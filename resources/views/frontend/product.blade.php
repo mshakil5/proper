@@ -140,7 +140,7 @@
                 <span id="totalPrice" class="price-value"
                     data-base-price="{{ $product->price }}">£{{ number_format($product->price, 2) }}</span>
             </div>
-            <button type="submit" class="btn-add-order addToOrderBtn d-none">Add to Order</button>
+            <button type="submit" class="btn-add-order addToOrderBtn">Add to Order</button>
         </div>
     </div>
 </form>

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContactMailController;
 use App\Http\Controllers\Admin\CompanyDetailsController;
 use App\Http\Controllers\Admin\ProductOptionController;
+use App\Http\Controllers\Admin\DeliveryZoneController;
 
 Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], function(){
 
@@ -123,4 +124,10 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     // Helper Routes
     Route::get('/product/{productId}/category/{categoryId}/products/{optionId?}', [ProductOptionController::class, 'getCategoryProducts']);
 
+    Route::get('/delivery-zones', [DeliveryZoneController::class, 'index'])->name('delivery-zone.index');
+    Route::post('/delivery-zones', [DeliveryZoneController::class, 'store'])->name('delivery-zone.store');
+    Route::get('/delivery-zones/{id}/edit', [DeliveryZoneController::class, 'edit'])->name('delivery-zone.edit');
+    Route::post('/delivery-zones-update', [DeliveryZoneController::class, 'update'])->name('delivery-zone.update');
+    Route::delete('/delivery-zones/{id}', [DeliveryZoneController::class, 'destroy'])->name('delivery-zone.delete');
+    Route::post('/delivery-zones-status', [DeliveryZoneController::class, 'toggleStatus']);
 });

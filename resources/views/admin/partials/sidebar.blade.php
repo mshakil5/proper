@@ -46,6 +46,7 @@
                         'sections.index',
                         'master.index',
                         'contactemail.index',
+                        'delivery-zone.index',
                     );
                 @endphp
 
@@ -206,6 +207,10 @@
                             <li class="nav-item">
                                 <a href="{{ route('contactemail.index') }}" 
                                   class="nav-link {{ Route::is('contactemail.index') ? 'active' : '' }}">Contact Email</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('delivery-zone.index') }}" 
+                                  class="nav-link {{ Route::is('delivery-zone.index') ? 'active' : '' }}">Delivery Zone</a>
                             </li>
                         </ul>
                     </div>

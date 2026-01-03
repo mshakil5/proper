@@ -1,4 +1,4 @@
-<button type="button" class="cart-float-btn d-none" id="cartFloatBtn">
+<button type="button" class="cart-float-btn" id="cartFloatBtn">
     <i class="fas fa-shopping-cart"></i>
     <span class="cart-badge">0</span>
 </button>
