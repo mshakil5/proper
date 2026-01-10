@@ -181,6 +181,7 @@
 
     window.ShopStatus = ShopStatus;
 
+    //Uncomment this if you want to show the status on page load
     // document.addEventListener('DOMContentLoaded', () => {
     //     const update = () => {
     //         ShopStatus.updateDisplay();
