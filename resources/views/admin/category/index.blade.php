@@ -31,6 +31,11 @@
                                 </div>
 
                                 <div class="col-md-12">
+                                    <label class="form-label">Hubrise Ref</label>
+                                    <input type="text" class="form-control" id="hubrise_ref" name="hubrise_ref">
+                                </div>
+
+                                <div class="col-md-12">
                                     <label class="form-label">Description</label>
                                     <textarea class="form-control summernote" id="description" name="description"
                                         placeholder="Enter category description (optional)"></textarea>
@@ -69,6 +74,7 @@
                                 <tr>
                                     <th>Sl</th>
                                     <th>Name</th>
+                                    <th>Hubrise Ref</th>
                                     <th>Status</th>
                                     <th>Show in Menu</th>
                                     <th>Action</th>
@@ -161,6 +167,10 @@
                         name: 'name'
                     },
                     {
+                        data: 'hubrise_ref',
+                        name: 'hubrise_ref'
+                    },
+                    {
                         data: 'status',
                         name: 'status',
                         orderable: false,
@@ -232,6 +242,7 @@
             $("#addBtn").click(function() {
                 var form_data = new FormData();
                 form_data.append("name", $("#name").val());
+                form_data.append("hubrise_ref", $("#hubrise_ref").val());
                 form_data.append("description", $(".summernote").summernote('code'));
 
                 if ($(this).val() == 'Create') {
@@ -289,7 +300,9 @@
             });
 
             function populateForm(data) {
+                pagetop();
                 $("#name").val(data.name);
+                $("#hubrise_ref").val(data.hubrise_ref);
                 $(".summernote").summernote('code', data.description);
                 $("#codeid").val(data.id);
                 $("#addBtn").val('Update').html('Update');

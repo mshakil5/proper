@@ -13,7 +13,7 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $categories = Category::select(['id','sl','name','description','status','show_in_menu'])->orderBy('sl');
+            $categories = Category::select(['id','sl','name','description','status','show_in_menu', 'hubrise_ref'])->orderBy('sl');
             return DataTables::of($categories)
                 ->addIndexColumn()
                 ->addColumn('status', function($row){
@@ -73,6 +73,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:categories,name',
+            'hubrise_ref' => 'nullable|unique:categories,hubrise_ref',
             'description' => 'nullable'
         ]);
 
@@ -80,6 +81,7 @@ class CategoryController extends Controller
         
         Category::create([
             'name' => $request->name,
+            'hubrise_ref' => $request->hubrise_ref,
             'description' => $request->description,
             'sl' => $lastSl ? $lastSl + 1 : 1,
             'status' => 1,
@@ -99,12 +101,14 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:categories,name,'.$request->codeid,
+            'hubrise_ref' => 'nullable|unique:categories,hubrise_ref,'.$request->codeid,
             'description' => 'nullable'
         ]);
 
         $category = Category::findOrFail($request->codeid);
         $category->update([
             'name' => $request->name,
+            'hubrise_ref' => $request->hubrise_ref,
             'description' => $request->description
         ]);
 
