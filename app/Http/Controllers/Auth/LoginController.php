@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use App\Models\User;
 use Illuminate\Http\Request;
+use auth;
 
 class LoginController extends Controller
 {
@@ -19,39 +20,46 @@ class LoginController extends Controller
     }
 
     public function login(Request $request)
-    {   
-        $input = $request->all();
-     
-        $this->validate($request, [
+    {
+        $validated = $request->validate([
             'email' => 'required|email',
-            'password' => 'required',
+            'password' => 'required|min:6',
+        ], [
+            'email.required' => 'Email is required',
+            'email.email' => 'Please enter a valid email',
+            'password.required' => 'Password is required',
+            'password.min' => 'Password must be at least 6 characters'
         ]);
-    
-        $chksts = User::where('email', $input['email'])->first();
-        if ($chksts) {
-            if ($chksts->status == 1) {
-                if (auth()->attempt(['email' => $input['email'], 'password' => $input['password']])) {
-                    if (auth()->user()->user_type == '1') {
-                        return redirect()->route('admin.dashboard');
-                    } elseif (auth()->user()->user_type == '2') {
-                        return redirect()->route('manager.dashboard');
-                    } elseif (auth()->user()->user_type == '3') {
-                        return redirect()->route('user.dashboard');
-                    }
-                } else {
-                    return redirect()->back()
-                        ->withInput($request->only('email'))
-                        ->withErrors(['password' => 'Wrong password.']);
-                }
-            } else {
-                return redirect()->back()
-                    ->withInput($request->only('email'))
-                    ->withErrors(['email' => 'Your account is inactive.']);
-            }
-        } else {
-            return redirect()->back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => 'Please input correct email and password.']);
+
+        $user = User::where('email', $validated['email'])->first();
+
+        if (!$user) {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'Email not found']);
         }
+
+        if ($user->status != 1) {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'Your account is inactive']);
+        }
+
+        if (Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']], $request->remember)) {
+            $request->session()->regenerate();
+
+            if ($request->redirect_to_checkout) {
+                return redirect('/checkout');
+            }
+
+            if (auth()->user()->user_type == '1') {
+                return redirect()->route('admin.dashboard');
+            } elseif (auth()->user()->user_type == '2') {
+                return redirect()->route('manager.dashboard');
+            } else {
+                return redirect()->route('user.dashboard');
+            }
+        }
+
+        return back()->withInput($request->only('email'))
+            ->withErrors(['password' => 'Password is incorrect']);
     }
 }
