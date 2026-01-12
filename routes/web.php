@@ -27,7 +27,9 @@ Route::get('/', [FrontendController::class, 'index'])->name('home');
 
 Route::get('/product/{slug}', [FrontendController::class, 'productDetails'])->name('product.details');
 
-Route::get('/check-delivery', [FrontendController::class, 'checkDelivery']);
+Route::get('/check-delivery', [FrontendController::class, 'checkDelivery'])->name('check-delivery');
+
+Route::get('/get-addresses', [FrontendController::class, 'getAddresses'])->name('get-addresses');
 
 Route::get('/menu', [FrontendController::class, 'menu'])->name('menu');
 
@@ -39,7 +41,9 @@ Route::post('/coupons/validate', [FrontendController::class, 'validateCoupon']);
 
 Route::post('/place-order', [FrontendController::class, 'placeOrder'])->name('checkout.place-order');
 
-Route::post('/hubrise/order-callback', [FrontendController::class, 'hubRiseOrderCallback']);
+Route::post('/hubrise-webhook', [FrontendController::class, 'hubRiseOrderCallback']);
+
+Route::get('/setup-hubrise-callback', [FrontendController::class, 'setupHubRiseCallback']);
 
 Route::get('/find-us', [FrontendController::class, 'findUs'])->name('find-us');
 

@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->use([
 
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'hubrise-webhook'
+        ]);
         $middleware->alias([
             'is_admin' => App\Http\Middleware\IsAdmin::class,
             'is_user' => App\Http\Middleware\IsUser::class,

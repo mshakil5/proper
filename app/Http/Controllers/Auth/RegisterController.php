@@ -14,39 +14,18 @@ class RegisterController extends Controller
 {
     use RegistersUsers;
 
-    /**
-     * Where to redirect users after registration.
-     *
-     * @var string
-     */
     protected $redirectTo = '/user/dashboard';
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->middleware('guest');
     }
 
-    /**
-     * Show the application registration form.
-     *
-     * @return \Illuminate\View\View
-     */
     public function showRegistrationForm()
     {
         return view('auth.register');
     }
 
-    /**
-     * Handle a registration request for the application.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function register(Request $request)
     {
         $validated = $this->validator($request->all())->validate();
@@ -57,7 +36,6 @@ class RegisterController extends Controller
 
         $request->session()->regenerate();
 
-        // Check if coming from checkout
         if ($request->redirect_to_checkout) {
             return redirect('/checkout');
         }
@@ -65,48 +43,43 @@ class RegisterController extends Controller
         return redirect($this->redirectTo);
     }
 
-    /**
-     * Get a validator for an incoming registration request.
-     *
-     * @param  array  $data
-     * @return \Illuminate\Contracts\Validation\Validator
-     */
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
             'terms' => ['required', 'accepted']
         ], [
-            'name.required' => 'Full name is required',
+            'first_name.required' => 'First name is required',
+            'last_name.required' => 'Last name is required',
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.unique' => 'This email is already registered',
             'phone.required' => 'Phone number is required',
             'password.required' => 'Password is required',
-            'password.min' => 'Password must be at least 8 characters',
+            'password.min' => 'Password must be at least 6 characters',
             'password.confirmed' => 'Passwords do not match',
             'terms.required' => 'You must accept the terms and conditions'
         ]);
     }
 
-    /**
-     * Create a new user instance after a valid registration.
-     *
-     * @param  array  $data
-     * @return \App\Models\User
-     */
     protected function create(array $data)
     {
+        $fullName = $data['first_name'] . ' ' . $data['last_name'];
+
         return User::create([
-            'name' => $data['name'],
+            'name' => $fullName,
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
             'user_type' => '2',
-            'status' => 1
+            'status' => 1,
+            'image' => '/placeholder.webp'
         ]);
     }
 }

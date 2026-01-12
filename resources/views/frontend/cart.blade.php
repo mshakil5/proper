@@ -51,7 +51,11 @@
 
                 <div id="deliveryMode">
                     <div class="delivery-postcode-section">
-                        <label class="delivery-label">Postcode</label>
+                        <label class="delivery-label">Postcode
+                            <a href="https://www.royalmail.com/find-a-postcode" target="_blank" style="font-size: 9px; color: #0dcaf0; text-decoration: none; margin-left: 8px;">
+                                <i class="fas fa-question-circle"></i> Find Postcode
+                            </a>
+                        </label>
                         <div class="postcode-input-group">
                             <input type="text" class="postcode-input" id="deliveryPostcode" placeholder="LN5 8ES">
                             <button type="button" class="postcode-check-btn">CHECK</button>
