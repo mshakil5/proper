@@ -87,13 +87,26 @@
     box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
     transform-origin: top center;
     text-align: center;
+    pointer-events: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 576px) {
     .floating-shop-status {
-        top: 60px;
+        top: 170px;
+        right: 35px;
+        transform: translateX(50%);
         padding: 8px 20px;
         font-size: 16px;
+    }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+    .floating-shop-status {
+        top: 170px;
+        right: 85px;
+        transform: translateX(50%);
+        padding: 10px 25px;
+        font-size: 17px;
     }
 }
 

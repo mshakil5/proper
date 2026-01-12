@@ -6,30 +6,181 @@
         <div class="row g-4">
             <!-- Left Column: Customer & Delivery Details -->
             <div class="col-lg-8">
-                <!-- Customer Details Card -->
-                <div class="checkout-card">
-                    <h5 class="checkout-title">Customer Details</h5>
-                    <form id="customerForm">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">First Name <span class="required">*</span></label>
-                                <input type="text" class="form-control" id="firstName" placeholder="John" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Last Name <span class="required">*</span></label>
-                                <input type="text" class="form-control" id="lastName" placeholder="Doe" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Email <span class="required">*</span></label>
-                                <input type="email" class="form-control" id="email" placeholder="john@example.com" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Phone <span class="required">*</span></label>
-                                <input type="tel" class="form-control" id="phone" placeholder="+44 123 456 7890" required>
+                @if(!auth()->check())
+                    <!-- Customer Type Selection Tabs (Only for guests) -->
+                    <div class="checkout-card">
+                        <h5 class="checkout-title">Checkout As</h5>
+                        <div class="nav nav-tabs" role="tablist" id="customerTypeTabs">
+                            <button class="nav-link active" id="guest-tab" data-bs-toggle="tab" data-bs-target="#guestPanel" type="button" role="tab">
+                                <i class="fas fa-user-secret"></i> Guest
+                            </button>
+                            <button class="nav-link" id="existing-tab" data-bs-toggle="tab" data-bs-target="#existingPanel" type="button" role="tab">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#registerPanel" type="button" role="tab">
+                                <i class="fas fa-user-plus"></i> Register
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tab Panels -->
+                    <div class="tab-content" id="customerTypeContent">
+                        <!-- Guest Checkout Panel -->
+                        <div class="tab-pane fade show active" id="guestPanel" role="tabpanel">
+                            <div class="checkout-card">
+                                <h5 class="checkout-title">Guest Details</h5>
+                                <div class="alert alert-info mb-3">
+                                    <i class="fas fa-info-circle"></i> Checkout as guest - you may lose loyalty points and exclusive features.
+                                </div>
+                                <form id="guestForm">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">First Name <span class="required">*</span></label>
+                                            <input type="text" class="form-control" id="guestFirstName" placeholder="John" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Last Name <span class="required">*</span></label>
+                                            <input type="text" class="form-control" id="guestLastName" placeholder="Doe" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Email <span class="required">*</span></label>
+                                            <input type="email" class="form-control" id="guestEmail" placeholder="john@example.com" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Phone <span class="required">*</span></label>
+                                            <input type="tel" class="form-control" id="guestPhone" placeholder="+44 123 456 7890" required>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                    </form>
-                </div>
+
+                        <!-- Existing Customer Panel -->
+                        <div class="tab-pane fade" id="existingPanel" role="tabpanel">
+                            <div class="checkout-card">
+                                <h5 class="checkout-title">Login to Your Account</h5>
+                                <form id="loginForm" method="POST" action="{{ route('login') }}">
+                                    @csrf
+                                    <input type="hidden" name="redirect_to_checkout" value="1">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label">Email <span class="required">*</span></label>
+                                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="loginEmail" name="email" placeholder="your@email.com" value="{{ old('email') }}">
+                                            @error('email')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Password <span class="required">*</span></label>
+                                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="loginPassword" name="password" placeholder="Enter password">
+                                            @error('password')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="row text-center mt-3">
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-outline-dark w-50" id="loginBtn">Login</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Register Panel -->
+                        <div class="tab-pane fade" id="registerPanel" role="tabpanel">
+                            <div class="checkout-card">
+                                <h5 class="checkout-title">Create New Account</h5>
+                                <form id="registerForm" method="POST" action="{{ route('register') }}">
+                                    @csrf
+                                    <input type="hidden" name="redirect_to_checkout" value="1">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">First Name <span class="required">*</span></label>
+                                            <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="regFirstName" name="first_name" placeholder="John" value="{{ old('first_name') }}">
+                                            @error('first_name')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Last Name <span class="required">*</span></label>
+                                            <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="regLastName" name="last_name" placeholder="Doe" value="{{ old('last_name') }}">
+                                            @error('last_name')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Email <span class="required">*</span></label>
+                                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="regEmail" name="email" placeholder="john@example.com" value="{{ old('email') }}">
+                                            @error('email')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Phone <span class="required">*</span></label>
+                                            <input type="tel" class="form-control @error('phone') is-invalid @enderror" id="regPhone" name="phone" placeholder="+44 123 456 7890" value="{{ old('phone') }}">
+                                            @error('phone')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Password <span class="required">*</span></label>
+                                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="regPassword" name="password" placeholder="Create a password">
+                                            @error('password')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Confirm Password <span class="required">*</span></label>
+                                            <input type="password" class="form-control" id="regConfirmPassword" name="password_confirmation" placeholder="Confirm password">
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input @error('terms') is-invalid @enderror" type="checkbox" id="regTerms" name="terms" value="1" {{ old('terms') ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="regTerms">
+                                                    I agree to the terms and conditions
+                                                </label>
+                                                @error('terms')
+                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row text-center mt-3">
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-dark w-50">Create Account</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <!-- Authenticated User Details Card -->
+                    <div class="checkout-card">
+                        <h5 class="checkout-title">Customer Information</h5>
+                        <form id="authUserForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">First Name <span class="required">*</span></label>
+                                    <input type="text" class="form-control" id="authFirstName" value="{{ auth()->user()->first_name ?? '' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Last Name <span class="required">*</span></label>
+                                    <input type="text" class="form-control" id="authLastName" value="{{ auth()->user()->last_name ?? '' }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Email <span class="required">*</span></label>
+                                    <input type="email" class="form-control" id="authEmail" value="{{ auth()->user()->email ?? '' }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Phone <span class="required">*</span></label>
+                                    <input type="tel" class="form-control" id="authPhone" value="{{ auth()->user()->phone ?? '' }}">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                @endif
 
                 <!-- Delivery Address Card -->
                 <div class="checkout-card">
@@ -39,6 +190,10 @@
                             <div class="col-12">
                                 <label class="form-label">Address <span class="required">*</span></label>
                                 <input type="text" class="form-control" id="address" placeholder="123 Main Street" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address Line 2 (Optional)</label>
+                                <input type="text" class="form-control" id="address2" placeholder="Apt, Suite, etc.">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">City <span class="required">*</span></label>
@@ -52,38 +207,61 @@
                     </form>
                 </div>
 
-                <!-- Delivery & Collection Details Card -->
+                <!-- Order Notes Card -->
                 <div class="checkout-card">
-                    <h5 class="checkout-title">Delivery & Collection Details</h5>
-                    <div id="deliveryDetailsDisplay" style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
-                        <div class="delivery-detail-row">
-                            <span class="detail-label">Type:</span>
-                            <span class="detail-value" id="deliveryTypeDisplay">-</span>
+                    <h5 class="checkout-title">Order Notes</h5>
+                    <form id="notesForm">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Special Instructions (Optional)</label>
+                                <textarea class="form-control" id="orderNotes" rows="3" placeholder="Add any special requests or delivery instructions here..."></textarea>
+                            </div>
                         </div>
-                        <div class="delivery-detail-row">
-                            <span class="detail-label">Time:</span>
-                            <span class="detail-value" id="deliveryTimeDisplay">-</span>
-                        </div>
-                        <div class="delivery-detail-row" id="postcodeRow" style="display: none;">
-                            <span class="detail-label">Postcode:</span>
-                            <span class="detail-value" id="deliveryPostcodeDisplay">-</span>
-                        </div>
-                        <div class="delivery-detail-row">
-                            <span class="detail-label">Delivery Charge:</span>
-                            <span class="detail-value" id="deliveryChargeDisplay">£0.00</span>
-                        </div>
-                    </div>
+                    </form>
                 </div>
 
-                <!-- Payment Method Card -->
-                <div class="checkout-card">
-                    <h5 class="checkout-title">Payment Method</h5>
-                    <div class="payment-method">
-                        <div class="payment-badge">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <div class="payment-info">
-                                <strong>Cash on Delivery</strong>
-                                <small>Pay when your order arrives</small>
+                <!-- Bottom Row: 2 Columns -->
+                <div class="row g-4">
+                    <!-- Delivery & Collection Details -->
+                    <div class="col-md-6">
+                        <div class="checkout-card">
+                            <h5 class="checkout-title">Delivery Details</h5>
+                            <div id="deliveryDetailsDisplay">
+                                <div class="delivery-detail-row">
+                                    <span class="detail-label">Type:</span>
+                                    <span class="detail-value" id="deliveryTypeDisplay">-</span>
+                                </div>
+                                <div class="delivery-detail-row">
+                                    <span class="detail-label">Time:</span>
+                                    <span class="detail-value" id="deliveryTimeDisplay">-</span>
+                                </div>
+                                <div class="delivery-detail-row" id="postcodeRow" style="display: none;">
+                                    <span class="detail-label">Postcode:</span>
+                                    <span class="detail-value" id="deliveryPostcodeDisplay">-</span>
+                                </div>
+                                <div class="delivery-detail-row">
+                                    <span class="detail-label">Charge:</span>
+                                    <span class="detail-value" id="deliveryChargeDisplay">£0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="col-md-6">
+                        <div class="checkout-card">
+                            <h5 class="checkout-title">Payment</h5>
+                            <button class="btn btn-outline-dark w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#paymentOffcanvas">
+                                <i class="fas fa-credit-card"></i> Select Payment Method
+                            </button>
+                            <div id="selectedPaymentDisplay" style="margin-top: 12px; display: none;">
+                                <div class="payment-badge">
+                                    <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                                    <div class="payment-info">
+                                        <strong id="paymentMethodName">-</strong>
+                                        <small id="paymentMethodDesc">-</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -102,6 +280,20 @@
 
                     <div class="summary-divider"></div>
 
+                    <!-- Promo Code Section -->
+                    <div class="promo-section-compact">
+                        <label class="form-label">Promo Code</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="promoCode" placeholder="Enter code">
+                            <button class="btn btn-outline-dark" type="button" id="applyPromoBtn">Apply</button>
+                        </div>
+                        <div id="promoMessageContainer" style="display: none; margin-top: 8px;">
+                            <div class="alert alert-info mb-0" id="promoMessage"></div>
+                        </div>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
                     <!-- Pricing -->
                     <div class="summary-row">
                         <span>Subtotal</span>
@@ -110,6 +302,10 @@
                     <div class="summary-row">
                         <span>Delivery Charge</span>
                         <span id="summaryDeliveryCharge">£0.00</span>
+                    </div>
+                    <div class="summary-row" id="discountRow" style="display: none;">
+                        <span>Discount</span>
+                        <span id="summaryDiscount" style="color: #28a745;">-£0.00</span>
                     </div>
 
                     <div class="summary-divider"></div>
@@ -125,6 +321,53 @@
         </div>
     </div>
 </div>
+
+<!-- Payment Method Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="paymentOffcanvas">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Select Payment Method</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="payment-options">
+            <div class="payment-option" data-method="cash">
+                <input type="radio" name="paymentMethod" id="paymentCash" value="cash" class="form-check-input">
+                <label for="paymentCash" class="payment-option-label">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <div class="payment-option-text">
+                        <strong>Cash on Delivery</strong>
+                        <small>Pay when your order arrives</small>
+                    </div>
+                </label>
+            </div>
+
+            <div class="payment-option" data-method="stripe">
+                <input type="radio" name="paymentMethod" id="paymentStripe" value="stripe" class="form-check-input">
+                <label for="paymentStripe" class="payment-option-label">
+                    <i class="fab fa-stripe"></i>
+                    <div class="payment-option-text">
+                        <strong>Stripe</strong>
+                        <small>Secure card payment</small>
+                    </div>
+                </label>
+            </div>
+
+            <div class="payment-option" data-method="paypal">
+                <input type="radio" name="paymentMethod" id="paymentPaypal" value="paypal" class="form-check-input">
+                <label for="paymentPaypal" class="payment-option-label">
+                    <i class="fab fa-paypal"></i>
+                    <div class="payment-option-text">
+                        <strong>PayPal</strong>
+                        <small>Fast and secure checkout</small>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-outline-dark w-100 mt-4" id="confirmPaymentBtn" data-bs-dismiss="offcanvas">Confirm Payment Method</button>
+    </div>
+</div>
+
 @endsection
 
 @section('script')
@@ -132,10 +375,185 @@
 $(function() {
     let checkoutData = JSON.parse(localStorage.getItem('checkoutData')) || null;
 
+    console.log(checkoutData);
+    let appliedDiscount = 0;
+    let appliedCoupon = null;
+    let currentTab = 'guest';
+    let selectedPaymentMethod = 'cash';
+    let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+
+    $('#paymentCash').prop('checked', true);
+    $('#paymentMethodName').text('Cash on Delivery');
+    $('#paymentMethodDesc').text('Pay when your order arrives');
+    $('#selectedPaymentDisplay').show();
+
     if (!checkoutData) {
         alert('No cart data found. Redirecting to cart...');
         window.location.href = '/';
         return;
+    }
+
+    // Track current tab and update validation (only for guests)
+    if (!isAuthenticated) {
+        $('#customerTypeTabs button').on('click', function() {
+            currentTab = $(this).attr('id').replace('-tab', '');
+            updateFormValidation();
+        });
+    }
+
+    function updateFormValidation() {
+        if (currentTab === 'guest') {
+            $('#guestFirstName, #guestLastName, #guestEmail, #guestPhone').prop('required', true);
+            $('#loginEmail, #loginPassword').prop('required', false);
+            $('#regFirstName, #regLastName, #regEmail, #regPhone, #regPassword, #regConfirmPassword').prop('required', false);
+        } else if (currentTab === 'existing') {
+            $('#loginEmail, #loginPassword').prop('required', true);
+            $('#guestFirstName, #guestLastName, #guestEmail, #guestPhone').prop('required', false);
+            $('#regFirstName, #regLastName, #regEmail, #regPhone, #regPassword, #regConfirmPassword').prop('required', false);
+        } else if (currentTab === 'register') {
+            $('#regFirstName, #regLastName, #regEmail, #regPhone, #regPassword, #regConfirmPassword').prop('required', true);
+            $('#guestFirstName, #guestLastName, #guestEmail, #guestPhone').prop('required', false);
+            $('#loginEmail, #loginPassword').prop('required', false);
+        }
+    }
+
+    // Payment Method Selection
+    $(document).on('change', 'input[name="paymentMethod"]', function() {
+        selectedPaymentMethod = $(this).val();
+    });
+
+    $('#confirmPaymentBtn').on('click', function() {
+        let selectedMethod = $('input[name="paymentMethod"]:checked').val();
+        if (!selectedMethod) {
+            showError('Please select a payment method');
+            return;
+        }
+
+        selectedPaymentMethod = selectedMethod;
+        
+        let methodNames = {
+            'cash': { name: 'Cash on Delivery', desc: 'Pay when your order arrives' },
+            'stripe': { name: 'Stripe', desc: 'Secure card payment' },
+            'paypal': { name: 'PayPal', desc: 'Fast and secure checkout' }
+        };
+
+        let method = methodNames[selectedMethod];
+        $('#paymentMethodName').text(method.name);
+        $('#paymentMethodDesc').text(method.desc);
+        $('#selectedPaymentDisplay').show();
+    });
+
+    // Apply Promo Code
+    $('#applyPromoBtn').on('click', function() {
+        let promoCode = $('#promoCode').val().trim().toUpperCase();
+        
+        if (!promoCode) {
+            showError('Please enter a promo code');
+            return;
+        }
+
+        $.ajax({
+            url: '/coupons/validate',
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+                code: promoCode,
+                subtotal: checkoutData.subtotal
+            }),
+            success: function(res) {
+                appliedDiscount = res.discount_amount;
+                appliedCoupon = res.coupon;
+
+                $('#promoMessageContainer').show();
+                let discountText = res.coupon.discount_type === 'percent' 
+                    ? res.coupon.discount_value + '%' 
+                    : '£' + parseFloat(res.coupon.discount_value).toFixed(2);
+                
+                $('#promoMessage').html(`✓ Coupon applied! Discount: ${discountText}`).removeClass('alert-danger').addClass('alert-success');
+                $('#discountRow').show();
+                $('#summaryDiscount').text(`-£${res.discount_amount.toFixed(2)}`);
+
+                updateTotals();
+                showSuccess('Coupon applied successfully!');
+            },
+            error: function(err) {
+                appliedDiscount = 0;
+                appliedCoupon = null;
+                $('#discountRow').hide();
+                $('#promoMessageContainer').hide();
+                let message = err.responseJSON?.message || 'Invalid coupon code';
+                showError(message);
+            }
+        });
+    });
+
+    function getCustomerData() {
+        let customerData = {};
+
+        if (isAuthenticated) {
+            customerData = {
+                firstName: '{{ auth()->check() ? auth()->user()->first_name : '' }}',
+                lastName: '{{ auth()->check() ? auth()->user()->last_name : '' }}',
+                email: '{{ auth()->check() ? auth()->user()->email : '' }}',
+                phone: '{{ auth()->check() ? auth()->user()->phone : '' }}',
+                type: 'authenticated'
+            };
+        } else if (currentTab === 'guest') {
+            customerData = {
+                firstName: $('#guestFirstName').val().trim(),
+                lastName: $('#guestLastName').val().trim(),
+                email: $('#guestEmail').val().trim(),
+                phone: $('#guestPhone').val().trim(),
+                type: 'guest'
+            };
+        } else if (currentTab === 'existing') {
+            customerData = {
+                email: $('#loginEmail').val().trim(),
+                password: $('#loginPassword').val(),
+                type: 'login'
+            };
+        } else if (currentTab === 'register') {
+            customerData = {
+                firstName: $('#regFirstName').val().trim(),
+                lastName: $('#regLastName').val().trim(),
+                email: $('#regEmail').val().trim(),
+                phone: $('#regPhone').val().trim(),
+                password: $('#regPassword').val(),
+                confirmPassword: $('#regConfirmPassword').val(),
+                type: 'register'
+            };
+        }
+
+        return customerData;
+    }
+
+    function validateCustomerData(data) {
+        if (data.type === 'authenticated') {
+            return true;
+        } else if (data.type === 'guest') {
+            if (!data.firstName || !data.lastName || !data.email || !data.phone) {
+                showError('Please fill in all guest details');
+                return false;
+            }
+        } else if (data.type === 'login') {
+            if (!data.email || !data.password) {
+                showError('Please enter email and password');
+                return false;
+            }
+        } else if (data.type === 'register') {
+            if (!data.firstName || !data.lastName || !data.email || !data.phone || !data.password || !data.confirmPassword) {
+                showError('Please fill in all registration fields');
+                return false;
+            }
+            if (data.password !== data.confirmPassword) {
+                showError('Passwords do not match');
+                return false;
+            }
+        }
+        return true;
     }
 
     function displayDeliveryDetails() {
@@ -192,10 +610,11 @@ $(function() {
         $('#summaryItemsContainer').html(itemsHTML);
     }
 
-    function displayTotals() {
+    function updateTotals() {
+        let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedDiscount;
         $('#summarySubtotal').text('£' + checkoutData.subtotal.toFixed(2));
         $('#summaryDeliveryCharge').text('£' + checkoutData.deliveryCharge.toFixed(2));
-        $('#summaryTotal').text('£' + checkoutData.total.toFixed(2));
+        $('#summaryTotal').text('£' + finalTotal.toFixed(2));
     }
 
     function escapeHtml(text) {
@@ -210,51 +629,47 @@ $(function() {
     }
 
     $('#confirmOrderBtn').on('click', function() {
-        let firstName = $('#firstName').val().trim();
-        let lastName = $('#lastName').val().trim();
-        let email = $('#email').val().trim();
-        let phone = $('#phone').val().trim();
         let address = $('#address').val().trim();
+        let address2 = $('#address2').val().trim();
         let city = $('#city').val().trim();
         let postalCode = $('#postalCode').val().trim();
+        let orderNotes = $('#orderNotes').val().trim();
 
-        if (!firstName || !lastName || !email || !phone || !address || !city || !postalCode) {
-            showError('Please fill in all required fields');
+        if (!address || !city || !postalCode) {
+            showError('Please fill in delivery address');
             return;
         }
 
-        // Build HubRise order items from cart
+        if (!selectedPaymentMethod) {
+            showError('Please select a payment method');
+            return;
+        }
+
+        let customerData = getCustomerData();
+        if (!validateCustomerData(customerData)) {
+            return;
+        }
+
+        // Disable button and show loading
+        let $btn = $('#confirmOrderBtn');
+        let originalText = $btn.text();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Please wait...');
+
         let hubRiseItems = [];
-        let totalPrice = 0;
+        let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - appliedDiscount;
 
         checkoutData.cart.forEach(item => {
             let itemPrice = Number(item.price);
             let itemQuantity = Number(item.quantity);
-            
-            // Calculate options price for this item
-            let optionsPrice = 0;
-            if (item.type === 'custom' && item.options && Object.keys(item.options).length > 0) {
-                Object.entries(item.options).forEach(([optionName, optionValues]) => {
-                    optionValues.forEach(opt => {
-                        optionsPrice += Number(opt.price || 0);
-                    });
-                });
-            }
-
-            // Final price per item = base price (already includes options in your cart)
-            // So just use item.price as is
-            let itemTotal = itemPrice * itemQuantity;
-            totalPrice += itemTotal;
-
             let priceValue = itemPrice.toFixed(2);
 
             let hubRiseItem = {
                 product_name: item.title,
+                sku_ref: item.skuRef || '',
                 quantity: itemQuantity,
                 price: priceValue + ' BDT'
             };
 
-            // Add options separately - DO NOT include in price
             if (item.type === 'custom' && item.options && Object.keys(item.options).length > 0) {
                 hubRiseItem.options = [];
                 Object.entries(item.options).forEach(([optionName, optionValues]) => {
@@ -262,6 +677,7 @@ $(function() {
                         hubRiseItem.options.push({
                             option_list_name: optionName,
                             name: opt.title,
+                            ref: opt.hubriseOptionRef || '',
                             price: (opt.price || 0).toFixed(2) + ' BDT'
                         });
                     });
@@ -271,10 +687,6 @@ $(function() {
             hubRiseItems.push(hubRiseItem);
         });
 
-        // Add delivery charge if applicable
-        totalPrice += checkoutData.deliveryCharge;
-
-        // Build HubRise order object matching documentation
         let hubRiseOrder = {
             status: 'new',
             channel: 'Website',
@@ -282,32 +694,42 @@ $(function() {
             items: hubRiseItems,
             payments: [
                 {
+                    type: selectedPaymentMethod,
+                    name: $(`input[name="paymentMethod"][value="${selectedPaymentMethod}"]`).next().find('strong').text(),
                     amount: totalPrice.toFixed(2) + ' BDT'
                 }
             ],
             customer: {
-                first_name: firstName,
-                last_name: lastName,
-                email: email,
-                phone_number: phone,
-                address: address
-            }
+                first_name: customerData.firstName || '',
+                last_name: customerData.lastName || '',
+                email: customerData.email,
+                phone: customerData.phone || '',
+                address_1: address,
+                address_2: address2,
+                city: city,
+                postal_code: postalCode
+            },
+            notes: orderNotes
         };
 
-        // Add delivery charge if applicable (as charges, not in items)
         if (checkoutData.delivery.type === 'delivery') {
             hubRiseOrder.charges = [
                 {
                     name: 'Delivery',
-                    amount: checkoutData.deliveryCharge.toFixed(2) + ' BDT'
+                    price: checkoutData.deliveryCharge.toFixed(2) + ' BDT'
                 }
             ];
         }
 
-        console.log('HubRise Order:', hubRiseOrder);
-        console.log('Total Price:', totalPrice.toFixed(2) + ' BDT');
+        if (appliedDiscount > 0 && appliedCoupon) {
+            hubRiseOrder.discounts = [
+                {
+                    name: 'Coupon: ' + appliedCoupon.code,
+                    price_off: appliedDiscount.toFixed(2) + ' BDT'
+                }
+            ];
+        }
 
-        // Send to backend
         $.ajax({
             url: '/place-order',
             type: 'POST',
@@ -318,25 +740,23 @@ $(function() {
             data: JSON.stringify({
                 hubRiseOrder: hubRiseOrder,
                 localOrder: {
-                    customer: {
-                        firstName: firstName,
-                        lastName: lastName,
-                        email: email,
-                        phone: phone,
-                        address: address,
-                        city: city,
-                        postalCode: postalCode
-                    },
+                    customer: customerData,
+                    address: address,
+                    address2: address2,
+                    city: city,
+                    postalCode: postalCode,
+                    orderNotes: orderNotes,
                     cart: checkoutData.cart,
                     delivery: checkoutData.delivery,
                     subtotal: checkoutData.subtotal,
                     deliveryCharge: checkoutData.deliveryCharge,
+                    discount: appliedDiscount,
+                    coupon_id: appliedCoupon?.id || null,
+                    paymentMethod: selectedPaymentMethod,
                     total: totalPrice
                 }
             }),
             success: function(response) {
-                console.log('Order placed successfully:', response);
-
                 localStorage.removeItem('cart');
                 localStorage.removeItem('cartSummary');
                 localStorage.removeItem('deliveryOptions');
@@ -345,11 +765,11 @@ $(function() {
                 showSuccess('Order placed successfully!');
 
                 setTimeout(() => {
-                    window.location.href = '/order-confirmation/' + response.orderId;
+                    window.location.href = '/order-confirmation/' + response.orderNumber;
                 }, 1500);
             },
             error: function(err) {
-                console.error('Error placing order:', err);
+                $btn.prop('disabled', false).text(originalText);
                 if (err.responseJSON && err.responseJSON.message) {
                     showError(err.responseJSON.message);
                 } else {
@@ -359,9 +779,13 @@ $(function() {
         });
     });
 
+    // Set initial validation
+    if (!isAuthenticated) {
+        updateFormValidation();
+    }
     displayDeliveryDetails();
     displaySummaryItems();
-    displayTotals();
+    updateTotals();
 });
 </script>
 @endsection

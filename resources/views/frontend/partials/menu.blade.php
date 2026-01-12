@@ -56,6 +56,7 @@
                                         data-price="{{ $product->price }}"
                                         data-title="{{ $product->title }}"
                                         data-image="{{ $product->image }}"
+                                        data-sku-ref="{{ $product->sku_ref }}"
                                         data-has-options="{{ $product->options()->exists() ? 1 : 0 }}"
                                         >Add to Order</a>
                                     @else
