@@ -21,11 +21,7 @@ Route::get('/clear', function() {
 
 require __DIR__.'/admin.php';
 
-Auth::routes([
-    'register' => false,
-    'reset' => false,
-    'verify' => false,
-]);
+Auth::routes();
 
 Route::get('/', [FrontendController::class, 'index'])->name('home');
 
@@ -39,7 +35,11 @@ Route::get('/our-story', [FrontendController::class, 'ourStory'])->name('our-sto
 
 Route::get('/checkout', [FrontendController::class, 'checkout'])->name('checkout');
 
+Route::post('/coupons/validate', [FrontendController::class, 'validateCoupon']);
+
 Route::post('/place-order', [FrontendController::class, 'placeOrder'])->name('checkout.place-order');
+
+Route::post('/hubrise/order-callback', [FrontendController::class, 'hubRiseOrderCallback']);
 
 Route::get('/find-us', [FrontendController::class, 'findUs'])->name('find-us');
 

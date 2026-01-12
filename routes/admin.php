@@ -3,7 +3,6 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\FAQController;
 use App\Http\Controllers\Admin\TagController;
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\MasterController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\ContactController;
@@ -14,18 +13,19 @@ use App\Http\Controllers\Admin\ContactMailController;
 use App\Http\Controllers\Admin\CompanyDetailsController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\ClientController;
 
 Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], function(){
 
     Route::get('/dashboard', [HomeController::class, 'adminHome'])->name('admin.dashboard');
 
-    //User
-    Route::get('/user', [UserController::class, 'index'])->name('user.index');
-    Route::post('/user', [UserController::class, 'store'])->name('user.store');
-    Route::get('/user/{id}/edit', [UserController::class, 'edit'])->name('user.edit');
-    Route::post('/user/update', [UserController::class, 'update'])->name('user.update');
-    Route::get('/user/{id}/delete', [UserController::class, 'destroy'])->name('user.destroy');
-    Route::post('/user/status', [UserController::class, 'toggleStatus'])->name('user.status');
+    // Clients
+    Route::get('/client', [ClientController::class, 'index'])->name('client.index');
+    Route::post('/client', [ClientController::class, 'store'])->name('client.store');
+    Route::get('/client/{id}/edit', [ClientController::class, 'edit'])->name('client.edit');
+    Route::post('/client/update', [ClientController::class, 'update'])->name('client.update');
+    Route::delete('/client/{id}', [ClientController::class, 'destroy'])->name('client.destroy');
+    Route::post('/client/toggle-status', [ClientController::class, 'toggleStatus'])->name('client.toggleStatus');
 
     // Company
     Route::get('/company-details', [CompanyDetailsController::class, 'index'])->name('admin.companyDetails');

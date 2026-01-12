@@ -155,8 +155,8 @@
                     </a>
                 </li>
 
-                <li class="nav-item d-none">
-                    <a href="{{ route('user.index') }}" class="nav-link {{ Route::is('user.index') ? 'active' : '' }}">
+                <li class="nav-item">
+                    <a href="{{ route('client.index') }}" class="nav-link {{ Route::is('client.index') ? 'active' : '' }}">
                         <i class="ri-user-3-line"></i>
                         <span>Customers</span>
                     </a>
