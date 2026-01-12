@@ -152,7 +152,7 @@ $(function () {
                     updateTotalPrice();
                 },
                 error: function (err) {
-                    console.error('Error loading product:', err);
+                    // console.error('Error loading product:', err);
                 }
             });
         }
@@ -171,6 +171,7 @@ $(function () {
                 title: String(element.data('title') || '').trim(),
                 image: String(element.data('image') || '').trim(),
                 price: Number(element.data('price')) || 0,
+                skuRef: String(element.data('sku-ref') || '').trim(),
                 quantity: 1,
                 type: "direct"
             });
@@ -251,6 +252,7 @@ $(function () {
         }
 
         let productId = Number($('#productId').val()) || null;
+        let skuRef = $('#productSkuRef').val() || '';
         if (!productId) {
             return;
         }
@@ -271,6 +273,7 @@ $(function () {
             } else {
                 cart.push({
                     productId: productId,
+                    skuRef: skuRef,
                     id: productId + '-standalone',
                     title: $('#productTitle').text().trim(),
                     image: $('#productImage').attr('src'),
@@ -338,22 +341,34 @@ $(function () {
                 let label = $(this).data('title');
                 let price = Number($(this).data('price')) || 0;
                 let productId = Number($(this).data('product-id')) || null;
+                let hubriseOptionRef = $(this).data('hubrise-option-ref') || '';
                 extraPrice += price;
 
                 let name = $(this).attr('name');
                 if (!options[name]) options[name] = [];
-                options[name].push({ title: label, price: price, productId: productId });
+                options[name].push({ 
+                    title: label, 
+                    price: price, 
+                    productId: productId,
+                    hubriseOptionRef: hubriseOptionRef
+                });
             });
         } else if (!hasAttribute) {
             $('.option-input:checked').each(function () {
                 let label = $(this).data('title');
                 let price = Number($(this).data('price')) || 0;
                 let productId = Number($(this).data('product-id')) || null;
+                let hubriseOptionRef = $(this).data('hubrise-option-ref') || '';
                 extraPrice += price;
 
                 let name = $(this).attr('name');
                 if (!options[name]) options[name] = [];
-                options[name].push({ title: label, price: price, productId: productId });
+                options[name].push({ 
+                    title: label, 
+                    price: price, 
+                    productId: productId,
+                    hubriseOptionRef: hubriseOptionRef
+                });
             });
         }
 
@@ -377,6 +392,7 @@ $(function () {
         } else {
             cart.push({
                 productId: productId,
+                skuRef: skuRef,
                 id: productId + '-' + Date.now(),
                 productHash: productHash,
                 title: productTitle,
@@ -566,31 +582,45 @@ $(function () {
             return;
         }
 
+        $('.postcode-check-btn').prop('disabled', true).text('CHECKING...');
+
         $.ajax({
-            url: '/check-delivery',
+            url: 'https://api.postcodes.io/postcodes/' + postcode,
             type: 'GET',
-            data: {
-                postcode: postcode
-            },
             success: function(res) {
-                console.log(res);
-                if (res.available) {
-                    selectedDelivery.postcode = postcode;
-                    selectedDelivery.charge = parseFloat(res.delivery_charge);
-                    selectedDelivery.isValid = true;
-                    showSuccess('✓ Delivery available for ' + postcode + ' | Charge: £' + parseFloat(res.delivery_charge).toFixed(2));
-                    saveDeliveryData();
-                    updateCartUI();
-                } else {
-                    selectedDelivery.isValid = false;
-                    selectedDelivery.postcode = '';
-                    selectedDelivery.charge = 0;
-                    saveDeliveryData();
-                    showError('✗ Delivery not available for ' + postcode);
-                }
+                let latitude = res.result.latitude;
+                let longitude = res.result.longitude;
+
+                $.ajax({
+                    url: '/check-delivery',
+                    type: 'GET',
+                    data: {
+                        postcode: postcode,
+                        latitude: latitude,
+                        longitude: longitude
+                    },
+                    success: function(res) {
+                        selectedDelivery.postcode = postcode;
+                        selectedDelivery.charge = parseFloat(res.delivery_charge);
+                        selectedDelivery.isValid = true;
+                        showSuccess('✓ Delivery available for ' + postcode + ' | Charge: £' + parseFloat(res.delivery_charge).toFixed(2));
+                        saveDeliveryData();
+                        updateCartUI();
+                        $('.postcode-check-btn').prop('disabled', false).text('CHECK');
+                    },
+                    error: function(xhr) {
+                        selectedDelivery.isValid = false;
+                        selectedDelivery.postcode = '';
+                        selectedDelivery.charge = 0;
+                        saveDeliveryData();
+                        showError('✗ Outside delivery area');
+                        $('.postcode-check-btn').prop('disabled', false).text('CHECK');
+                    }
+                });
             },
-            error: function(xhr) {
-                showError('Postcode not in delivery area');
+            error: function() {
+                showError('Invalid postcode');
+                $('.postcode-check-btn').prop('disabled', false).text('CHECK');
             }
         });
     });
@@ -642,7 +672,7 @@ $(function () {
 
         localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
 
-        console.log('Checkout Data:', checkoutData);
+        // console.log('Checkout Data:', checkoutData);
         
         showSuccess('Proceeding to checkout...');
         

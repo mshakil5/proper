@@ -16,7 +16,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $products = Product::select(['id','title','price','status','image','category_id','show_in_menu','stock_status'])
+            $products = Product::select(['id','title','price','status','image','category_id','show_in_menu','stock_status', 'sku_ref'])
             ->with('category')
             ->when($request->category_id, function($q) use ($request) {
                 $q->where('category_id', $request->category_id);
@@ -115,6 +115,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'tag_id' => 'nullable|exists:tags,id',
             'price' => 'required|numeric|min:0',
+            'sku_ref' => 'required|string',
             'short_description' => 'nullable|string',
             'long_description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
@@ -129,6 +130,7 @@ class ProductController extends Controller
         $product->category_id = $request->category_id;
         $product->tag_id = $request->tag_id;
         $product->price = $request->price;
+        $product->sku_ref = $request->sku_ref;
         $product->short_description = $request->short_description;
         $product->long_description = $request->long_description;
         
@@ -174,6 +176,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'tag_id' => 'nullable|exists:tags,id',
             'price' => 'required|numeric|min:0',
+            'sku_ref' => 'required|string',
             'short_description' => 'nullable|string',
             'long_description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
@@ -188,6 +191,7 @@ class ProductController extends Controller
         $product->category_id = $request->category_id;
         $product->tag_id = $request->tag_id;
         $product->price = $request->price;
+        $product->sku_ref = $request->sku_ref;
         $product->short_description = $request->short_description;
         $product->long_description = $request->long_description;
         

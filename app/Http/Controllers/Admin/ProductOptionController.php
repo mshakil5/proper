@@ -104,7 +104,8 @@ class ProductOptionController extends Controller
             ProductOptionItem::create([
                 'product_option_id' => $option->id,
                 'product_id' => $productId,
-                'override_price' => $price
+                'override_price' => $price,
+                'hubrise_option_ref' => $request->input("hubrise_option_refs.{$productId}")
             ]);
         }
 
@@ -153,7 +154,8 @@ class ProductOptionController extends Controller
             ProductOptionItem::create([
                 'product_option_id' => $option->id,
                 'product_id' => $productId,
-                'override_price' => $price
+                'override_price' => $price,
+                'hubrise_option_ref' => $request->input("hubrise_option_refs.{$productId}")
             ]);
         }
 
@@ -170,12 +172,14 @@ class ProductOptionController extends Controller
     {
         $selectedProductIds = [];
         $selectedProductsPrices = [];
+        $selectedProductsRefs = [];
         
         if ($optionId) {
             $items = ProductOptionItem::where('product_option_id', $optionId)->get();
             foreach ($items as $item) {
                 $selectedProductIds[] = $item->product_id;
                 $selectedProductsPrices[$item->product_id] = $item->override_price;
+                $selectedProductsRefs[$item->product_id] = $item->hubrise_option_ref;
             }
         }
 
@@ -184,9 +188,10 @@ class ProductOptionController extends Controller
             ->select('id', 'title', 'price')
             ->where('show_in_menu', 1)
             ->get()
-            ->map(function($product) use ($selectedProductIds, $selectedProductsPrices) {
+            ->map(function($product) use ($selectedProductIds, $selectedProductsPrices, $selectedProductsRefs) {
                 $product->is_selected = in_array($product->id, $selectedProductIds);
                 $product->override_price = $selectedProductsPrices[$product->id] ?? $product->price;
+                $product->hubrise_option_ref = $selectedProductsRefs[$product->id] ?? '';
                 return $product;
             });
 

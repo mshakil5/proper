@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('categories', function (Blueprint $table) {
+            $table->string('hubrise_ref')->nullable()->after('id');
+        });
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->string('sku_ref')->nullable()->after('id');
+        });
+
+        Schema::table('product_option_items', function (Blueprint $table) {
+            $table->string('hubrise_option_ref')->nullable()->after('id');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('categories', function (Blueprint $table) {
+            $table->dropColumn('hubrise_ref');
+        });
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn(['sku_ref']);
+        });
+
+        Schema::table('product_option_items', function (Blueprint $table) {
+            $table->dropColumn('hubrise_option_ref');
+        });
+    }
+};

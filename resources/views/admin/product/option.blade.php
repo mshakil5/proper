@@ -80,15 +80,16 @@
                                     <table class="table table-sm" id="productsTable">
                                         <thead class="table-light">
                                             <tr>
+                                                <th><input type="checkbox" id="selectAllProducts" class="form-check-input"></th>
                                                 <th>Product Name</th>
                                                 <th>Base Price</th>
                                                 <th>Override Price</th>
-                                                <th>Action</th>
+                                                <th>HubRise Option Ref</th>
                                             </tr>
                                         </thead>
                                         <tbody id="productsTableBody">
                                             <tr id="emptyRow">
-                                                <td colspan="4" class="text-center text-muted">Select a category to load products</td>
+                                                <td colspan="5" class="text-center text-muted">Select a category to load products</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -206,7 +207,8 @@ function bindEvents() {
         let formData = new FormData($('#optionForm')[0]);
 
         for (let productId in selectedProducts) {
-            formData.append('products[' + productId + ']', selectedProducts[productId]);
+            formData.append('products[' + productId + ']', selectedProducts[productId].price);
+            formData.append('hubrise_option_refs[' + productId + ']', selectedProducts[productId].ref);
         }
 
         $.ajax({
@@ -236,27 +238,47 @@ function bindEvents() {
         });
     });
 
+    $(document).on('change', '.product-checkbox', function() {
+        let productId = $(this).data('product-id');
+        let isChecked = $(this).is(':checked');
+        let row = $(this).closest('tr');
+        
+        if (isChecked) {
+            row.addClass('table-success');
+            let priceVal = row.find('.price-input').val();
+            let refVal = row.find('.hubrise-option-ref').val();
+            selectedProducts[productId] = {
+                price: parseFloat(priceVal) || 0,
+                ref: refVal || ''
+            };
+            row.find('.price-input, .hubrise-option-ref').prop('disabled', false);
+        } else {
+            row.removeClass('table-success');
+            delete selectedProducts[productId];
+            row.find('.price-input, .hubrise-option-ref').prop('disabled', true);
+        }
+    });
+
+    $(document).on('change', '#selectAllProducts', function() {
+        let isChecked = $(this).is(':checked');
+        $('#productsTableBody').find('.product-checkbox').prop('checked', isChecked).trigger('change');
+    });
+
     $(document).on('change', '.price-input', function() {
         let productId = $(this).data('product-id');
         let price = $(this).val();
         
-        if (price && price !== '') {
-            selectedProducts[productId] = parseFloat(price);
-        } else {
-            delete selectedProducts[productId];
+        if (selectedProducts[productId]) {
+            selectedProducts[productId].price = parseFloat(price) || 0;
         }
     });
 
-    $(document).on('click', '.delete-product-row', function(e) {
-        e.preventDefault();
+    $(document).on('change', '.hubrise-option-ref', function() {
         let productId = $(this).data('product-id');
+        let ref = $(this).val();
         
-        delete selectedProducts[productId];
-        $(this).closest('tr').remove();
-        
-        let remainingRows = $('#productsTableBody tr:not(#emptyRow)').length;
-        if (remainingRows === 0) {
-            $('#productsTableBody').html('<tr id="emptyRow"><td colspan="4" class="text-center text-muted">No products selected</td></tr>');
+        if (selectedProducts[productId]) {
+            selectedProducts[productId].ref = ref;
         }
     });
 }
@@ -264,7 +286,7 @@ function bindEvents() {
 function loadCategoryProducts(optionId = null) {
     let categoryId = $('#category_id').val();
     if (!categoryId) {
-        $('#productsTableBody').html('<tr id="emptyRow"><td colspan="4" class="text-center text-muted">Select a category to load products</td></tr>');
+        $('#productsTableBody').html('<tr id="emptyRow"><td colspan="5" class="text-center text-muted">Select a category to load products</td></tr>');
         selectedProducts = {};
         return;
     }
@@ -280,17 +302,25 @@ function loadCategoryProducts(optionId = null) {
         selectedProducts = {};
         
         if (products.length === 0) {
-            $('#productsTableBody').html('<tr id="emptyRow"><td colspan="4" class="text-center text-muted">No products in this category</td></tr>');
+            $('#productsTableBody').html('<tr id="emptyRow"><td colspan="5" class="text-center text-muted">No products in this category</td></tr>');
             return;
         }
 
         let html = '';
         
         products.forEach(p => {
+            let isSelected = p.is_selected ? 'checked' : '';
             let rowClass = p.is_selected ? 'table-success' : '';
+            let refValue = p.hubrise_option_ref || '';
+            let disabled = p.is_selected ? '' : 'disabled';
             
             html += `
                 <tr data-product-id="${p.id}" class="${rowClass}">
+                    <td>
+                        <input type="checkbox" class="form-check-input product-checkbox" 
+                            data-product-id="${p.id}" 
+                            ${isSelected}>
+                    </td>
                     <td>${p.title}</td>
                     <td>£${parseFloat(p.price).toFixed(2)}</td>
                     <td>
@@ -299,18 +329,24 @@ function loadCategoryProducts(optionId = null) {
                             value="${parseFloat(p.override_price).toFixed(2)}" 
                             step="0.01" 
                             min="0" 
-                            required>
+                            ${disabled}>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-danger delete-product-row" 
-                            data-product-id="${p.id}">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
+                        <input type="text" class="form-control form-control-sm hubrise-option-ref" 
+                            data-product-id="${p.id}" 
+                            placeholder="e.g., 64"
+                            value="${refValue}"
+                            ${disabled}>
                     </td>
                 </tr>
             `;
 
-            selectedProducts[p.id] = parseFloat(p.override_price);
+            if (p.is_selected) {
+                selectedProducts[p.id] = {
+                    price: parseFloat(p.override_price),
+                    ref: refValue
+                };
+            }
         });
         
         $('#productsTableBody').html(html);
@@ -335,7 +371,8 @@ function clearForm() {
     $('#optionForm')[0].reset();
     $('#option_id').val('');
     $('#formTitle').text('Add New Option');
-    $('#productsTableBody').html('<tr id="emptyRow"><td colspan="4" class="text-center text-muted">Select a category to load products</td></tr>');
+    $('#productsTableBody').html('<tr id="emptyRow"><td colspan="5" class="text-center text-muted">Select a category to load products</td></tr>');
+    $('#selectAllProducts').prop('checked', false);
     currentOptionId = null;
     selectedProducts = {};
     toggleMaxSelect();

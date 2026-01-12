@@ -9,7 +9,8 @@ class ProductOptionItem extends Model
     protected $fillable = [
         'product_option_id',
         'product_id',
-        'override_price'
+        'override_price',
+        'hubrise_option_ref'
     ];
 
     protected $casts = [

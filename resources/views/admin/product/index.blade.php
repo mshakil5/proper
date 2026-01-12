@@ -55,6 +55,11 @@
                                 </div>
 
                                 <div class="col-md-6">
+                                    <label class="form-label">SKU Ref <span class="text-danger">*</span> <span class="text-muted">(from HubRise)</span></label>
+                                    <input type="text" class="form-control" id="sku_ref" name="sku_ref" placeholder="e.g., 572">
+                                </div>
+
+                                <div class="col-md-6">
                                     <label class="form-label">Product Image</label>
                                     <input type="file" class="form-control" id="image" accept="image/*"
                                         onchange="previewImage(event, '#preview-image')">
@@ -145,6 +150,7 @@
                             <th>Title</th>
                             <th>Price</th>
                             <th>Category</th>
+                            <th>Reference</th>
                             <th>Status</th>
                             <th>Stock</th>
                             <th>Show in Menu</th>
@@ -189,6 +195,7 @@
                         name: 'price'
                     },
                     { data: 'category_name', name: 'category_name' },
+                    { data: 'sku_ref', name: 'sku_ref' },
                     {
                         data: 'status',
                         name: 'status',
@@ -288,6 +295,7 @@
                 form_data.append("category_id", $("#category_id").val());
                 form_data.append("tag_id", $("#tag_id").val());
                 form_data.append("price", $("#price").val());
+                form_data.append("sku_ref", $("#sku_ref").val());
                 form_data.append("short_description", $("#short_description").val());
                 form_data.append("long_description", $(".summernote").summernote('code'));
                 
@@ -387,6 +395,7 @@
                 $("#category_id").val(data.category_id).trigger('change');
                 $("#tag_id").val(data.tag_id).trigger('change');
                 $("#price").val(data.price);
+                $("#sku_ref").val(data.sku_ref);
                 $("#short_description").val(data.short_description);
                 $(".summernote").summernote('code', data.long_description);
                 

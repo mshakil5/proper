@@ -1,5 +1,6 @@
 <form id="productForm">
     <input type="hidden" id="productId" value="{{ $product->id ?? '' }}">
+    <input type="hidden" id="productSkuRef" value="{{ $product->sku_ref ?? '' }}">
     <div class="product-modal-wrapper">
         <div class="product-modal-header">
             <img src="{{ asset($product->image ?? '/placeholder.webp') }}" id="productImage" class="product-image"
@@ -64,6 +65,7 @@
                                         name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
                                         value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
                                         data-title="{{ $item->product->title }}" data-product-id="{{ $item->product_id }}"
+                                        data-hubrise-option-ref="{{ $item->hubrise_option_ref ?? '' }}"
                                         class="option-input"
                                         id="option_{{ $option->id }}_{{ $item->product_id }}">
                                     <label for="option_{{ $option->id }}_{{ $item->product_id }}" class="option-label">
@@ -105,6 +107,7 @@
                                     name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
                                     value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
                                     data-title="{{ $item->product->title }}" data-product-id="{{ $item->product_id }}"
+                                    data-hubrise-option-ref="{{ $item->hubrise_option_ref ?? '' }}"
                                     class="option-input"
                                     id="option_{{ $option->id }}_{{ $item->product_id }}">
                                 <label for="option_{{ $option->id }}_{{ $item->product_id }}" class="option-label">
