@@ -195,13 +195,13 @@
     window.ShopStatus = ShopStatus;
 
     //Uncomment this if you want to show the status on page load
-    // document.addEventListener('DOMContentLoaded', () => {
-    //     const update = () => {
-    //         ShopStatus.updateDisplay();
-    //         if (!ShopStatus.isOpen())
-    //             document.querySelectorAll('.open-product').forEach(b => b.remove());
-    //     };
-    //     update();
-    //     setInterval(update, 60000);
-    // });
+    document.addEventListener('DOMContentLoaded', () => {
+        const update = () => {
+            ShopStatus.updateDisplay();
+            if (!ShopStatus.isOpen())
+                document.querySelectorAll('.open-product').forEach(b => b.remove());
+        };
+        update();
+        setInterval(update, 60000);
+    });
 </script>

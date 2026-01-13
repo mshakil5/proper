@@ -965,17 +965,20 @@
                         localOrder: localOrder
                     }),
                     success: function(response) {
-                        localStorage.removeItem('cart');
-                        localStorage.removeItem('cartSummary');
-                        localStorage.removeItem('deliveryOptions');
-                        localStorage.removeItem('checkoutData');
+                        if (response.redirectUrl) {
+                            window.location.href = response.redirectUrl;
+                        } else {
+                            localStorage.removeItem('cart');
+                            localStorage.removeItem('cartSummary');
+                            localStorage.removeItem('deliveryOptions');
+                            localStorage.removeItem('checkoutData');
 
-                        showSuccess('Order placed successfully!');
+                            showSuccess('Order placed successfully!');
 
-                        setTimeout(() => {
-                            window.location.href = '/order-confirmation/' + response
-                                .orderNumber;
-                        }, 1500);
+                            setTimeout(() => {
+                                window.location.href = '/order-confirmation/' + response.orderNumber;
+                            }, 1500);
+                        }
                     },
                     error: function(err) {
                         $btn.prop('disabled', false).text(originalText);

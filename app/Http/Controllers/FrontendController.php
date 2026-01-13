@@ -34,6 +34,7 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemOption;
+use Illuminate\Support\Str;
 
 class FrontendController extends Controller
 {
@@ -82,8 +83,8 @@ class FrontendController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $centerLatitude = 53.224052;
-        $centerLongitude = -0.533805;
+        $centerLatitude = 51.99682;
+        $centerLongitude = -0.80032;
         $deliveryRadius = 7.5;
         $deliveryCharge = 2.00;
 
@@ -383,10 +384,7 @@ class FrontendController extends Controller
                 'paypal' => '24'
             ];
 
-            // Determine payment status based on payment method
-            $paymentStatus = $this->getPaymentStatus($localOrder['paymentMethod']);
-
-            // Step 1: Create order in database FIRST (with pending/paid status)
+            // Create order in database
             $orderNumber = 'ORD-' . time() . '-' . rand(1000, 9999);
 
             $order = Order::create([
@@ -410,14 +408,14 @@ class FrontendController extends Controller
                 'coupon_id' => $localOrder['coupon_id'],
                 'total' => $localOrder['total'],
                 'payment_method' => $localOrder['paymentMethod'],
-                'payment_status' => $paymentStatus,
+                'payment_status' => 'pending',
                 'status' => 'pending',
                 'notes' => $localOrder['orderNotes'] ?? null,
                 'hubrise_order_id' => null,
                 'payment_transaction_id' => null
             ]);
 
-            // Step 2: Save order items
+            // Save order items
             foreach ($localOrder['cart'] as $item) {
                 $orderItem = OrderItem::create([
                     'order_id' => $order->id,
@@ -445,13 +443,16 @@ class FrontendController extends Controller
                 }
             }
 
-            // Step 3: Handle payment based on method
+            // Route based on payment method
             if ($localOrder['paymentMethod'] === 'stripe') {
-                // return $this->handleStripePayment($order, $hubRiseOrder, $localOrder, $paymentRefMap);
+                return $this->initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
             } elseif ($localOrder['paymentMethod'] === 'paypal') {
-                // return $this->handlePayPalPayment($order, $hubRiseOrder, $localOrder, $paymentRefMap);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'PayPal not yet implemented'
+                ], 400);
             } else {
-                // Cash on Delivery - send to HubRise immediately
+                // Cash on Delivery
                 return $this->sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
             }
 
@@ -463,42 +464,123 @@ class FrontendController extends Controller
         }
     }
 
-    private function getPaymentStatus($paymentMethod)
+    private function initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
     {
-        if ($paymentMethod === 'cash') {
-            return 'pending'; // Will be marked as paid when order is completed
-        } elseif ($paymentMethod === 'stripe') {
-            return 'pending'; // Waiting for payment
-        } elseif ($paymentMethod === 'paypal') {
-            return 'pending'; // Waiting for payment
+        try {
+            session([
+                'checkout_data' => [
+                    'order_id' => $order->id,
+                    'hubRiseOrder' => $hubRiseOrder,
+                    'localOrder' => $localOrder,
+                    'accessToken' => $accessToken,
+                    'locationId' => $locationId,
+                    'paymentRefMap' => $paymentRefMap
+                ]
+            ]);
+
+            // Set Stripe API key
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            // Create Stripe Checkout Session
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'GBP',
+                        'product_data' => [
+                            'name' => 'Order #' . $order->order_number,
+                            'description' => 'Restaurant Order'
+                        ],
+                        'unit_amount' => intval($localOrder['total'] * 100),
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => route('payment.success', ['order_id' => $order->id]),
+                'cancel_url' => route('payment.cancel'),
+                'customer_email' => $order->email,
+            ]);
+
+            // Update order with Stripe session ID
+            $order->update([
+                'payment_transaction_id' => $session->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'redirectUrl' => $session->url,
+                'orderId' => $order->id,
+                'orderNumber' => $order->order_number
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create payment session'
+            ], 500);
         }
-        return 'pending';
     }
 
-    private function handleStripePayment($order, $hubRiseOrder, $localOrder, $paymentRefMap)
+    public function paymentSuccess(Request $request)
     {
-        // TODO: Implement Stripe payment processing
-        // For now, return instruction to process payment
-        return response()->json([
-            'success' => false,
-            'message' => 'Stripe payment processing not yet implemented',
-            'orderId' => $order->id,
-            'orderNumber' => $order->order_number,
-            'paymentRequired' => true
-        ], 400);
+        $orderId = $request->input('order_id');
+        $checkoutData = session('checkout_data');
+
+        if (!$checkoutData || $checkoutData['order_id'] != $orderId) {
+            return view('frontend.payment-error', ['message' => 'Invalid payment session']);
+        }
+
+        $order = Order::find($orderId);
+        if (!$order) {
+            return view('frontend.payment-error', ['message' => 'Order not found']);
+        }
+
+        try {
+            // Update order - payment confirmed
+            $order->update([
+                'payment_status' => 'paid',
+                'status' => 'pending'
+            ]);
+
+            // Send to HubRise
+            $this->sendToHubRise(
+                $order,
+                $checkoutData['hubRiseOrder'],
+                $checkoutData['localOrder'],
+                $checkoutData['accessToken'],
+                $checkoutData['locationId'],
+                $checkoutData['paymentRefMap']
+            );
+
+            // Clear session
+            session()->forget('checkout_data');
+
+            return view('frontend.payment-success', [
+                'order' => $order,
+                'orderNumber' => $order->order_number,
+                'orderId' => $order->id
+            ]);
+
+        } catch (\Exception $e) {
+            return view('frontend.payment-error', ['message' => 'Error processing order']);
+        }
     }
 
-    private function handlePayPalPayment($order, $hubRiseOrder, $localOrder, $paymentRefMap)
+    public function paymentCancel()
     {
-        // TODO: Implement PayPal payment processing
-        // For now, return instruction to process payment
-        return response()->json([
-            'success' => false,
-            'message' => 'PayPal payment processing not yet implemented',
-            'orderId' => $order->id,
-            'orderNumber' => $order->order_number,
-            'paymentRequired' => true
-        ], 400);
+        session()->forget('checkout_data');
+        return view('frontend.payment-cancelled');
+    }
+
+    public function orderConfirmation($orderNumber)
+    {
+        $order = Order::with(['items.options'])->where('order_number', $orderNumber)->first();
+
+        if (!$order) {
+            return redirect('/')->with('error', 'Order not found');
+        }
+
+        return view('frontend.order-confirmation', compact('order'));
     }
 
     private function sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
@@ -529,7 +611,7 @@ class FrontendController extends Controller
             ]
         ];
 
-        // Add customer notes if present
+        // Add customer notes
         if (!empty($hubRiseOrder['notes'])) {
             $hubRisePayload['customer_notes'] = $hubRiseOrder['notes'];
         }
@@ -544,7 +626,6 @@ class FrontendController extends Controller
                 'options' => []
             ];
 
-            // Add options if present
             if (!empty($item['options'])) {
                 foreach ($item['options'] as $option) {
                     $itemData['options'][] = [
@@ -559,7 +640,7 @@ class FrontendController extends Controller
             $hubRisePayload['items'][] = $itemData;
         }
 
-        // Add discounts if present
+        // Add discounts
         if (!empty($hubRiseOrder['discounts'])) {
             $hubRisePayload['discounts'] = [];
             foreach ($hubRiseOrder['discounts'] as $discount) {
@@ -571,7 +652,7 @@ class FrontendController extends Controller
             }
         }
 
-        // Add charges if present (delivery charges)
+        // Add charges
         if (!empty($hubRiseOrder['charges'])) {
             $hubRisePayload['charges'] = [];
             foreach ($hubRiseOrder['charges'] as $charge) {
@@ -591,67 +672,17 @@ class FrontendController extends Controller
             $hubRisePayload
         );
 
-        // Check HubRise response
         if (!$response->successful()) {
-            $errorData = $response->json();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create order in HubRise',
-                'error' => $errorData
-            ], 400);
+            throw new \Exception('Failed to create order in HubRise');
         }
 
         $hubRiseData = $response->json();
         $hubRiseOrderId = $hubRiseData['id'] ?? null;
 
-        // Update order with HubRise ID and mark as confirmed
+        // Update order with HubRise ID
         $order->update([
             'hubrise_order_id' => $hubRiseOrderId,
-            'status' => 'pending',
-            'payment_status' => 'paid'
-        ]);
-
-        // Return success response
-        return response()->json([
-            'success' => true,
-            'message' => 'Order placed successfully',
-            'orderNumber' => $order->order_number,
-            'orderId' => $order->id,
-            'hubRiseOrderId' => $hubRiseOrderId
-        ]);
-    }
-
-    public function confirmPayment(Request $request)
-    {
-        $orderId = $request->input('order_id');
-        $paymentTransactionId = $request->input('transaction_id');
-        $paymentMethod = $request->input('payment_method');
-
-        $order = Order::find($orderId);
-
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found'
-            ], 404);
-        }
-
-        // Update order with payment info
-        $order->update([
-            'payment_status' => 'paid',
-            'payment_transaction_id' => $paymentTransactionId
-        ]);
-
-        // Now send to HubRise since payment is confirmed
-        $hubRiseOrder = json_decode($request->input('hubrise_order'), true);
-        $localOrder = json_decode($request->input('local_order'), true);
-
-        // Send to HubRise...
-        // (implementation similar to sendToHubRise method)
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Payment confirmed and order sent to HubRise'
+            'status' => 'pending'
         ]);
     }
 
@@ -681,12 +712,6 @@ class FrontendController extends Controller
             );
 
             $data = $response->json();
-
-            Log::info('HubRise callback setup', [
-                'status' => $response->status(),
-                'url' => url('/hubrise-webhook'),
-                'response' => $data
-            ]);
 
             return response()->json([
                 'success' => true,

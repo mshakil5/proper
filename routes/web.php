@@ -39,7 +39,16 @@ Route::get('/checkout', [FrontendController::class, 'checkout'])->name('checkout
 
 Route::post('/coupons/validate', [FrontendController::class, 'validateCoupon']);
 
-Route::post('/place-order', [FrontendController::class, 'placeOrder'])->name('checkout.place-order');
+Route::post('/place-order', [FrontendController::class, 'placeOrder']);
+
+Route::get('/payment/success', [FrontendController::class, 'paymentSuccess'])->name('payment.success');
+
+Route::get('/payment/cancel', [FrontendController::class, 'paymentCancel'])->name('payment.cancel');
+
+Route::get('/order-confirmation/{orderNumber}', [FrontendController::class, 'orderConfirmation'])->name('order.confirmation');
+
+// For later
+Route::post('/stripe-webhook', [FrontendController::class, 'stripeWebhook'])->name('stripe.webhook');
 
 Route::post('/hubrise-webhook', [FrontendController::class, 'hubRiseOrderCallback']);
 
