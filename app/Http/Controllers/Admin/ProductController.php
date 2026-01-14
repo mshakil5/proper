@@ -111,7 +111,7 @@ class ProductController extends Controller
         ]);
 
         $request->validate([
-            'title' => 'required|unique:products,title',
+            'title' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'tag_id' => 'nullable|exists:tags,id',
             'price' => 'required|numeric|min:0',
@@ -124,9 +124,27 @@ class ProductController extends Controller
             'attribute_price' => 'nullable|numeric|min:0'
         ]);
 
+        $exists = Product::where('title', $request->title)
+            ->where('category_id', $request->category_id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'This product already exists in this category!'], 422);
+        }
+
+        $baseSlug = Str::slug($request->title);
+        $slugExists = Product::where('slug', $baseSlug)->exists();
+        
+        if ($slugExists) {
+            $category = Category::findOrFail($request->category_id);
+            $slug = Str::slug($category->name . '-' . $request->title);
+        } else {
+            $slug = $baseSlug;
+        }
+
         $product = new Product();
         $product->title = $request->title;
-        $product->slug = Str::slug($request->title);
+        $product->slug = $slug;
         $product->category_id = $request->category_id;
         $product->tag_id = $request->tag_id;
         $product->price = $request->price;
@@ -134,7 +152,6 @@ class ProductController extends Controller
         $product->short_description = $request->short_description;
         $product->long_description = $request->long_description;
         
-        // Attribute fields
         $product->has_attribute = $request->has_attribute ? 1 : 0;
         if ($request->has_attribute) {
             $product->attribute_name = $request->attribute_name;
@@ -172,7 +189,7 @@ class ProductController extends Controller
         ]);
 
         $request->validate([
-            'title' => 'required|unique:products,title,'.$request->codeid,
+            'title' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'tag_id' => 'nullable|exists:tags,id',
             'price' => 'required|numeric|min:0',
@@ -186,8 +203,28 @@ class ProductController extends Controller
         ]);
 
         $product = Product::findOrFail($request->codeid);
+
+        $exists = Product::where('title', $request->title)
+            ->where('category_id', $request->category_id)
+            ->where('id', '!=', $request->codeid)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'This product already exists in this category!'], 422);
+        }
+
+        $baseSlug = Str::slug($request->title);
+        $slugExists = Product::where('slug', $baseSlug)->where('id', '!=', $request->codeid)->exists();
+        
+        if ($slugExists) {
+            $category = Category::findOrFail($request->category_id);
+            $slug = Str::slug($category->name . '-' . $request->title);
+        } else {
+            $slug = $baseSlug;
+        }
+
         $product->title = $request->title;
-        $product->slug = Str::slug($request->title);
+        $product->slug = $slug;
         $product->category_id = $request->category_id;
         $product->tag_id = $request->tag_id;
         $product->price = $request->price;
@@ -195,7 +232,6 @@ class ProductController extends Controller
         $product->short_description = $request->short_description;
         $product->long_description = $request->long_description;
         
-        // Attribute fields
         $product->has_attribute = $request->has_attribute ? 1 : 0;
         if ($request->has_attribute) {
             $product->attribute_name = $request->attribute_name;

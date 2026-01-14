@@ -19,7 +19,7 @@ class ProductOptionController extends Controller
         if (request()->ajax()) {
             $options = ProductOption::where('product_id', $id)
                 ->with('category')
-                ->latest()
+                ->orderBy('sort_order', 'asc')
                 ->get();
 
             return DataTables::of($options)
@@ -46,6 +46,12 @@ class ProductOptionController extends Controller
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
+                                    <button class="dropdown-item copyBtn" data-id="'.$row->id.'">
+                                        <i class="ri-file-copy-fill align-bottom me-2 text-muted"></i> Copy
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
                                     <button class="dropdown-item editBtn" data-id="'.$row->id.'">
                                         <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
                                     </button>
@@ -68,7 +74,11 @@ class ProductOptionController extends Controller
         }
 
         $categories = Category::where('show_in_menu', 1)->get();
-        return view('admin.product.option', compact('product', 'categories'));
+        $options = ProductOption::where('product_id', $id)
+                ->with('category')
+                ->orderBy('sort_order', 'asc')
+                ->get();
+        return view('admin.product.option', compact('product', 'categories', 'options'));
     }
 
     public function store(Request $request)
@@ -78,18 +88,10 @@ class ProductOptionController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'type' => 'required|in:single,multiple',
-            'max_select' => 'required|integer|min:1',
+            'max_select' => 'required|integer|min:0',
             'is_required' => 'nullable|boolean',
             'products' => 'required|array|min:1'
         ]);
-
-        $exists = ProductOption::where('product_id', $request->product_id)
-            ->where('category_id', $request->category_id)
-            ->exists();
-
-        if ($exists) {
-            return response()->json(['message' => 'This category is already added for this product!'], 422);
-        }
 
         $option = ProductOption::create([
             'product_id' => $request->product_id,
@@ -124,21 +126,12 @@ class ProductOptionController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'type' => 'required|in:single,multiple',
-            'max_select' => 'required|integer|min:1',
+            'max_select' => 'required|integer|min:0',
             'is_required' => 'nullable|boolean',
             'products' => 'required|array|min:1'
         ]);
 
         $option = ProductOption::findOrFail($id);
-
-        $exists = ProductOption::where('product_id', $option->product_id)
-            ->where('category_id', $request->category_id)
-            ->where('id', '!=', $id)
-            ->exists();
-
-        if ($exists) {
-            return response()->json(['message' => 'This category is already added for this product!'], 422);
-        }
 
         $option->update([
             'category_id' => $request->category_id,
@@ -168,6 +161,33 @@ class ProductOptionController extends Controller
         return response()->json(['message' => 'Option deleted successfully!'], 200);
     }
 
+    public function copy($id)
+    {
+        $option = ProductOption::with('items')->findOrFail($id);
+        
+        $newOption = $option->replicate();
+        $newOption->save();
+        
+        foreach ($option->items as $item) {
+            $item->replicate()->fill(['product_option_id' => $newOption->id])->save();
+        }
+        
+        return response()->json(['message' => 'Option copied successfully!'], 200);
+    }
+
+    public function updateSort(Request $request)
+    {
+        $order = $request->order;
+        $productId = $request->product_id;
+        
+        foreach ($order as $index => $id) {
+            ProductOption::where('id', $id)
+                ->where('product_id', $productId)
+                ->update(['sort_order' => $index]);
+        }
+        return response()->json(['message' => 'Sort order updated!'], 200);
+    }
+
     public function getCategoryProducts($productId, $categoryId, $optionId = null)
     {
         $selectedProductIds = [];
@@ -184,14 +204,14 @@ class ProductOptionController extends Controller
         }
 
         $products = Product::where('category_id', $categoryId)
-            ->where('status', 1)
-            ->select('id', 'title', 'price')
+            ->where('id', '!=', $productId)
+            ->select('id', 'title', 'price', 'sku_ref')
             ->where('show_in_menu', 1)
             ->get()
             ->map(function($product) use ($selectedProductIds, $selectedProductsPrices, $selectedProductsRefs) {
                 $product->is_selected = in_array($product->id, $selectedProductIds);
                 $product->override_price = $selectedProductsPrices[$product->id] ?? $product->price;
-                $product->hubrise_option_ref = $selectedProductsRefs[$product->id] ?? '';
+                $product->hubrise_option_ref = $selectedProductsRefs[$product->id] ?? ($product->sku_ref ?? '');
                 return $product;
             });
 

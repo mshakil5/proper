@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('type', ['single', 'multiple'])->default('single');
             $table->unsignedSmallInteger('max_select')->default(1);
             $table->boolean('is_required')->default(0);
+            $table->integer('sort_order')->nullable();
             $table->timestamps();
         });
     }

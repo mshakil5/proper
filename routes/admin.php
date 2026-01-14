@@ -120,6 +120,8 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::get('/product-options/{id}/edit', [ProductOptionController::class, 'edit']);
     Route::post('/product-options/{id}', [ProductOptionController::class, 'update']);
     Route::delete('/product-options/{id}', [ProductOptionController::class, 'destroy'])->name('product-option.destroy');
+    Route::post('/product-options/{id}/copy', [ProductOptionController::class, 'copy'])->name('product-option.copy');
+    Route::post('/product/update-sort', [ProductOptionController::class, 'updateSort'])->name('product.update-sort');
 
     // Helper Routes
     Route::get('/product/{productId}/category/{categoryId}/products/{optionId?}', [ProductOptionController::class, 'getCategoryProducts']);

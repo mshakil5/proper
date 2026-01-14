@@ -47,7 +47,7 @@
             </div>
 
             <div id="optionsContainer" style="display: none;">
-                @forelse($product->options as $option)
+                @forelse($product->options->sortBy('sort_order') as $option)
                     <div class="product-section" data-option-id="{{ $option->id }}"
                         data-required="{{ $option->is_required ? 1 : 0 }}" data-max="{{ $option->max_select }}">
                         <div class="product-section-title">
@@ -78,7 +78,7 @@
                             @endforeach
                         </div>
 
-                        @if ($option->type === 'multiple')
+                        @if ($option->type === 'multiple' && $option->max_select > 0)
                             <small class="text-muted d-block mt-2">
                                 Max selections: <strong>{{ $option->max_select }}</strong>
                             </small>

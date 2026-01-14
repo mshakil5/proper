@@ -200,7 +200,7 @@ $(function () {
         let parentSection = $(this).closest('.product-section');
 
         if ($(this).attr('type') === 'checkbox') {
-            let max = Number(parentSection.data('max')) || 999;
+            let max = Number(parentSection.data('max')) || 0;
             let checkedCount = parentSection.find('input[type="checkbox"]:checked').length;
             if (max && checkedCount > max) {
                 $(this).prop('checked', false);

@@ -35,12 +35,9 @@
                                 <select class="form-control select2" id="category_id" name="category_id" required onchange="loadCategoryProducts()">
                                     <option value="">Select Category</option>
                                     @foreach($categories as $cat)
-                                        @if($cat->id != $product->category_id)
-                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                        @endif
+                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted" id="categoryError" style="color: red; display: none;"></small>
                             </div>
 
                             <div class="col-md-6">
@@ -106,38 +103,89 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Options List</h5>
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="listTab" data-bs-toggle="tab" href="#listContent" role="tab">
+                <i class="ri-list-check-2"></i> Options List
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="sortTab" data-bs-toggle="tab" href="#sortContent" role="tab">
+                <i class="ri-sort-asc"></i> Sort Order
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="listContent" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Options List</h5>
+                </div>
+                <div class="card-body">
+                    <table id="optionsTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Sl</th>
+                                <th>Option Name</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Max Select</th>
+                                <th>Required</th>
+                                <th>Items</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <table id="optionsTable" class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>Sl</th>
-                        <th>Option Name</th>
-                        <th>Category</th>
-                        <th>Type</th>
-                        <th>Max Select</th>
-                        <th>Required</th>
-                        <th>Items</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-            </table>
+
+        <div class="tab-pane fade" id="sortContent" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Sort Options</h5>
+                    <small class="text-muted">Drag & drop rows to change order</small>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Sl</th>
+                                <th>Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sortable">
+                            @foreach($options as $option)
+                                <tr data-id="{{ $option->id }}">
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $option->name }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
 @endsection
 
 @section('script')
+
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
 <script>
 let currentOptionId = null;
 let selectedProducts = {};
 
 $(document).ready(function() {
     initDataTable();
+    initSortable();
     bindEvents();
 });
 
@@ -162,6 +210,48 @@ function initDataTable() {
         ]
     });
 }
+
+function initSortable() {
+    $("#sortable").sortable({
+        placeholder: "ui-state-highlight",
+        cursor: "grab",
+        forcePlaceholderSize: true,
+        opacity: 0.8,
+        update: function(event, ui) {
+            var order = $(this).sortable('toArray', {
+                attribute: 'data-id'
+            });
+            $.ajax({
+                url: "{{ route('product.update-sort') }}",
+                method: "POST",
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    product_id: {{ $product->id }},
+                    order: order
+                },
+                success: function(res) {
+                    showSuccess(res.message);
+                    $("#sortable tr").each(function(index) {
+                        $(this).find("td:first").text(index + 1);
+                    });
+                    reloadTable('#optionsTable');
+                },
+                error: function(xhr) {
+                    showError(xhr.responseJSON?.message ?? "Something went wrong!");
+                }
+            });
+        }
+    });
+}
+
+$(document).on('click', '.copyBtn', function() {
+    let optionId = $(this).data('id');
+    $.post('/admin/product-options/' + optionId + '/copy', {_token: '{{ csrf_token() }}'}, function(d) {
+        showSuccess(d.message);
+        reloadTable('#optionsTable');
+        location.reload();
+    });
+});
 
 function bindEvents() {
     $('#newOptionBtn').click(function() {
@@ -196,6 +286,22 @@ function bindEvents() {
         });
     });
 
+    $(document).on('click', '.deleteBtn', function() {
+        let optionId = $(this).data('id');
+        showConfirm('Delete this option?', function() {
+            $.ajax({
+                url: '/admin/product-options/' + optionId,
+                type: 'DELETE',
+                data: {_token: '{{ csrf_token() }}'},
+                success: function(d) {
+                    showSuccess(d.message);
+                    reloadTable('#optionsTable');
+                    location.reload();
+                }
+            });
+        });
+    });
+
     $('#saveOptionBtn').click(function() {
         if (Object.keys(selectedProducts).length === 0) {
             showError('Please select at least one product');
@@ -222,6 +328,7 @@ function bindEvents() {
                 $('#formContainer').slideUp(300);
                 $('#newBtnSection').slideDown(300);
                 reloadTable('#optionsTable');
+                location.reload();
                 clearForm();
             },
             error: function(xhr) {
