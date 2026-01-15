@@ -20,6 +20,7 @@ Route::get('/clear', function() {
 });
 
 require __DIR__.'/admin.php';
+require __DIR__.'/user.php';
 
 Auth::routes();
 
@@ -71,7 +72,3 @@ Route::get('/sitemap.xml', [FrontendController::class, 'sitemap']);
 Route::get('/product', [FrontendController::class, 'product']);
 
 Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
-
-Route::group(['prefix' =>'user/', 'middleware' => ['auth', 'is_user']], function(){
-    Route::get('/dashboard', [HomeController::class, 'userHome'])->name('user.dashboard');
-});
