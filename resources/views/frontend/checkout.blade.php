@@ -228,10 +228,10 @@
                                 <div class="col-md-8">
                                     <label class="form-label">Postcode <span class="required">*</span></label>
                                     <input type="text" class="form-control" id="postcodeInput"
-                                        placeholder="e.g. LN5 8ES">
+                                        placeholder="e.g. MK44NP">
                                 </div>
                                 <div class="col-md-4 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-dark w-100" id="findAddressBtn">
+                                    <button type="button" class="btn btn-outline-dark w-100" id="findAddressBtn" style="height: 45px;">
                                         <i class="fas fa-search"></i> Find
                                     </button>
                                 </div>
@@ -362,6 +362,55 @@
 
                         <div class="summary-divider"></div>
 
+                        <!-- Points Redemption (Only for authenticated users with points) -->
+                        @if(auth()->check())
+                            @php
+                                $userAvailablePoints = auth()->user()->available_points ?? 0;
+                            @endphp
+                            
+                            @if($userAvailablePoints > 0)
+                                <div class="points-redemption-section">
+                                    <h6 class="points-section-title">
+                                        <i class="fas fa-star"></i> Redeem Points
+                                    </h6>
+
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input form-check-input" id="usePoints" name="use_points">
+                                        <label class="custom-control-label" for="usePoints">
+                                            Use my points <strong>({{ $userAvailablePoints }} available)</strong>
+                                        </label>
+                                    </div>
+
+                                    <div id="pointsContainer" class="points-input-container" style="display: none;">
+                                        <div class="points-info-box">
+                                            <p><strong>1 point = £1</strong></p>
+                                        </div>
+
+                                        <label class="form-label">Points to Redeem</label>
+                                        <input type="number" class="form-control" id="pointsToUse" name="points_to_use"
+                                               min="0" max="{{ $userAvailablePoints }}" value="0" placeholder="0">
+
+                                        <div class="points-display-box">
+                                            <div class="points-row">
+                                                <span>Points used:</span>
+                                                <strong id="pointsUsedDisplay">0</strong>
+                                            </div>
+                                            <div class="points-row">
+                                                <span>Discount value:</span>
+                                                <strong id="pointsDiscountDisplay">£0.00</strong>
+                                            </div>
+                                            <div class="points-row">
+                                                <span>Remaining:</span>
+                                                <strong id="remainingPointsDisplay">{{ $userAvailablePoints }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="summary-divider"></div>
+                            @endif
+                        @endif
+
                         <!-- Pricing -->
                         <div class="summary-row">
                             <span>Subtotal</span>
@@ -372,8 +421,12 @@
                             <span id="summaryDeliveryCharge">£0.00</span>
                         </div>
                         <div class="summary-row" id="discountRow" style="display: none;">
-                            <span>Discount</span>
+                            <span>Promo Discount</span>
                             <span id="summaryDiscount" style="color: #28a745;">-£0.00</span>
+                        </div>
+                        <div class="summary-row" id="pointsDiscountRow" style="display: none;">
+                            <span>Points Discount</span>
+                            <span id="summaryPointsDiscount" style="color: #28a745;">-£0.00</span>
                         </div>
 
                         <div class="summary-divider"></div>
@@ -447,9 +500,17 @@
             let checkoutData = JSON.parse(localStorage.getItem('checkoutData')) || null;
             let foundAddresses = [];
             let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+            const userAvailablePoints = {{ auth()->check() ? auth()->user()->available_points ?? 0 : 0 }};
+            
+            let appliedPromoDiscount = 0;
+            let appliedCoupon = null;
+            let pointsUsedDiscount = 0;
+            let pointsUsed = 0;
+            let currentTab = 'guest';
+            let selectedPaymentMethod = 'cash';
 
             if (!checkoutData) {
-                alert('No cart data found. Redirecting to cart...');
+                showError('No cart data found. Redirecting to cart...');
                 window.location.href = '/';
                 return;
             }
@@ -595,6 +656,45 @@
                 $('#city').val(selected.city);
             });
 
+            // Points Checkbox
+            $('#usePoints').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#pointsContainer').slideDown();
+                } else {
+                    $('#pointsContainer').slideUp();
+                    $('#pointsToUse').val(0);
+                    pointsUsed = 0;
+                    pointsUsedDiscount = 0;
+                    updateTotals();
+                }
+            });
+
+            // Points Input
+            $('#pointsToUse').on('input', function() {
+                let val = parseInt($(this).val()) || 0;
+                const subtotal = checkoutData.subtotal;
+                const maxPoints = Math.min(userAvailablePoints, Math.floor(subtotal));
+                
+                if (val > maxPoints) {
+                    val = maxPoints;
+                    $(this).val(maxPoints);
+                }
+                
+                if (val < 0) {
+                    val = 0;
+                    $(this).val(0);
+                }
+
+                pointsUsed = val;
+                pointsUsedDiscount = val * 1; // 1 point = £1
+                
+                $('#pointsUsedDisplay').text(pointsUsed);
+                $('#pointsDiscountDisplay').text('£' + pointsUsedDiscount.toFixed(2));
+                $('#remainingPointsDisplay').text(userAvailablePoints - pointsUsed);
+                
+                updateTotals();
+            });
+
             function updateDeliveryDetailsWithNewPostcode(postcode, charge) {
                 checkoutData.delivery.postcode = postcode;
                 checkoutData.delivery.charge = parseFloat(charge);
@@ -604,11 +704,6 @@
 
                 updateTotals();
             }
-
-            let appliedDiscount = 0;
-            let appliedCoupon = null;
-            let currentTab = 'guest';
-            let selectedPaymentMethod = 'cash';
 
             $('#paymentCash').prop('checked', true);
             $('#paymentMethodName').text('Cash on Delivery');
@@ -669,7 +764,7 @@
                         subtotal: checkoutData.subtotal
                     }),
                     success: function(res) {
-                        appliedDiscount = res.discount_amount;
+                        appliedPromoDiscount = res.discount_amount;
                         appliedCoupon = res.coupon;
 
                         $('#promoMessageContainer').show();
@@ -686,7 +781,7 @@
                         showSuccess('Coupon applied successfully!');
                     },
                     error: function(err) {
-                        appliedDiscount = 0;
+                        appliedPromoDiscount = 0;
                         appliedCoupon = null;
                         $('#discountRow').hide();
                         $('#promoMessageContainer').hide();
@@ -818,9 +913,18 @@
             }
 
             function updateTotals() {
-                let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedDiscount;
+                let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoDiscount - pointsUsedDiscount;
+                
                 $('#summarySubtotal').text('£' + checkoutData.subtotal.toFixed(2));
                 $('#summaryDeliveryCharge').text('£' + checkoutData.deliveryCharge.toFixed(2));
+                
+                if (pointsUsedDiscount > 0) {
+                    $('#pointsDiscountRow').show();
+                    $('#summaryPointsDiscount').text('-£' + pointsUsedDiscount.toFixed(2));
+                } else {
+                    $('#pointsDiscountRow').hide();
+                }
+                
                 $('#summaryTotal').text('£' + finalTotal.toFixed(2));
             }
 
@@ -842,7 +946,6 @@
                 let postalCode = $('#postcodeInput').val().trim();
                 let orderNotes = $('#orderNotes').val().trim();
 
-                // Only validate address if delivery (not collection)
                 if (checkoutData.delivery.type === 'delivery') {
                     if (!address || !city || !postalCode) {
                         showError('Please select delivery address');
@@ -865,7 +968,7 @@
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Please wait...');
 
                 let hubRiseItems = [];
-                let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - appliedDiscount;
+                let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoDiscount - pointsUsedDiscount;
 
                 checkoutData.cart.forEach(item => {
                     let itemPrice = Number(item.price);
@@ -879,8 +982,7 @@
                         price: priceValue + ' GBP'
                     };
 
-                    if (item.type === 'custom' && item.options && Object.keys(item.options).length >
-                        0) {
+                    if (item.type === 'custom' && item.options && Object.keys(item.options).length > 0) {
                         hubRiseItem.options = [];
                         Object.entries(item.options).forEach(([optionName, optionValues]) => {
                             optionValues.forEach(opt => {
@@ -888,8 +990,7 @@
                                     option_list_name: 'Option',
                                     name: opt.title,
                                     ref: opt.hubriseOptionRef || '',
-                                    price: (0).toFixed(2) +
-                                        ' GBP'
+                                    price: (0).toFixed(2) + ' GBP'
                                 });
                             });
                         });
@@ -929,10 +1030,10 @@
                     }];
                 }
 
-                if (appliedDiscount > 0 && appliedCoupon) {
+                if (appliedPromoDiscount > 0 && appliedCoupon) {
                     hubRiseOrder.discounts = [{
                         name: 'Coupon: ' + appliedCoupon.code,
-                        price_off: appliedDiscount.toFixed(2) + ' GBP'
+                        price_off: appliedPromoDiscount.toFixed(2) + ' GBP'
                     }];
                 }
 
@@ -947,11 +1048,15 @@
                     delivery: checkoutData.delivery,
                     subtotal: checkoutData.subtotal,
                     deliveryCharge: checkoutData.deliveryCharge,
-                    discount: appliedDiscount,
+                    coupon_discount: appliedPromoDiscount,
+                    points_used: pointsUsed,
                     coupon_id: appliedCoupon?.id || null,
                     paymentMethod: selectedPaymentMethod,
                     total: totalPrice
                 };
+
+                // console.log(localOrder);
+                // return;
 
                 $.ajax({
                     url: '/place-order',
@@ -965,15 +1070,17 @@
                         localOrder: localOrder
                     }),
                     success: function(response) {
+                        console.log(response);
                         if (response.redirectUrl) {
                             window.location.href = response.redirectUrl;
                         } else {
+
+                            showSuccess('Order placed successfully!');
+
                             localStorage.removeItem('cart');
                             localStorage.removeItem('cartSummary');
                             localStorage.removeItem('deliveryOptions');
                             localStorage.removeItem('checkoutData');
-
-                            showSuccess('Order placed successfully!');
 
                             setTimeout(() => {
                                 window.location.href = '/order-confirmation/' + response.orderNumber;

@@ -12,7 +12,7 @@ class OrderItemOption extends Model
         'price' => 'decimal:2',
     ];
 
-    public function orderItem(): BelongsTo
+    public function orderItem()
     {
         return $this->belongsTo(OrderItem::class);
     }

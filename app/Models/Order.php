@@ -17,17 +17,17 @@ class Order extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function coupon(): BelongsTo
+    public function coupon()
     {
         return $this->belongsTo(Coupon::class);
     }
 
-    public function items(): HasMany
+    public function items()
     {
         return $this->hasMany(OrderItem::class);
     }

@@ -1,100 +1,69 @@
 @extends('frontend.master')
 
 @section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <!-- Order Success Header -->
-            <div class="card border-success mb-4">
-                <div class="card-body text-center">
-                    <h1 class="text-success mb-3">
-                        <i class="fas fa-check-circle fa-3x"></i>
-                    </h1>
-                    <h2 class="mb-2">Order Confirmed!</h2>
-                    <p class="text-muted">Thank you for your order. We've received it and will start preparing it soon.</p>
-                </div>
-            </div>
-
-            <!-- Order Details -->
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Order Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <small class="text-muted">Order Number</small>
-                            <p class="fw-bold">{{ $order->order_number }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <small class="text-muted">Order Date</small>
-                            <p class="fw-bold">{{ $order->created_at->format('d M Y, H:i') }}</p>
-                        </div>
+<div class="checkout-wrapper">
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <!-- Success Header -->
+                <div class="checkout-card" style="text-align: center; background: linear-gradient(135deg, #fff8f0, #ffe8d6); border: 2px solid rgba(255, 138, 0, 0.3); margin-bottom: 30px;">
+                    <div style="padding: 30px 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 60px; color: #ff8a00; margin-bottom: 16px; display: block;"></i>
+                        <h2 class="checkout-title" style="margin-bottom: 8px;">Order Confirmed!</h2>
+                        <p style="color: #666; margin: 0;">Thank you for your order. We've received it and will start preparing it soon.</p>
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <small class="text-muted">Delivery Type</small>
-                            <p class="fw-bold">
+                <!-- Order Details Card -->
+                <div class="checkout-card">
+                    <h5 class="checkout-title">Order Details</h5>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label class="form-label">Order Number</label>
+                            <p style="font-size: 14px; font-weight: 700; color: #ff8a00; margin: 0;">{{ $order->order_number }}</p>
+                        </div>
+                        <div>
+                            <label class="form-label">Order Date</label>
+                            <p style="font-size: 14px; font-weight: 700; color: #1a1a1a; margin: 0;">{{ $order->created_at->format('d M Y, H:i') }}</p>
+                        </div>
+                        <div>
+                            <label class="form-label">Delivery Type</label>
+                            <p style="font-size: 14px; font-weight: 700; color: #1a1a1a; margin: 0;">
                                 @if($order->delivery_type === 'delivery')
-                                    <i class="fas fa-truck"></i> Home Delivery
+                                    <i class="fas fa-truck" style="color: #ff8a00;"></i> Home Delivery
                                 @else
-                                    <i class="fas fa-store"></i> Collection
+                                    <i class="fas fa-store" style="color: #ff8a00;"></i> Collection
                                 @endif
                             </p>
                         </div>
-                        <div class="col-md-6">
-                            <small class="text-muted">Delivery Time</small>
-                            <p class="fw-bold">{{ $order->time }}</p>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <small class="text-muted">Payment Method</small>
-                            <p class="fw-bold text-capitalize">{{ ucfirst($order->payment_method) }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <small class="text-muted">Payment Status</small>
-                            <p class="fw-bold">
-                                @if($order->payment_status === 'paid')
-                                    <span class="badge bg-success">Paid</span>
-                                @elseif($order->payment_status === 'pending')
-                                    <span class="badge bg-warning">Pending</span>
-                                @else
-                                    <span class="badge bg-danger">Failed</span>
-                                @endif
-                            </p>
+                        <div>
+                            <label class="form-label">Delivery Time</label>
+                            <p style="font-size: 14px; font-weight: 700; color: #1a1a1a; margin: 0;">{{ $order->time }}</p>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Customer Details -->
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Customer Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <small class="text-muted">Name</small>
-                            <p class="fw-bold">{{ $order->first_name }} {{ $order->last_name }}</p>
+                <!-- Customer Info Card -->
+                <div class="checkout-card">
+                    <h5 class="checkout-title">Customer Information</h5>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label class="form-label">Full Name</label>
+                            <p style="font-size: 13px; font-weight: 600; color: #1a1a1a; margin: 0;">{{ $order->first_name }} {{ $order->last_name }}</p>
                         </div>
-                        <div class="col-md-6">
-                            <small class="text-muted">Email</small>
-                            <p class="fw-bold">{{ $order->email }}</p>
+                        <div>
+                            <label class="form-label">Email</label>
+                            <p style="font-size: 13px; font-weight: 600; color: #1a1a1a; margin: 0;">{{ $order->email }}</p>
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <small class="text-muted">Phone</small>
-                            <p class="fw-bold">{{ $order->phone }}</p>
+                        <div>
+                            <label class="form-label">Phone</label>
+                            <p style="font-size: 13px; font-weight: 600; color: #1a1a1a; margin: 0;">{{ $order->phone }}</p>
                         </div>
-                        <div class="col-md-6">
-                            <small class="text-muted">Address</small>
-                            <p class="fw-bold">
+                        <div>
+                            <label class="form-label">Address</label>
+                            <p style="font-size: 13px; font-weight: 600; color: #1a1a1a; margin: 0; line-height: 1.5;">
                                 {{ $order->address_1 }}
                                 @if($order->address_2)
                                     <br>{{ $order->address_2 }}
@@ -104,122 +73,135 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Order Items -->
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Order Items</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th class="text-end">Price</th>
-                                    <th class="text-center">Qty</th>
-                                    <th class="text-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($order->items as $item)
-                                <tr>
-                                    <td>
-                                        <strong>{{ $item->product_name }}</strong>
-                                        @if($item->options->count() > 0)
-                                            <br>
-                                            <small class="text-muted">
-                                                @foreach($item->options as $option)
-                                                    {{ $option->option_name }}@if(!$loop->last), @endif
-                                                @endforeach
-                                            </small>
-                                        @endif
-                                    </td>
-                                    <td class="text-end">£{{ number_format($item->price, 2) }}</td>
-                                    <td class="text-center">{{ $item->quantity }}</td>
-                                    <td class="text-end fw-bold">£{{ number_format($item->total, 2) }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Order Summary -->
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Order Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 ms-auto">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Subtotal</span>
-                                <span>£{{ number_format($order->subtotal, 2) }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Delivery Charge</span>
-                                <span>£{{ number_format($order->delivery_charge, 2) }}</span>
-                            </div>
-                            @if($order->discount > 0)
-                            <div class="d-flex justify-content-between mb-2 text-success">
-                                <span>Discount</span>
-                                <span>-£{{ number_format($order->discount, 2) }}</span>
-                            </div>
-                            @endif
-                            <hr>
-                            <div class="d-flex justify-content-between fw-bold fs-5">
-                                <span>Total</span>
-                                <span>£{{ number_format($order->total, 2) }}</span>
+                <!-- Order Items Card -->
+                <div class="checkout-card">
+                    <h5 class="checkout-title">Order Items</h5>
+                    
+                    <div class="checkout-cart-body">
+                        @foreach($order->items as $item)
+                        <div class="cart-item-row">
+                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 12px; width: 100%;">
+                                <div>
+                                    <div class="cart-item-img" style="width: 60px; height: 60px; background: linear-gradient(135deg, #fff5eb, #ffe8d6);"></div>
+                                </div>
+                                <div>
+                                    <p class="cart-product-name">{{ $item->product_name }}</p>
+                                    @if($item->options->count() > 0)
+                                        <ul class="cart-item-options">
+                                            @foreach($item->options as $option)
+                                                <li>{{ $option->option_name }}@if($option->price > 0) +£{{ number_format($option->price, 2) }}@endif</li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                                    <div class="cart-item-controls">
+                                        <span class="cart-product-price">£{{ number_format($item->price, 2) }}</span>
+                                        <span style="font-size: 12px; font-weight: 600; color: #666;">x{{ $item->quantity }}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        @endforeach
                     </div>
                 </div>
+
+                <!-- Special Instructions -->
+                @if($order->notes)
+                <div class="checkout-card">
+                    <h5 class="checkout-title">Special Instructions</h5>
+                    <div class="alert alert-info mb-0" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb); border-left: 4px solid #17a2b8;">
+                        {{ $order->notes }}
+                    </div>
+                </div>
+                @endif
             </div>
 
-            <!-- Order Notes -->
-            @if($order->notes)
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Special Instructions</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-0">{{ $order->notes }}</p>
-                </div>
-            </div>
-            @endif
+            <!-- Right Column: Order Summary -->
+            <div class="col-lg-4">
+                <div class="order-summary-card">
+                    <h5 class="checkout-title">Order Summary</h5>
 
-            <!-- Action Buttons -->
-            <div class="d-flex gap-2 justify-content-center">
-                <a href="/" class="btn btn-primary btn-lg">
-                    <i class="fas fa-home"></i> Back to Home
-                </a>
-                <a href="/menu" class="btn btn-outline-primary btn-lg">
-                    <i class="fas fa-utensils"></i> Order Again
-                </a>
+                    <div class="checkout-cart-body" style="max-height: none; padding: 0; margin-bottom: 0;">
+                        @foreach($order->items as $item)
+                        <div class="cart-item-row" style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <div>
+                                    <p class="cart-product-name" style="margin: 0;">{{ $item->product_name }}</p>
+                                    <span style="font-size: 11px; color: #999;">x{{ $item->quantity }}</span>
+                                </div>
+                                <span class="cart-product-price">£{{ number_format($item->total, 2) }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>£{{ number_format($order->subtotal, 2) }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery Charge</span>
+                        <span>£{{ number_format($order->delivery_charge, 2) }}</span>
+                    </div>
+                    @if($order->coupon_discount > 0)
+                    <div class="summary-row" style="color: #28a745;">
+                        <span>Promo Discount</span>
+                        <span style="color: #28a745;">-£{{ number_format($order->coupon_discount, 2) }}</span>
+                    </div>
+                    @endif
+                    @if($order->points_used > 0)
+                    <div class="summary-row" style="color: #28a745;">
+                        <span>Points Discount</span>
+                        <span style="color: #28a745;">-£{{ number_format($order->points_used, 2) }}</span>
+                    </div>
+                    @endif
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span>£{{ number_format($order->total, 2) }}</span>
+                    </div>
+
+                    <!-- Payment Status -->
+                    <div class="payment-badge" style="margin-top: 20px;">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="payment-info">
+                            <strong>
+                                @if($order->payment_status === 'paid')
+                                    Payment Confirmed
+                                @elseif($order->payment_status === 'pending')
+                                    Payment Pending
+                                @else
+                                    Payment Failed
+                                @endif
+                            </strong>
+                            <small>
+                                @if($order->payment_method === 'stripe')
+                                    Stripe
+                                @elseif($order->payment_method === 'paypal')
+                                    PayPal
+                                @else
+                                    Cash on Delivery
+                                @endif
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                        <a href="/" class="btn-place-order" style="background: linear-gradient(135deg, #ff8a00, #ff5a00); margin: 0;">
+                            <i class="fas fa-home"></i> Back to Home
+                        </a>
+                        <a href="/menu" class="btn-place-order" style="background: white; color: #ff8a00; border: 2px solid #ff8a00; margin: 0;">
+                            <i class="fas fa-utensils"></i> Order Again
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-@endsection
-
-@section('style')
-<style>
-    .order-confirmation {
-        animation: slideIn 0.3s ease-in-out;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>
 @endsection

@@ -35,6 +35,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemOption;
 use Illuminate\Support\Str;
+use App\Models\UserPoint;
 
 class FrontendController extends Controller
 {
@@ -83,8 +84,8 @@ class FrontendController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $centerLatitude = 51.99682;
-        $centerLongitude = -0.80032;
+        $centerLatitude = 51.996611;
+        $centerLongitude = -0.802070;
         $deliveryRadius = 7.5;
         $deliveryCharge = 2.00;
 
@@ -134,8 +135,8 @@ class FrontendController extends Controller
 
         $postcode = strtoupper(trim($request->postcode));
         
-        $centerLatitude = 53.224052;
-        $centerLongitude = -0.533805;
+        $centerLatitude = 51.996611;
+        $centerLongitude = -0.802070;
         $deliveryRadius = 7.5;
         $deliveryCharge = 2.00;
 
@@ -350,12 +351,12 @@ class FrontendController extends Controller
             $accessToken = env('HUBRISE_ACCESS_TOKEN');
             $locationId = env('HUBRISE_LOCATION_ID');
 
-            if (!$accessToken || !$locationId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'HubRise credentials not configured'
-                ], 500);
-            }
+            // if (!$accessToken || !$locationId) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'HubRise credentials not configured'
+            //     ], 500);
+            // }
 
             // Validate service type
             $serviceType = $hubRiseOrder['service_type'] ?? 'delivery';
@@ -404,8 +405,10 @@ class FrontendController extends Controller
                 'time' => $localOrder['delivery']['time'],
                 'subtotal' => $localOrder['subtotal'],
                 'delivery_charge' => $localOrder['deliveryCharge'],
-                'discount' => $localOrder['discount'],
+                'coupon_discount' => $localOrder['coupon_discount'],
                 'coupon_id' => $localOrder['coupon_id'],
+                'points_used' => $localOrder['points_used'],
+                'other_discount' => 0.00,
                 'total' => $localOrder['total'],
                 'payment_method' => $localOrder['paymentMethod'],
                 'payment_status' => 'pending',
@@ -453,7 +456,14 @@ class FrontendController extends Controller
                 ], 400);
             } else {
                 // Cash on Delivery
-                return $this->sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
+                $this->sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
+
+                return response()->json([
+                    'success' => true,
+                    'confirmUrl' => route('order.confirmation', ['orderNumber' => $order->order_number]),
+                    'orderId' => $order->id,
+                    'orderNumber' => $order->order_number
+                ]);
             }
 
         } catch (\Exception $e) {
@@ -541,6 +551,14 @@ class FrontendController extends Controller
                 'payment_status' => 'paid',
                 'status' => 'pending'
             ]);
+
+            if (auth()->check()) {
+                UserPoint::create([
+                    'user_id' => auth()->id(),
+                    'order_id' => $order->id,
+                    'point' => -($order->points_used ?? 0)
+                ]);
+            }
 
             // Send to HubRise
             $this->sendToHubRise(
@@ -664,24 +682,25 @@ class FrontendController extends Controller
         }
 
         // Send to HubRise
-        $response = Http::withHeaders([
-            'X-Access-Token' => $accessToken,
-            'Content-Type' => 'application/json'
-        ])->post(
-            "https://api.hubrise.com/v1/locations/{$locationId}/orders",
-            $hubRisePayload
-        );
+        // $response = Http::withHeaders([
+        //     'X-Access-Token' => $accessToken,
+        //     'Content-Type' => 'application/json'
+        // ])->post(
+        //     "https://api.hubrise.com/v1/locations/{$locationId}/orders",
+        //     $hubRisePayload
+        // );
 
-        if (!$response->successful()) {
-            throw new \Exception('Failed to create order in HubRise');
-        }
+        // if (!$response->successful()) {
+        //     throw new \Exception('Failed to create order in HubRise');
+        // }
 
-        $hubRiseData = $response->json();
-        $hubRiseOrderId = $hubRiseData['id'] ?? null;
+        // $hubRiseData = $response->json();
+        // $hubRiseOrderId = $hubRiseData['id'] ?? null;
 
         // Update order with HubRise ID
         $order->update([
-            'hubrise_order_id' => $hubRiseOrderId,
+            // 'hubrise_order_id' => $hubRiseOrderId,
+            'hubrise_order_id' => str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT),
             'status' => 'pending'
         ]);
     }

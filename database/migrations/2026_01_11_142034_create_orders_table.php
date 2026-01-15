@@ -36,8 +36,9 @@ return new class extends Migration
             
             // Pricing
             $table->decimal('subtotal', 10, 2);
-            $table->decimal('delivery_charge', 10, 2);
-            $table->decimal('discount', 10, 2)->default(0);
+            $table->decimal('coupon_discount', 10, 2)->default(0);
+            $table->decimal('points_used', 10, 2)->default(0);
+            $table->decimal('other_discount', 10, 2)->default(0);
             $table->foreignId('coupon_id')->nullable()->constrained('coupons')->onDelete('set null');
             $table->decimal('total', 10, 2);
             

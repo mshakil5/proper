@@ -13,17 +13,17 @@ class OrderItem extends Model
         'total' => 'decimal:2',
     ];
 
-    public function order(): BelongsTo
+    public function order()
     {
         return $this->belongsTo(Order::class);
     }
 
-    public function product(): BelongsTo
+    public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function options(): HasMany
+    public function options()
     {
         return $this->hasMany(OrderItemOption::class);
     }

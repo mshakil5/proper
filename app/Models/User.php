@@ -17,6 +17,18 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function userPoints()
+    {
+        return $this->hasMany(UserPoint::class);
+    }
+
+    public function getAvailablePointsAttribute()
+    {
+        return $this->userPoints()
+            ->selectRaw('SUM(point) as total')
+            ->value('total') ?? 0;
+    }
+
     protected function casts(): array
     {
         return [

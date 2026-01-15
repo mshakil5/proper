@@ -5617,3 +5617,160 @@ footer a:hover {
         width: 100%;
     }
 }
+
+.points-redemption-section {
+    background: linear-gradient(135deg, #fff8f0, #ffe8d6);
+    border: 2px solid rgba(255, 138, 0, 0.2);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.points-section-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(255, 138, 0, 0.3);
+}
+
+.custom-control-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.custom-control-label strong {
+    color: #ff8a00;
+    font-size: 13px;
+}
+
+.points-input-container {
+    margin-top: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.points-info-box {
+    background: white;
+    border: 1px solid rgba(255, 138, 0, 0.2);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.points-info-box p {
+    margin: 0;
+    font-size: 12px;
+    color: #1a1a1a;
+}
+
+.points-info-box p strong {
+    color: #ff8a00;
+    font-weight: 700;
+}
+
+.points-display-box {
+    background: white;
+    border: 1px solid rgba(255, 138, 0, 0.2);
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.points-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 11px;
+    color: #666;
+    border-bottom: 1px solid rgba(255, 138, 0, 0.1);
+}
+
+.points-row:last-child {
+    border-bottom: none;
+}
+
+.points-row strong {
+    color: #ff8a00;
+    font-weight: 800;
+    font-size: 12px;
+}
+
+#pointsToUse {
+    padding: 10px 12px !important;
+    border: 2px solid #E8E8E8 !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    background: white !important;
+    margin-bottom: 10px !important;
+}
+
+#pointsToUse:focus {
+    border-color: #ff8a00 !important;
+    box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.1) !important;
+    outline: none !important;
+}
+
+#pointsDiscountRow {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 576px) {
+    .points-redemption-section {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+    .points-section-title {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .custom-control-label {
+        font-size: 11px;
+    }
+
+    .points-row {
+        font-size: 10px;
+        padding: 5px 0;
+    }
+
+    .points-row strong {
+        font-size: 11px;
+    }
+
+    #pointsToUse {
+        padding: 9px 10px !important;
+        font-size: 11px !important;
+        margin-bottom: 8px !important;
+    }
+}
