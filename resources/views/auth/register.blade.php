@@ -21,25 +21,33 @@
                     <form method="POST" action="{{ route('register') }}" class="auth-form">
                         @csrf
 
-                        <!-- Full Name Field -->
                         <div class="form-group">
                             <label class="form-label">
-                                <i class="fas fa-user"></i> Full Name <span class="required">*</span>
+                                <i class="fas fa-user"></i> First Name <span class="required">*</span>
                             </label>
-                            <input 
-                                id="name" 
+                            <input
                                 type="text"
-                                class="form-control @error('name') is-invalid @enderror"
-                                name="name" 
-                                value="{{ old('name') }}" 
-                                required 
-                                autocomplete="name" 
-                                autofocus
-                                placeholder="Enter your full name">
-                            @error('name')
-                                <div class="invalid-feedback">
-                                    <i class="fas fa-exclamation-circle"></i> {{ $message }}
-                                </div>
+                                class="form-control @error('first_name') is-invalid @enderror"
+                                name="first_name"
+                                value="{{ old('first_name') }}"
+                                required>
+                            @error('first_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-user"></i> Last Name <span class="required">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                class="form-control @error('last_name') is-invalid @enderror"
+                                name="last_name"
+                                value="{{ old('last_name') }}"
+                                required>
+                            @error('last_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
