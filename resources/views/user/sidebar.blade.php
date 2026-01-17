@@ -2,7 +2,7 @@
     <div class="user-sidebar-header">
         <div class="user-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
         <div class="user-info">
-            <h6>{{ auth()->user()->name }}</h6>
+            <h6>{{ trim(auth()->user()->first_name.' '.auth()->user()->last_name) }}</h6>
             <p>{{ auth()->user()->email }}</p>
         </div>
     </div>

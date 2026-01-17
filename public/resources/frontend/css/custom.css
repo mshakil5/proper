@@ -4432,10 +4432,6 @@ footer a:hover {
     flex-direction: column;
 }
 
-.profile-form .form-group:last-child,
-.profile-form .form-group:nth-last-child(2) {
-    grid-column: 1 / -1;
-}
 
 .form-label {
     font-size: 12px;

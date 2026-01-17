@@ -68,8 +68,11 @@
     </div>
 </div>
 
-<div class="floating-shop-status swing" id="shopStatus">
-    OPEN
+<div class="floating-shop-status swing @if (request()->routeIs('checkout')) d-none @endif" id="shopStatus">
+    <div class="status-text">OPEN</div>
+    <a href="{{ route('menu') }}" class="order-btn-inside" id="orderBtnInside" target="_blank">
+        <i class="fa-solid fa-bag-shopping me-1"></i> Order
+    </a>
 </div>
 
 <style>
@@ -81,13 +84,44 @@
     background: #fff;
     border: 2px solid;
     border-radius: 5px;
-    padding: 10px 25px;
+    padding: 10px 20px;
     font-weight: bold;
     font-size: 18px;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
     transform-origin: top center;
     text-align: center;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.status-text {
     pointer-events: none;
+}
+
+.order-btn-inside {
+    display: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff !important;
+    padding: 8px 10px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.order-btn-inside:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    color: #fff !important;
+}
+
+.order-btn-inside.show {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 @media (max-width: 576px) {
@@ -95,8 +129,13 @@
         top: 170px;
         right: 35px;
         transform: translateX(50%);
-        padding: 8px 20px;
+        padding: 8px 8px;
         font-size: 16px;
+    }
+
+    .order-btn-inside {
+        padding: 6px 14px;
+        font-size: 12px;
     }
 }
 
@@ -160,6 +199,7 @@
 <script>
     const ShopStatus = {
         isOpen() {
+            return true;
             const now = new Date();
             const day = now.getDay();
             const hour = now.getHours();
@@ -184,17 +224,26 @@
 
         updateDisplay() {
             const element = document.getElementById('shopStatus');
+            const orderBtn = document.getElementById('orderBtnInside');
+            
             if (element) {
-                element.textContent = this.getStatus();
+                element.querySelector('.status-text').textContent = this.getStatus();
                 element.classList.remove('open', 'closed');
                 element.classList.add(this.isOpen() ? 'open' : 'closed');
+            }
+
+            if (orderBtn) {
+                if (this.isOpen()) {
+                    orderBtn.classList.add('show');
+                } else {
+                    orderBtn.classList.remove('show');
+                }
             }
         }
     };
 
     window.ShopStatus = ShopStatus;
 
-    //Uncomment this if you want to show the status on page load
     document.addEventListener('DOMContentLoaded', () => {
         const update = () => {
             ShopStatus.updateDisplay();

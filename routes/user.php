@@ -10,7 +10,11 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth', 'is_user'], 'as' => '
 
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
 
+    Route::post('/profile', [UserController::class, 'updateProfile'])->name('update-profile');
+
     Route::get('/password', [UserController::class, 'password'])->name('password');
+
+    Route::post('update-password', [UserController::class, 'updatePassword'])->name('update-password');
 
     Route::get('/orders', [UserController::class, 'orders'])->name('orders');
 
