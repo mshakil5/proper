@@ -1,5 +1,8 @@
 $(function () {
 
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    console.log('Cart:', cart);
+
     let selectedDelivery = {
         type: 'delivery',
         postcode: '',
@@ -710,6 +713,68 @@ $(function () {
         }
         updateTotalPrice();
     });
+
+    $(document).on('click', '.btn-order-again', function () {
+        let order = $(this).data('order');
+
+        if (!order || !order.items || !order.items.length) {
+            showError('No items found in this order!');
+            return;
+        }
+
+        let cart = sanitizeCart();
+
+        order.items.forEach(item => {
+            let isCustom = item.options && item.options.length > 0;
+            let optionsObj = {};
+
+            if (isCustom) {
+                item.options.forEach(opt => {
+                    if (!optionsObj[opt.option_list_name]) optionsObj[opt.option_list_name] = [];
+                    optionsObj[opt.option_list_name].push({
+                        title: opt.option_name,
+                        price: parseFloat(opt.price),
+                        productId: parseInt(item.product_id) || null,
+                        hubriseOptionRef: opt.option_ref || ''
+                    });
+                });
+            }
+
+            let productHash = isCustom ? item.productHash || item.id + '-' + Date.now() : null;
+
+            let existingItem = cart.find(c => {
+                if (isCustom) return c.type === 'custom' && c.productHash === productHash;
+                else return c.productId === item.product_id && c.type === 'direct';
+            });
+
+            let qty = parseInt(item.quantity) || 1;
+            let price = parseFloat(item.price);
+
+            if (existingItem) {
+                existingItem.quantity += qty;
+            } else {
+                cart.push({
+                    productId: item.product_id,
+                    skuRef: item.sku_ref || '',
+                    id: item.id + '-' + Date.now(),
+                    productHash: productHash,
+                    title: item.product_name,
+                    image: item.product?.image || '',
+                    price: price,
+                    quantity: qty,
+                    options: optionsObj,
+                    type: isCustom ? 'custom' : 'direct',
+                    attribute: item.product?.has_attribute || false,
+                    attributePrice: item.product?.attribute_price || 0
+                });
+            }
+        });
+
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartUI();
+        showSuccess('Items added from previous order!');
+    });
+
 
     function updateCartUI() {
         let cart = sanitizeCart();

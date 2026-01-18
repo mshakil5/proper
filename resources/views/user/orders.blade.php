@@ -53,6 +53,7 @@
                         <td><span class="order-amount">£{{ number_format($order->total, 2) }}</span></td>
                         <td class="order-actions">
                             <a href="{{ route('user.orders.details', $order->id) }}" class="btn-view-order">View</a>
+                            <button class="btn-view-order btn-order-again" data-order='@json($order)'>Order Again</button>
                         </td>
                     </tr>
                 @empty

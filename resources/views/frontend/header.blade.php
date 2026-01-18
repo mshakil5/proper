@@ -35,6 +35,17 @@
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
             </li>
+            <li class="nav-item">
+                @auth
+                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                        Dashboard
+                    </a>
+                @else
+                    <a class="nav-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ route('login') }}">
+                        Login
+                    </a>
+                @endauth
+            </li>
             </ul>
             <a href="https://www.propertakeaways.com/menu" class="btn btn-gradient ms-3 fw-semibold" target="_blank">
                 <i class="fa-solid fa-bag-shopping me-1"></i> Order Now

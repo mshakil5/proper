@@ -70,6 +70,8 @@ class UserController extends Controller
             abort(403);
         }
 
+        $order->load(['items.options', 'items.product']);
+
         return view('user.order-details', compact('order'));
     }
 

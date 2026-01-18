@@ -29,6 +29,12 @@
         </div>
 
         <div class="order-details-status text-end">
+            <button 
+                class="btn-view-order mb-2 btn-order-again"
+                data-order='@json($order)'>
+                Order Again
+            </button>
+            <br>
             <div class="status-badge">{{ ucfirst($order->status) }}</div>
             <p>Status updated on {{ $order->updated_at->format('M d, Y') }}</p>
             <p><strong>Payment Method:</strong> {{ ucfirst($order->payment_method) }}</p>
@@ -51,7 +57,7 @@
                             {{-- Options --}}
                             @if($item->options->count())
                                 @foreach($item->options as $option)
-                                    <p class="order-item-detail">{{ $option->option_list_name }}: {{ $option->option_name }}</p>
+                                    <p class="order-item-detail">{{ $option->option_name }}</p>
                                 @endforeach
                             @endif
 
@@ -102,6 +108,6 @@
     </div>
 </div>
 
-    <a href="{{ url()->previous() }}" class="btn-reorder-now">Back to Orders</a>
+<a href="{{ url()->previous() }}" class="btn-reorder-now">Back to Orders</a>
 
 @endsection
