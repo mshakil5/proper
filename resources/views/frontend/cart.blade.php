@@ -107,6 +107,6 @@
             <span>Total</span>
             <span class="cart-total-price" id="cartTotal">£0.00</span>
         </div>
-        <a href="#" class="cart-checkout-btn">Proceed to Checkout</a>
+        <a href="#" class="cart-checkout-btn" disabled>Proceed to Checkout</a>
     </div>
 </div>

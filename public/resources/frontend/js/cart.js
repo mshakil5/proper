@@ -295,7 +295,9 @@ $(function () {
         let missingOptions = [];
         
         if (hasAttribute && attributeSelect === 'with_options') {
-            $('#optionsContainer').find('.product-section').each(function () {
+            $('#optionsContainer')
+            .find('.product-section:not([data-attribute="1"])')
+                .each(function () {
                 let isRequired = Number($(this).data('required'));
                 let hasSelection = $(this).find('input:checked').length > 0;
                 
@@ -319,11 +321,28 @@ $(function () {
         }
 
         if (!valid) {
-            if (missingOptions.length === 1) {
-                showError(`Please select: ${missingOptions[0]}`);
-            } else {
-                showError(`Please select: ${missingOptions.join(', ')}`);
+            $('.product-section').removeClass('option-error');
+
+            let firstError = null;
+
+            missingOptions.forEach(name => {
+                let section = $('.product-section').filter(function () {
+                    return $(this).find('.product-section-title').text().trim() === name;
+                });
+
+                section.addClass('option-error');
+
+                if (!firstError) firstError = section;
+            });
+
+            if (firstError && firstError.length) {
+                firstError[0].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
+
+            showError('Please select required option(s)');
             return;
         }
 
@@ -712,6 +731,13 @@ $(function () {
             itemCount: totalQty
         };
         localStorage.setItem('cartSummary', JSON.stringify(cartSummary));
+
+        if (totalQty === 0) {
+            $('.cart-checkout-btn').prop('disabled', true);
+        } else {
+            $('.cart-checkout-btn').prop('disabled', false);
+        }
+
     }
 
     updateDeliveryStartTimes();
