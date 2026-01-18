@@ -18,4 +18,21 @@ class Coupon extends Model
         }
         return $this->discount_value;
     }
+
+    public function scopeActive($query)
+    {
+        $today = now()->startOfDay();
+
+        return $query->where('is_active', true)
+                    ->where(function($q) use ($today) {
+                        $q->whereNull('start_date')->orWhere('start_date', '<=', $today);
+                    })
+                    ->where(function($q) use ($today) {
+                        $q->whereNull('end_date')->orWhere('end_date', '>=', $today);
+                    })
+                    ->where(function($q) {
+                        $q->whereNull('max_uses')->orWhereColumn('used_count', '<', 'max_uses');
+                    });
+    }
+
 }

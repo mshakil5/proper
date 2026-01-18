@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Order;
 
 class UserController extends Controller
 {
@@ -61,6 +62,15 @@ class UserController extends Controller
     public function orders()
     {
         return view('user.orders');
+    }
+
+    public function orderDetails(Order $order)
+    {
+        if ($order->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        return view('user.order-details', compact('order'));
     }
 
     public function coupons()

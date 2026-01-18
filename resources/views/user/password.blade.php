@@ -31,7 +31,7 @@
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
-                <small class="form-text">Password must be at least 8 characters</small>
+                <small class="form-text">Password must be at least 6 characters</small>
             </div>
 
             <div class="form-group">

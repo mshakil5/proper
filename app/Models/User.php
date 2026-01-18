@@ -17,6 +17,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function userPoints()
     {
         return $this->hasMany(UserPoint::class);

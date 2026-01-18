@@ -1,5 +1,3 @@
-<!-- resources/views/user/points.blade.php -->
-
 @extends('user.master')
 
 @section('user-content')
@@ -12,7 +10,7 @@
     <p class="dashboard-subtitle">Track your loyalty points and rewards</p>
 
     <div class="points-header">
-        <div class="points-total">450</div>
+        <div class="points-total">{{ auth()->user()->available_points }}</div>
         <p class="points-label">Total Points Available</p>
     </div>
 
@@ -27,44 +25,44 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Jan 15, 2026</td>
-                    <td>Order #ORD123456 Completed</td>
-                    <td><span class="earned-text">Earned</span></td>
-                    <td><span class="points-add">+45</span></td>
-                </tr>
-                <tr>
-                    <td>Jan 12, 2026</td>
-                    <td>Referral Bonus</td>
-                    <td><span class="earned-text">Earned</span></td>
-                    <td><span class="points-add">+100</span></td>
-                </tr>
-                <tr>
-                    <td>Jan 10, 2026</td>
-                    <td>Redeemed for Discount</td>
-                    <td><span class="redeemed-text">Redeemed</span></td>
-                    <td><span class="points-deduct">-50</span></td>
-                </tr>
-                <tr>
-                    <td>Jan 8, 2026</td>
-                    <td>Birthday Bonus</td>
-                    <td><span class="earned-text">Earned</span></td>
-                    <td><span class="points-add">+50</span></td>
-                </tr>
-                <tr>
-                    <td>Jan 5, 2026</td>
-                    <td>Order #ORD123454 Completed</td>
-                    <td><span class="earned-text">Earned</span></td>
-                    <td><span class="points-add">+28</span></td>
-                </tr>
-                <tr>
-                    <td>Jan 1, 2026</td>
-                    <td>New Year Bonus</td>
-                    <td><span class="earned-text">Earned</span></td>
-                    <td><span class="points-add">+25</span></td>
-                </tr>
+                @forelse(auth()->user()->userPoints()->latest()->paginate(10) as $point)
+                    <tr>
+                        <td>{{ $point->created_at->format('M d, Y') }}</td>
+                        <td>
+                            @if($point->order_id)
+                                <a href="{{ route('user.orders.details', $point->order_id) }}" style="text-decoration: none; color: inherit;">
+                                    Order #{{ $point->order_id }} Completed
+                                </a>
+                            @else
+                                Bonus / Adjustment
+                            @endif
+                        </td>
+                        <td>
+                            @if($point->point > 0)
+                                <span class="earned-text">Earned</span>
+                            @else
+                                <span class="redeemed-text">Redeemed</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($point->point > 0)
+                                <span class="points-add">+{{ $point->point }}</span>
+                            @else
+                                <span class="points-deduct">{{ $point->point }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="text-center">No points history available.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
+    </div>
+
+    <div class="mt-3">
+        {{ auth()->user()->userPoints()->latest()->paginate(10)->links('pagination::bootstrap-5') }}
     </div>
 </div>
 

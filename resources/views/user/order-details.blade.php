@@ -1,131 +1,107 @@
-<!-- resources/views/user/order-details.blade.php -->
-
 @extends('user.master')
 
 @section('user-content')
 
 <div class="user-dashboard-card">
-    <div class="order-details-header">
+    {{-- Order Header --}}
+    <div class="order-details-header d-flex justify-content-between flex-wrap">
         <div class="order-details-info">
-            <h4>Order #ORD123456</h4>
-            <p><strong>Order Date:</strong> January 15, 2026</p>
-            <p><strong>Delivery Address:</strong> 123 Main Street, New York, NY 10001</p>
+            <h4>Order #{{ $order->order_number }}</h4>
+            <p><strong>Order Date:</strong> {{ $order->created_at->format('F d, Y') }}</p>
+            <p><strong>Delivery Type:</strong> {{ ucfirst($order->delivery_type) }}</p>
+            @if($order->time)
+                <p><strong>Delivery/Collection Time:</strong> {{ $order->time }}</p>
+            @endif
+            <p><strong>Customer:</strong> {{ $order->first_name }} {{ $order->last_name }}</p>
+            <p><strong>Email:</strong> {{ $order->email ?? '-' }}</p>
+            <p><strong>Phone:</strong> {{ $order->phone ?? '-' }}</p>
+            <p><strong>Delivery Address:</strong> 
+                {{ $order->address_1 }} 
+                @if($order->address_2) , {{ $order->address_2 }} @endif
+                , {{ $order->street ?? '' }}
+                , {{ $order->city ?? '' }} 
+                , {{ $order->postcode ?? '' }}
+                , {{ $order->country ?? '' }}
+            </p>
+            @if($order->notes)
+                <p><strong>Notes:</strong> {{ $order->notes }}</p>
+            @endif
         </div>
-        <div class="order-details-status">
-            <div class="status-badge">Delivered</div>
-            <p>Delivered on Jan 17, 2026</p>
+
+        <div class="order-details-status text-end">
+            <div class="status-badge">{{ ucfirst($order->status) }}</div>
+            <p>Status updated on {{ $order->updated_at->format('M d, Y') }}</p>
+            <p><strong>Payment Method:</strong> {{ ucfirst($order->payment_method) }}</p>
+            <p><strong>Payment Status:</strong> {{ ucfirst($order->payment_status) }}</p>
         </div>
     </div>
 
-    <div class="order-timeline">
-        <h5>Order Timeline</h5>
-        
-        <div class="timeline-item">
-            <div class="timeline-dot">
-                <i class="fas fa-check"></i>
-            </div>
-            <div class="timeline-content">
-                <h6>Order Delivered</h6>
-                <p>January 17, 2026 at 2:30 PM</p>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-dot">
-                <i class="fas fa-truck"></i>
-            </div>
-            <div class="timeline-content">
-                <h6>Out for Delivery</h6>
-                <p>January 17, 2026 at 9:00 AM</p>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-dot">
-                <i class="fas fa-box"></i>
-            </div>
-            <div class="timeline-content">
-                <h6>Package Dispatched</h6>
-                <p>January 16, 2026 at 3:45 PM</p>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-dot">
-                <i class="fas fa-shopping-bag"></i>
-            </div>
-            <div class="timeline-content">
-                <h6>Order Confirmed</h6>
-                <p>January 15, 2026 at 10:20 AM</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="order-items-list">
+    {{-- Order Items --}}
+    <div class="order-items-list mt-4">
         <h5>Order Items</h5>
-        
-        <div class="order-item">
-            <img src="https://via.placeholder.com/70" alt="Product" class="order-item-img">
-            <div class="order-item-content">
-                <h6 class="order-item-name">Classic Margherita Pizza</h6>
-                <p class="order-item-detail">Size: Large</p>
-                <p class="order-item-detail">Quantity: 1</p>
-                <p class="order-item-price">$15.50</p>
-            </div>
-        </div>
+        <div class="row">
+            @forelse($order->items as $item)
+                <div class="col-12 col-md-6 mb-3">
+                    <div class="order-item d-flex">
+                        <img src="{{ $item->product->image ?? 'https://via.placeholder.com/70' }}" 
+                             alt="Product" class="order-item-img me-3">
+                        <div class="order-item-content">
+                            <h6 class="order-item-name">{{ $item->product_name }}</h6>
 
-        <div class="order-item">
-            <img src="https://via.placeholder.com/70" alt="Product" class="order-item-img">
-            <div class="order-item-content">
-                <h6 class="order-item-name">Garlic Bread</h6>
-                <p class="order-item-detail">Size: Regular</p>
-                <p class="order-item-detail">Quantity: 2</p>
-                <p class="order-item-price">$12.00</p>
-            </div>
-        </div>
+                            {{-- Options --}}
+                            @if($item->options->count())
+                                @foreach($item->options as $option)
+                                    <p class="order-item-detail">{{ $option->option_list_name }}: {{ $option->option_name }}</p>
+                                @endforeach
+                            @endif
 
-        <div class="order-item">
-            <img src="https://via.placeholder.com/70" alt="Product" class="order-item-img">
-            <div class="order-item-content">
-                <h6 class="order-item-name">Coca Cola</h6>
-                <p class="order-item-detail">Size: 500ml</p>
-                <p class="order-item-detail">Quantity: 2</p>
-                <p class="order-item-price">$6.00</p>
-            </div>
+                            <p class="order-item-detail">Quantity: {{ $item->quantity }}</p>
+                            <p class="order-item-price">£{{ number_format($item->total, 2) }}</p>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-12">
+                    <p>No items in this order.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 
-    <div class="order-summary">
+    {{-- Order Summary --}}
+    <div class="order-summary mt-4">
         <h5>Order Summary</h5>
-        
+
         <div class="summary-row">
             <span>Subtotal</span>
-            <span>$33.50</span>
+            <span>£{{ number_format($order->subtotal, 2) }}</span>
         </div>
+        @if($order->coupon_discount)
         <div class="summary-row">
-            <span>Delivery Fee</span>
-            <span>$5.00</span>
+            <span>Discount</span>
+            <span>-£{{ number_format($order->coupon_discount, 2) }}</span>
         </div>
+        @endif
+        @if($order->points_used)
         <div class="summary-row">
-            <span>Discount (10% OFF)</span>
-            <span>-$3.85</span>
+            <span>Points Used</span>
+            <span>-£{{ number_format($order->points_used, 2) }}</span>
         </div>
+        @endif
+        @if($order->other_discount)
         <div class="summary-row">
-            <span>Tax</span>
-            <span>$2.85</span>
+            <span>Other Discount</span>
+            <span>-£{{ number_format($order->other_discount, 2) }}</span>
         </div>
+        @endif
+
         <div class="summary-row total">
             <span>Total Amount</span>
-            <span>$37.50</span>
+            <span>£{{ number_format($order->total, 2) }}</span>
         </div>
-
-        <div class="order-details-badge">
-            <p><strong>Payment Method:</strong> Credit Card</p>
-            <p><strong>Status:</strong> Paid</p>
-        </div>
-
-        <button class="btn-reorder-now">Order Again</button>
     </div>
 </div>
+
+    <a href="{{ url()->previous() }}" class="btn-reorder-now">Back to Orders</a>
 
 @endsection

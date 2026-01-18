@@ -18,6 +18,8 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth', 'is_user'], 'as' => '
 
     Route::get('/orders', [UserController::class, 'orders'])->name('orders');
 
+    Route::get('/orders/{order}', [UserController::class, 'orderDetails'])->name('orders.details');
+
     Route::get('/coupons', [UserController::class, 'coupons'])->name('coupons');
 
     Route::get('/points', [UserController::class, 'points'])->name('points');
