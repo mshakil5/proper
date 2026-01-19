@@ -163,6 +163,13 @@
                 </li>
 
                 <li class="nav-item">
+                    <a href="{{ route('coupons.index') }}" class="nav-link {{ Route::is('coupons.index') ? 'active' : '' }}">
+                        <i class="ri-coupon-3-line"></i>
+                        <span>Coupons</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link menu-link {{ $settingsRoute ? 'active' : '' }}" 
                       href="#sidebarSettings" data-bs-toggle="collapse" role="button" 
                       aria-expanded="{{ $settingsRoute ? 'true' : 'false' }}" 

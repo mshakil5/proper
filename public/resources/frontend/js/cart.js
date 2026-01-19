@@ -1,8 +1,5 @@
 $(function () {
 
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    console.log('Cart:', cart);
-
     let selectedDelivery = {
         type: 'delivery',
         postcode: '',

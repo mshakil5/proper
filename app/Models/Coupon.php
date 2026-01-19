@@ -35,4 +35,8 @@ class Coupon extends Model
                     });
     }
 
+    public function scopeByCouponType($query, $type)
+    {
+        return $query->where('coupon_type', $type);
+    }
 }

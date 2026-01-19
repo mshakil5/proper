@@ -21,6 +21,13 @@ class ProductController extends Controller
             ->when($request->category_id, function($q) use ($request) {
                 $q->where('category_id', $request->category_id);
             })
+            ->when($request->product_type, function($q) use ($request) {
+                if ($request->product_type === 'main') {
+                    $q->where('status', 1);
+                } elseif ($request->product_type === 'sub') {
+                    $q->where('status', 0);
+                }
+            })
             ->latest();
             return DataTables::of($products)
                 ->addIndexColumn()
@@ -151,6 +158,7 @@ class ProductController extends Controller
         $product->sku_ref = $request->sku_ref;
         $product->short_description = $request->short_description;
         $product->long_description = $request->long_description;
+        $product->status = $request->product_type == 'sub' ? 0 : 1;
         
         $product->has_attribute = $request->has_attribute ? 1 : 0;
         if ($request->has_attribute) {
@@ -231,6 +239,7 @@ class ProductController extends Controller
         $product->sku_ref = $request->sku_ref;
         $product->short_description = $request->short_description;
         $product->long_description = $request->long_description;
+        $product->status = $request->product_type == 'sub' ? 0 : 1;
         
         $product->has_attribute = $request->has_attribute ? 1 : 0;
         if ($request->has_attribute) {

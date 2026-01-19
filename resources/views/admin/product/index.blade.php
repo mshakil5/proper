@@ -25,6 +25,20 @@
 
                             <div class="row g-3">
                                 <div class="col-md-12">
+                                    <label class="form-label">Product Type <span class="text-danger">*</span></label>
+                                    <div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" id="typeMain" name="product_type" value="main" checked>
+                                            <label class="form-check-label" for="typeMain">Main Product</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" id="typeSub" name="product_type" value="sub">
+                                            <label class="form-check-label" for="typeSub">Sub Product</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
                                     <label class="form-label">Product Title <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="title" name="title">
                                 </div>
@@ -85,7 +99,6 @@
                                         placeholder="Enter long description (optional)"></textarea>
                                 </div>
 
-                                <!-- ATTRIBUTE SECTION -->
                                 <div class="col-md-12">
                                     <hr>
                                     <h6 class="mb-3">Product Attribute (Optional)</h6>
@@ -128,36 +141,81 @@
 
     <div class="container-fluid" id="contentContainer">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">Products List</h4>
-
-                <div style="width:200px;">
-                    <select id="filterCategory" class="form-control select2">
-                        <option value="">All Categories</option>
-                        @foreach ($categories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+            <div class="card-header">
+                <ul class="nav nav-tabs nav-tabs-custom rounded card-header-tabs border-bottom-0" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#mainProducts" role="tab" data-type="main">
+                            <span class="d-block d-sm-none"><i class="fas fa-home"></i></span>
+                            <span class="d-none d-sm-block">Main Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#subProducts" role="tab" data-type="sub">
+                            <span class="d-block d-sm-none"><i class="fas fa-bars"></i></span>
+                            <span class="d-none d-sm-block">Sub Products</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
-
             <div class="card-body">
-                <table id="productTable" class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>Sl</th>
-                            <th>Image</th>
-                            <th>Title</th>
-                            <th>Price</th>
-                            <th>Category</th>
-                            <th>Reference</th>
-                            <th>Status</th>
-                            <th>Stock</th>
-                            <th>Show in Menu</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                </table>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="mainProducts" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Main Products List</h5>
+                            <div style="width:200px;">
+                                <select id="filterCategory" class="form-control select2">
+                                    <option value="">All Categories</option>
+                                    @foreach ($categories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <table id="productTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sl</th>
+                                    <th>Image</th>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>Category</th>
+                                    <th>Reference</th>
+                                    <th>Status</th>
+                                    <th>Stock</th>
+                                    <th>Show in Menu</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <div class="tab-pane fade" id="subProducts" role="tabpanel">
+                        <div style="width:200px; margin-bottom: 15px;">
+                            <select id="filterCategorySub" class="form-control select2">
+                                <option value="">All Categories</option>
+                                @foreach ($categories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <table id="productTableSub" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sl</th>
+                                    <th>Image</th>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>Category</th>
+                                    <th>Reference</th>
+                                    <th>Status</th>
+                                    <th>Stock</th>
+                                    <th>Show in Menu</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -167,16 +225,20 @@
 @section('script')
     <script>
         let currentProductId = null;
+        let currentProductType = 'main';
+        let mainTable, subTable;
 
-        $(document).ready(function() {
-            $('#productTable').DataTable({
+        function initDataTable(tableId, productType) {
+            return $('#' + tableId).DataTable({
                 processing: true,
                 serverSide: true,
                 pageLength: 25,
+                destroy: true,
                 ajax: {
                     url: "{{ route('allproducts') }}",
                     data: function (d) {
-                        d.category_id = $('#filterCategory').val(); 
+                        d.category_id = productType === 'main' ? $('#filterCategory').val() : $('#filterCategorySub').val();
+                        d.product_type = productType;
                     }
                 },
                 columns: [{
@@ -186,45 +248,43 @@
                         searchable: false
                     },
                     { data: 'image', name: 'image', orderable:false, searchable:false },
-                    {
-                        data: 'title',
-                        name: 'title'
-                    },
-                    {
-                        data: 'price',
-                        name: 'price'
-                    },
+                    { data: 'title', name: 'title' },
+                    { data: 'price', name: 'price' },
                     { data: 'category_name', name: 'category_name' },
                     { data: 'sku_ref', name: 'sku_ref' },
-                    {
-                        data: 'status',
-                        name: 'status',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'stock_status',
-                        name: 'stock_status',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'sidebar',
-                        name: 'sidebar',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
-                    }
+                    { data: 'status', name: 'status', orderable: false, searchable: false },
+                    { data: 'stock_status', name: 'stock_status', orderable: false, searchable: false },
+                    { data: 'sidebar', name: 'sidebar', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]
+            });
+        }
+
+        $(document).ready(function() {
+            mainTable = initDataTable('productTable', 'main');
+
+            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                let type = $(e.target).data('type');
+
+                if (type === 'sub') {
+                    if ($.fn.DataTable.isDataTable('#productTableSub')) {
+                        subTable.columns.adjust().draw(false);
+                    } else {
+                        subTable = initDataTable('productTableSub', 'sub');
+                    }
+                }
+
+                if (type === 'main') {
+                    mainTable.columns.adjust().draw(false);
+                }
             });
 
             $('#filterCategory').change(function() {
-                reloadTable('#productTable');
+                mainTable.ajax.reload();
+            });
+
+            $('#filterCategorySub').change(function() {
+                subTable.ajax.reload();
             });
 
             $(document).on('change', '.toggle-status', function() {
@@ -235,7 +295,11 @@
                     product_id: product_id,
                     status: status
                 }, function(d) {
-                    reloadTable('#productTable');
+                    if (currentProductType === 'main') {
+                        mainTable.ajax.reload();
+                    } else {
+                        subTable.ajax.reload();
+                    }
                     showSuccess(d.message);
                 }).fail(() => showError('Failed to update status'));
             });
@@ -248,7 +312,11 @@
                     product_id: product_id,
                     stock_status: stock_status
                 }, function(d) {
-                    reloadTable('#productTable');
+                    if (currentProductType === 'main') {
+                        mainTable.ajax.reload();
+                    } else {
+                        subTable.ajax.reload();
+                    }
                     showSuccess(d.message);
                 }).fail(() => showError('Failed to update stock status'));
             });
@@ -261,7 +329,11 @@
                     product_id: product_id,
                     show_in_menu: show_in_menu
                 }, function(d) {
-                    reloadTable('#productTable');
+                    if (currentProductType === 'main') {
+                        mainTable.ajax.reload();
+                    } else {
+                        subTable.ajax.reload();
+                    }
                     showSuccess(d.message);
                 }).fail(() => showError('Failed to update sidebar visibility'));
             });
@@ -298,8 +370,7 @@
                 form_data.append("sku_ref", $("#sku_ref").val());
                 form_data.append("short_description", $("#short_description").val());
                 form_data.append("long_description", $(".summernote").summernote('code'));
-                
-                // Attribute fields
+                form_data.append("product_type", $('input[name="product_type"]:checked').val());
                 form_data.append("has_attribute", $("#has_attribute").is(':checked') ? 1 : 0);
                 form_data.append("attribute_name", $("#attribute_name").val());
                 form_data.append("attribute_price", $("#attribute_price").val());
@@ -322,7 +393,11 @@
                             setTimeout(() => {
                                 $("#newBtn").show();
                             }, 300);
-                            reloadTable('#productTable');
+                            if (currentProductType === 'main') {
+                                mainTable.ajax.reload();
+                            } else {
+                                subTable.ajax.reload();
+                            }
                             clearform();
                         },
                         error: function(xhr) {
@@ -351,7 +426,11 @@
                             setTimeout(() => {
                                 $("#newBtn").show();
                             }, 300);
-                            reloadTable('#productTable');
+                            if (currentProductType === 'main') {
+                                mainTable.ajax.reload();
+                            } else {
+                                subTable.ajax.reload();
+                            }
                             clearform();
                         },
                         error: function(xhr) {
@@ -367,7 +446,7 @@
                 }
             });
 
-            $("#contentContainer").on('click', '#EditBtn', function() {
+            $(document).on('click', '#EditBtn', function() {
                 $("#cardTitle").text('Update Product');
                 codeid = $(this).attr('rid');
                 currentProductId = codeid;
@@ -399,12 +478,13 @@
                 $("#short_description").val(data.short_description);
                 $(".summernote").summernote('code', data.long_description);
                 
-                // Populate attribute fields
+                let productType = data.status == 1 ? 'main' : 'sub';
+                $('input[name="product_type"][value="' + productType + '"]').prop('checked', true);
+                
                 $("#has_attribute").prop('checked', data.has_attribute == 1);
                 $("#attribute_name").val(data.attribute_name || '');
                 $("#attribute_price").val(data.attribute_price || '0.00');
                 
-                // Toggle visibility of attribute fields
                 toggleAttributeFields();
                 
                 $("#codeid").val(data.id);
@@ -430,6 +510,7 @@
                 $("#tag_id").val(null).trigger('change');
                 $("#preview-image").attr('src', '/placeholder.webp');
                 $("#removeImageBtn").hide();
+                $('input[name="product_type"][value="main"]').prop('checked', true);
                 $("#has_attribute").prop('checked', false);
                 $("#attribute_name").val('');
                 $("#attribute_price").val('');

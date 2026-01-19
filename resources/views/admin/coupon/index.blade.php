@@ -1,12 +1,12 @@
 @extends('admin.pages.master')
-@section('title', 'Coupons')
+@section('title', 'Coupons & Vouchers')
 @section('content')
 
     <div class="container-fluid" id="newBtnSection">
         <div class="row mb-3">
             <div class="col text-start">
                 <button type="button" class="btn btn-primary" id="newBtn">
-                    <i class="ri-coupon-line me-1"></i> Add New Coupon
+                    <i class="ri-coupon-line me-1"></i> Add New
                 </button>
             </div>
         </div>
@@ -25,14 +25,28 @@
                             <input type="hidden" id="codeid" name="codeid">
 
                             <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Type <span class="text-danger">*</span></label>
+                                    <div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" id="typeCoupon" name="coupon_type" value="coupon" checked>
+                                            <label class="form-check-label" for="typeCoupon">Coupon</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" id="typeVoucher" name="coupon_type" value="voucher">
+                                            <label class="form-check-label" for="typeVoucher">Voucher</label>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="col-md-6">
-                                    <label class="form-label">Coupon Code <span class="text-danger">*</span></label>
+                                    <label class="form-label">Code <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control text-uppercase" id="code" name="code" placeholder="e.g., SAVE20">
                                     <small class="text-muted">Uppercase letters and numbers only</small>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Coupon Name <span class="text-danger">*</span></label>
+                                    <label class="form-label">Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="name" name="name" placeholder="e.g., Summer Sale 20% Off">
                                 </div>
 
@@ -45,7 +59,7 @@
                                     <label class="form-label">Discount Type <span class="text-danger">*</span></label>
                                     <select class="form-control" id="discount_type" name="discount_type">
                                         <option value="percent">Percentage (%)</option>
-                                        <option value="fixed">Fixed Amount ($)</option>
+                                        <option value="fixed">Fixed Amount (£)</option>
                                     </select>
                                 </div>
 
@@ -60,16 +74,22 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Minimum Order Amount</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">£</span>
                                         <input type="number" class="form-control" id="min_order_amount" name="min_order_amount" step="0.01" min="0" placeholder="0.00">
                                     </div>
                                     <small class="text-muted">Set 0 for no minimum</small>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Maximum Uses</label>
+                                    <label class="form-label">Maximum Total Uses</label>
                                     <input type="number" class="form-control" id="max_uses" name="max_uses" min="1" placeholder="Leave empty for unlimited">
-                                    <small class="text-muted">Leave empty for unlimited uses</small>
+                                    <small class="text-muted">Leave empty for unlimited</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Max Uses Per User</label>
+                                    <input type="number" class="form-control" id="max_uses_per_user" name="max_uses_per_user" min="1" placeholder="Leave empty for unlimited">
+                                    <small class="text-muted">Leave empty for unlimited</small>
                                 </div>
 
                                 <div class="col-md-6">
@@ -85,7 +105,7 @@
                                 </div>
 
                                 <div class="col-md-12">
-                                    <label class="form-label">Coupon Image (Optional)</label>
+                                    <label class="form-label">Image (Optional)</label>
                                     <input type="file" class="form-control" id="image" accept="image/*"
                                         onchange="previewImage(event, '#preview-image')">
                                     <img id="preview-image" src="#" alt="" class="img-thumbnail rounded mt-3"
@@ -96,12 +116,8 @@
                         </form>
                     </div>
                     <div class="card-footer text-end">
-                        <button type="submit" id="addBtn" class="btn btn-primary">
-                            Create Coupon
-                        </button>
-                        <button type="button" id="FormCloseBtn" class="btn btn-light">
-                            Cancel
-                        </button>
+                        <button type="submit" id="addBtn" class="btn btn-primary">Create</button>
+                        <button type="button" id="FormCloseBtn" class="btn btn-light">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -111,23 +127,57 @@
     <div class="container-fluid" id="contentContainer">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0">Coupons</h4>
+                <ul class="nav nav-tabs nav-tabs-custom rounded card-header-tabs border-bottom-0" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#coupons" role="tab" data-type="coupon">
+                            <span class="d-block d-sm-none"><i class="fas fa-ticket"></i></span>
+                            <span class="d-none d-sm-block">Coupons</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#vouchers" role="tab" data-type="voucher">
+                            <span class="d-block d-sm-none"><i class="fas fa-gift"></i></span>
+                            <span class="d-none d-sm-block">Vouchers</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
             <div class="card-body">
-                <table id="couponsTable" class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Coupon Code</th>
-                            <th>Image</th>
-                            <th>Discount Info</th>
-                            <th>Usage</th>
-                            <th>Validity</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                </table>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="coupons" role="tabpanel">
+                        <table id="couponsTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Code</th>
+                                    <th>Image</th>
+                                    <th>Discount</th>
+                                    <th>Usage</th>
+                                    <th>Validity</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <div class="tab-pane fade" id="vouchers" role="tabpanel">
+                        <table id="vouchersTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Code</th>
+                                    <th>Image</th>
+                                    <th>Discount</th>
+                                    <th>Usage</th>
+                                    <th>Validity</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -136,79 +186,68 @@
 
 @section('script')
 <script>
+    let couponTable, voucherTable;
+    let currentType = 'coupon';
+
+    function initDataTable(tableId, type) {
+        return $('#' + tableId).DataTable({
+            processing: true,
+            serverSide: true,
+            pageLength: 25,
+            destroy: true,
+            ajax: {
+                url: "{{ route('coupons.index') }}",
+                type: "GET",
+                data: function(d) {
+                    d.coupon_type = type;
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            },
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'code', name: 'code' },
+                { data: 'image', name: 'image', orderable: false, searchable: false },
+                { data: 'discount_info', name: 'discount_info', orderable: false, searchable: false },
+                { data: 'usage', name: 'usage', orderable: false, searchable: false },
+                { data: 'dates', name: 'dates', orderable: false, searchable: false },
+                { data: 'status', name: 'status', orderable: false, searchable: false },
+                { data: 'action', name: 'action', orderable: false, searchable: false }
+            ]
+        });
+    }
+
     $(document).ready(function() {
+        couponTable = initDataTable('couponsTable', 'coupon');
+
+        $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+            let type = $(e.target).data('type');
+            currentType = type;
+
+            if (type === 'voucher') {
+                if ($.fn.DataTable.isDataTable('#vouchersTable')) {
+                    voucherTable.columns.adjust().draw(false);
+                } else {
+                    voucherTable = initDataTable('vouchersTable', 'voucher');
+                }
+            }
+
+            if (type === 'coupon') {
+                couponTable.columns.adjust().draw(false);
+            }
+        });
+
         // Set default dates
         $('#start_date').val(new Date().toISOString().split('T')[0]);
         var nextMonth = new Date();
         nextMonth.setMonth(nextMonth.getMonth() + 1);
         $('#end_date').val(nextMonth.toISOString().split('T')[0]);
 
-        // Update discount suffix based on type
         $('#discount_type').change(function() {
-            var suffix = $(this).val() === 'percent' ? '%' : '$';
+            var suffix = $(this).val() === 'percent' ? '%' : '£';
             $('#discount_suffix').text(suffix);
             $('#discount_value').attr('placeholder', $(this).val() === 'percent' ? 'e.g., 20' : 'e.g., 10.00');
-        });
-
-        $('#couponsTable').DataTable({
-            processing: true,
-            serverSide: true,
-            pageLength: 25,
-                ajax: {
-        url: "{{ route('coupons.index') }}",
-        type: "GET",
-        error: function (xhr, status, error) {
-            console.error(xhr.responseText);
-        }
-    },
-            columns: [
-                {
-                    data: 'DT_RowIndex',
-                    name: 'DT_RowIndex',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'code',
-                    name: 'code'
-                },
-                {
-                    data: 'image',
-                    name: 'image',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'discount_info',
-                    name: 'discount_info',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'usage',
-                    name: 'usage',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'dates',
-                    name: 'dates',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'status',
-                    name: 'status',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
-                }
-            ]
         });
 
         $(document).on('change', '.toggle-status', function() {
@@ -224,7 +263,11 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(d) {
-                    reloadTable('#couponsTable');
+                    if (currentType === 'coupon') {
+                        couponTable.ajax.reload();
+                    } else {
+                        voucherTable.ajax.reload();
+                    }
                     showSuccess(d.message);
                 },
                 error: function(xhr, status, error) {
@@ -243,6 +286,7 @@
             clearform();
             $("#newBtn").hide(100);
             $("#addThisFormContainer").show(300);
+            pageTop();
         });
         
         $("#FormCloseBtn").click(function() {
@@ -261,7 +305,6 @@
         var upurl = "{{ route('coupons.update') }}";
 
         $("#addBtn").click(function() {
-            //create
             if ($(this).val() == 'Create') {
                 var form_data = new FormData();
                 form_data.append("code", $("#code").val().toUpperCase());
@@ -271,6 +314,8 @@
                 form_data.append("discount_value", $("#discount_value").val());
                 form_data.append("min_order_amount", $("#min_order_amount").val() || 0);
                 form_data.append("max_uses", $("#max_uses").val());
+                form_data.append("max_uses_per_user", $("#max_uses_per_user").val());
+                form_data.append("coupon_type", $('input[name="coupon_type"]:checked').val());
                 form_data.append("start_date", $("#start_date").val());
                 form_data.append("end_date", $("#end_date").val());
 
@@ -291,7 +336,11 @@
                         setTimeout(() => {
                             $("#newBtn").show(200);
                         }, 300);
-                        reloadTable('#couponsTable');
+                        if (currentType === 'coupon') {
+                            couponTable.ajax.reload();
+                        } else {
+                            voucherTable.ajax.reload();
+                        }
                         clearform();
                     },
                     error: function(xhr, status, error) {
@@ -305,9 +354,7 @@
                     }
                 });
             }
-            //create  end
 
-            //Update
             if ($(this).val() == 'Update') {
                 var form_data = new FormData();
                 form_data.append("code", $("#code").val().toUpperCase());
@@ -317,6 +364,8 @@
                 form_data.append("discount_value", $("#discount_value").val());
                 form_data.append("min_order_amount", $("#min_order_amount").val() || 0);
                 form_data.append("max_uses", $("#max_uses").val());
+                form_data.append("max_uses_per_user", $("#max_uses_per_user").val());
+                form_data.append("coupon_type", $('input[name="coupon_type"]:checked').val());
                 form_data.append("start_date", $("#start_date").val());
                 form_data.append("end_date", $("#end_date").val());
                 form_data.append("codeid", $("#codeid").val());
@@ -335,12 +384,15 @@
                     data: form_data,
                     success: function(d) {
                         showSuccess(d.message);
-                        $("#addThisFormContainer").hide();
                         $("#addThisFormContainer").slideUp(300);
                         setTimeout(() => {
                             $("#newBtn").show(200);
                         }, 300);
-                        reloadTable('#couponsTable');
+                        if (currentType === 'coupon') {
+                            couponTable.ajax.reload();
+                        } else {
+                            voucherTable.ajax.reload();
+                        }
                         clearform();
                     },
                     error: function(xhr, status, error) {
@@ -354,20 +406,17 @@
                     }
                 });
             }
-            //Update  end
         });
         
-        //Edit
-        $("#contentContainer").on('click', '#EditBtn', function() {
+        $(document).on('click', '#EditBtn', function() {
             $("#cardTitle").text('Update Coupon');
             codeid = $(this).attr('rid');
             info_url = "{{ route('coupons.edit', ':id') }}".replace(':id', codeid);
             $.get(info_url, {}, function(d) {
                 populateForm(d);
-                pagetop();
+                pageTop();
             });
         });
-        //Edit  end 
         
         function populateForm(data) {
             $("#code").val(data.code);
@@ -377,6 +426,8 @@
             $("#discount_value").val(data.discount_value);
             $("#min_order_amount").val(data.min_order_amount);
             $("#max_uses").val(data.max_uses);
+            $("#max_uses_per_user").val(data.max_uses_per_user);
+            $('input[name="coupon_type"][value="' + data.coupon_type + '"]').prop('checked', true);
             $("#start_date").val(data.start_date);
             $("#end_date").val(data.end_date);
             $("#codeid").val(data.id);
@@ -385,7 +436,6 @@
             $("#addThisFormContainer").show(300);
             $("#newBtn").hide(100);
 
-            // Update discount suffix
             $('#discount_type').trigger('change');
 
             var imagePreview = document.getElementById('preview-image');
@@ -401,19 +451,18 @@
         function clearform() {
             $('#createThisForm')[0].reset();
             $("#addBtn").val('Create');
-            $("#addBtn").html('Create Coupon');
+            $("#addBtn").html('Create');
             $('#preview-image').attr('src', '#').hide();
             $("#cardTitle").text('Add New Coupon');
             
-            // Reset dates and update suffix
             $('#start_date').val(new Date().toISOString().split('T')[0]);
             var nextMonth = new Date();
             nextMonth.setMonth(nextMonth.getMonth() + 1);
             $('#end_date').val(nextMonth.toISOString().split('T')[0]);
+            $('input[name="coupon_type"][value="coupon"]').prop('checked', true);
             $('#discount_type').trigger('change');
         }
 
-        // Preview image function
         function previewImage(event, selector) {
             var reader = new FileReader();
             reader.onload = function() {

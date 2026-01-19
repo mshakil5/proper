@@ -15,7 +15,11 @@ class CouponController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $coupons = Coupon::select(['id', 'code', 'name', 'image', 'discount_type', 'discount_value', 'min_order_amount', 'start_date', 'end_date', 'is_active', 'used_count', 'max_uses'])->orderBy('id', 'desc');
+            $coupons = Coupon::select(['id', 'code', 'name', 'image', 'discount_type', 'discount_value', 'min_order_amount', 'start_date', 'end_date', 'is_active', 'used_count', 'max_uses', 'coupon_type', 'max_uses_per_user'])
+                ->when($request->coupon_type, function($q) use ($request) {
+                    $q->where('coupon_type', $request->coupon_type);
+                })
+                ->orderBy('id', 'desc');
             
             return DataTables::of($coupons)
                 ->addIndexColumn()
@@ -27,10 +31,10 @@ class CouponController extends Controller
                 ->addColumn('discount_info', function ($row) {
                     $discount = $row->discount_type === 'percent' 
                         ? $row->discount_value . '%' 
-                        : '$' . number_format($row->discount_value, 2);
+                        : '£' . number_format($row->discount_value, 2);
                     
                     $minAmount = $row->min_order_amount > 0 
-                        ? '<br><small>Min: $' . number_format($row->min_order_amount, 2) . '</small>' 
+                        ? '<br><small>Min: £' . number_format($row->min_order_amount, 2) . '</small>' 
                         : '';
                     
                     $typeBadge = $row->discount_type === 'percent' 
@@ -43,7 +47,8 @@ class CouponController extends Controller
                     $uses = $row->used_count;
                     $max = $row->max_uses ?? '∞';
                     $maxText = $max === '∞' ? '∞' : $max;
-                    return $uses . ' / ' . $maxText;
+                    $perUser = $row->max_uses_per_user ? '<br><small>Per user: ' . $row->max_uses_per_user . '</small>' : '';
+                    return $uses . ' / ' . $maxText . $perUser;
                 })
                 ->addColumn('dates', function ($row) {
                     $start = $row->start_date 
@@ -119,6 +124,8 @@ class CouponController extends Controller
             'discount_value' => 'required|numeric|min:0.01',
             'min_order_amount' => 'nullable|numeric|min:0',
             'max_uses' => 'nullable|integer|min:1',
+            'max_uses_per_user' => 'nullable|integer|min:1',
+            'coupon_type' => 'required|in:coupon,voucher',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -137,6 +144,8 @@ class CouponController extends Controller
         $data->discount_value = $request->discount_value;
         $data->min_order_amount = $request->min_order_amount ?? 0;
         $data->max_uses = $request->max_uses;
+        $data->max_uses_per_user = $request->max_uses_per_user;
+        $data->coupon_type = $request->coupon_type;
         $data->start_date = $request->start_date;
         $data->end_date = $request->end_date;
 
@@ -181,6 +190,8 @@ class CouponController extends Controller
             'discount_value' => $coupon->discount_value,
             'min_order_amount' => $coupon->min_order_amount,
             'max_uses' => $coupon->max_uses,
+            'max_uses_per_user' => $coupon->max_uses_per_user,
+            'coupon_type' => $coupon->coupon_type,
             'start_date' => $coupon->start_date ? Carbon::parse($coupon->start_date)->format('Y-m-d') : null,
             'end_date' => $coupon->end_date ? Carbon::parse($coupon->end_date)->format('Y-m-d') : null,
             'image' => $coupon->image ? url($coupon->image) : null,
@@ -196,6 +207,8 @@ class CouponController extends Controller
             'discount_value' => 'required|numeric|min:0.01',
             'min_order_amount' => 'nullable|numeric|min:0',
             'max_uses' => 'nullable|integer|min:1',
+            'max_uses_per_user' => 'nullable|integer|min:1',
+            'coupon_type' => 'required|in:coupon,voucher',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -214,12 +227,14 @@ class CouponController extends Controller
         $data->discount_value = $request->discount_value;
         $data->min_order_amount = $request->min_order_amount ?? 0;
         $data->max_uses = $request->max_uses;
+        $data->max_uses_per_user = $request->max_uses_per_user;
+        $data->coupon_type = $request->coupon_type;
         $data->start_date = $request->start_date;
         $data->end_date = $request->end_date;
+        
         if ($request->hasFile('image')) {
             $uploadedFile = $request->file('image');
 
-            // Delete old image if exists
             if ($data->image && file_exists(public_path($data->image))) {
                 @unlink(public_path($data->image));
             }
@@ -256,7 +271,6 @@ class CouponController extends Controller
             ], 404);
         }
 
-        // Delete image if exists
         if ($data->image && file_exists(public_path($data->image))) {
             @unlink(public_path($data->image));
         }
@@ -335,7 +349,7 @@ class CouponController extends Controller
         if ($coupon->min_order_amount > 0 && $request->amount < $coupon->min_order_amount) {
             return response()->json([
                 'valid' => false,
-                'message' => 'Minimum order amount of $' . number_format($coupon->min_order_amount, 2) . ' required'
+                'message' => 'Minimum order amount of £' . number_format($coupon->min_order_amount, 2) . ' required'
             ], 400);
         }
 

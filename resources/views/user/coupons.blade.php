@@ -5,7 +5,7 @@
 <div class="user-dashboard-card">
     <h3 class="dashboard-title">
         <i class="fas fa-ticket-alt"></i>
-        Available Coupons ({{ \App\Models\Coupon::active()->count() }})
+        Available Coupons and Vouchers ({{ \App\Models\Coupon::active()->count() }})
     </h3>
     <p class="dashboard-subtitle">Claim and use exciting discounts on your next order</p>
 
@@ -30,7 +30,7 @@
                 </div>
             </div>
         @empty
-            <p class="text-center">No active coupons available at the moment.</p>
+            <p class="text-center">No active coupons and vouchers available at the moment.</p>
         @endforelse
     </div>
 </div>
@@ -44,6 +44,5 @@ function copyCoupon(code) {
     });
 }
 </script>
-
 
 @endsection
