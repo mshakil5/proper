@@ -222,6 +222,9 @@
                     <!-- Delivery Address Card (show for delivery only) -->
                     <div class="checkout-card" id="addressCard" style="display: none;">
                         <h5 class="checkout-title" id="addressCardTitle">Delivery Address</h5>
+                            <small style="font-size:12px; color:#999">
+                                (may be different from your profile address)
+                            </small>
                         <form id="addressForm">
                             <!-- Postcode Row -->
                             <div class="row g-3 mb-3">
@@ -362,13 +365,13 @@
 
                         <div class="summary-divider"></div>
 
-                        <!-- Points Redemption (Only for authenticated users with points) -->
+                        <!-- Points Redemption (Only for authenticated users with 100+ points) -->
                         @if(auth()->check())
                             @php
                                 $userAvailablePoints = auth()->user()->available_points ?? 0;
                             @endphp
                             
-                            @if($userAvailablePoints > 0)
+                            @if($userAvailablePoints >= 100)
                                 <div class="points-redemption-section">
                                     <h6 class="points-section-title">
                                         <i class="fas fa-star"></i> Redeem Points
@@ -383,12 +386,12 @@
 
                                     <div id="pointsContainer" class="points-input-container" style="display: none;">
                                         <div class="points-info-box">
-                                            <p><strong>1 point = £1</strong></p>
+                                            <p><strong>100 points = £1</strong></p>
                                         </div>
 
                                         <label class="form-label">Points to Redeem</label>
                                         <input type="number" class="form-control" id="pointsToUse" name="points_to_use"
-                                               min="0" max="{{ $userAvailablePoints }}" value="0" placeholder="0">
+                                               min="0" value="0" placeholder="0">
 
                                         <div class="points-display-box">
                                             <div class="points-row">
@@ -515,7 +518,6 @@
                 return;
             }
 
-            // Toggle address card based on delivery type
             function toggleAddressCard() {
                 if (checkoutData.delivery.type === 'delivery') {
                     $('#addressCard').show();
@@ -656,7 +658,6 @@
                 $('#city').val(selected.city);
             });
 
-            // Points Checkbox
             $('#usePoints').on('change', function() {
                 if ($(this).is(':checked')) {
                     $('#pointsContainer').slideDown();
@@ -669,30 +670,45 @@
                 }
             });
 
-            // Points Input
-            $('#pointsToUse').on('input', function() {
+            $('#pointsToUse').on('blur', function() {
                 let val = parseInt($(this).val()) || 0;
                 const subtotal = checkoutData.subtotal;
-                const maxPoints = Math.min(userAvailablePoints, Math.floor(subtotal));
+                const maxDiscount = Math.floor(subtotal * 100);
+                const maxPoints = Math.min(userAvailablePoints, maxDiscount);
                 
                 if (val > maxPoints) {
                     val = maxPoints;
-                    $(this).val(maxPoints);
                 }
                 
                 if (val < 0) {
                     val = 0;
-                    $(this).val(0);
                 }
 
+                $(this).val(val);
                 pointsUsed = val;
-                pointsUsedDiscount = val * 1; // 1 point = £1
+                pointsUsedDiscount = val / 100;
                 
                 $('#pointsUsedDisplay').text(pointsUsed);
                 $('#pointsDiscountDisplay').text('£' + pointsUsedDiscount.toFixed(2));
                 $('#remainingPointsDisplay').text(userAvailablePoints - pointsUsed);
                 
                 updateTotals();
+            }).on('input', function() {
+                let val = parseInt($(this).val()) || 0;
+                const subtotal = checkoutData.subtotal;
+                const maxDiscount = Math.floor(subtotal * 100);
+                const maxPoints = Math.min(userAvailablePoints, maxDiscount);
+                
+                if (val > maxPoints) {
+                    $(this).val(maxPoints);
+                    val = maxPoints;
+                }
+                
+                if (val >= 0) {
+                    $('#pointsUsedDisplay').text(val);
+                    $('#pointsDiscountDisplay').text('£' + (val / 100).toFixed(2));
+                    $('#remainingPointsDisplay').text(userAvailablePoints - val);
+                }
             });
 
             function updateDeliveryDetailsWithNewPostcode(postcode, charge) {
@@ -1049,7 +1065,7 @@
                     subtotal: checkoutData.subtotal,
                     deliveryCharge: checkoutData.deliveryCharge,
                     coupon_discount: appliedPromoDiscount,
-                    points_used: pointsUsed,
+                    points_used: parseInt($('#pointsToUse').val()) || 0,
                     coupon_id: appliedCoupon?.id || null,
                     paymentMethod: selectedPaymentMethod,
                     total: totalPrice
@@ -1070,13 +1086,10 @@
                         localOrder: localOrder
                     }),
                     success: function(response) {
-                        console.log(response);
                         if (response.redirectUrl) {
                             window.location.href = response.redirectUrl;
                         } else {
-
                             showSuccess('Order placed successfully!');
-
                             localStorage.removeItem('cart');
                             localStorage.removeItem('cartSummary');
                             localStorage.removeItem('deliveryOptions');

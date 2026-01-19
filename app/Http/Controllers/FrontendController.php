@@ -345,18 +345,51 @@ class FrontendController extends Controller
     public function placeOrder(Request $request)
     {
         try {
+
+            $request->validate([
+                'hubRiseOrder' => 'required|array',
+                'hubRiseOrder.service_type' => 'required|in:delivery,collection',
+
+                'localOrder' => 'required|array',
+                'localOrder.customer.firstName' => 'required|string|max:100',
+                'localOrder.customer.lastName' => 'nullable|string|max:100',
+                'localOrder.customer.email' => 'required|email',
+                'localOrder.customer.phone' => 'required|string|max:20',
+
+                'localOrder.cart' => 'required|array|min:1',
+                'localOrder.cart.*.title' => 'required|string',
+                'localOrder.cart.*.quantity' => 'required|integer|min:1',
+                'localOrder.cart.*.price' => 'required|numeric|min:0',
+
+                'localOrder.subtotal' => 'required|numeric|min:0',
+                'localOrder.deliveryCharge' => 'required|numeric|min:0',
+                'localOrder.total' => 'required|numeric|min:0',
+
+                'localOrder.paymentMethod' => 'required|in:cash,stripe,paypal',
+                'localOrder.points_used' => 'nullable|integer|min:0',
+                'localOrder.coupon_id' => 'nullable|integer',
+            ]);
+
+            if (($request->hubRiseOrder['service_type'] ?? '') === 'delivery') {
+                $request->validate([
+                    'localOrder.address' => 'required|string|max:255',
+                    'localOrder.city' => 'required|string|max:100',
+                    'localOrder.postalCode' => 'required|string|max:20',
+                ]);
+            }
+
             $hubRiseOrder = $request->input('hubRiseOrder');
             $localOrder = $request->input('localOrder');
 
             $accessToken = env('HUBRISE_ACCESS_TOKEN');
             $locationId = env('HUBRISE_LOCATION_ID');
 
-            // if (!$accessToken || !$locationId) {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'HubRise credentials not configured'
-            //     ], 500);
-            // }
+            if (!$accessToken || !$locationId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'HubRise credentials not configured'
+                ], 500);
+            }
 
             // Validate service type
             $serviceType = $hubRiseOrder['service_type'] ?? 'delivery';
@@ -407,7 +440,7 @@ class FrontendController extends Controller
                 'delivery_charge' => $localOrder['deliveryCharge'],
                 'coupon_discount' => $localOrder['coupon_discount'],
                 'coupon_id' => $localOrder['coupon_id'],
-                'points_used' => $localOrder['points_used'],
+                'points_used' => intval($localOrder['points_used'] ?? 0) / 100,
                 'other_discount' => 0.00,
                 'total' => $localOrder['total'],
                 'payment_method' => $localOrder['paymentMethod'],
@@ -682,25 +715,25 @@ class FrontendController extends Controller
         }
 
         // Send to HubRise
-        // $response = Http::withHeaders([
-        //     'X-Access-Token' => $accessToken,
-        //     'Content-Type' => 'application/json'
-        // ])->post(
-        //     "https://api.hubrise.com/v1/locations/{$locationId}/orders",
-        //     $hubRisePayload
-        // );
+        $response = Http::withHeaders([
+            'X-Access-Token' => $accessToken,
+            'Content-Type' => 'application/json'
+        ])->post(
+            "https://api.hubrise.com/v1/locations/{$locationId}/orders",
+            $hubRisePayload
+        );
 
-        // if (!$response->successful()) {
-        //     throw new \Exception('Failed to create order in HubRise');
-        // }
+        if (!$response->successful()) {
+            throw new \Exception('Failed to create order in HubRise');
+        }
 
-        // $hubRiseData = $response->json();
-        // $hubRiseOrderId = $hubRiseData['id'] ?? null;
+        $hubRiseData = $response->json();
+        $hubRiseOrderId = $hubRiseData['id'] ?? null;
 
         // Update order with HubRise ID
         $order->update([
-            // 'hubrise_order_id' => $hubRiseOrderId,
-            'hubrise_order_id' => str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT),
+            'hubrise_order_id' => $hubRiseOrderId,
+            // 'hubrise_order_id' => str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT),
             'status' => 'pending'
         ]);
     }
@@ -807,6 +840,26 @@ class FrontendController extends Controller
 
             // Update order status
             $order->update(['status' => $newLocalStatus]);
+
+            // Handle points when order is delivered
+            if ($order->status === 'delivered' && $order->user_id) {
+                // Deduct the points that were used for this order (if any)
+                if ($order->points_used > 0) {
+                    UserPoint::create([
+                        'user_id' => $order->user_id,
+                        'order_id' => $order->id,
+                        'point' => -($order->points_used)
+                    ]);
+                }
+
+                // Add new points earned from this order
+                $pointsEarned = floor($order->total);
+                UserPoint::create([
+                    'user_id' => $order->user_id,
+                    'order_id' => $order->id,
+                    'point' => $pointsEarned
+                ]);
+            }
 
             Log::info('Order status updated from HubRise', [
                 'order_id' => $order->id,
