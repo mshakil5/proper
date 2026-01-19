@@ -22,6 +22,11 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function purchasedGiftCards()
+    {
+        return $this->hasMany(GiftCard::class, 'purchased_by');
+    }
+
     public function userPoints()
     {
         return $this->hasMany(UserPoint::class);

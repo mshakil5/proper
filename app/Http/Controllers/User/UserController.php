@@ -84,6 +84,15 @@ class UserController extends Controller
         return view('user.coupons');
     }
 
+    public function giftCards()
+    {
+        $giftCards = auth()->user()->purchasedGiftCards()
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('user.gift-cards', compact('giftCards'));
+    }
+
     public function points()
     {
         return view('user.points');

@@ -22,6 +22,8 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth', 'is_user'], 'as' => '
 
     Route::get('/coupons', [UserController::class, 'coupons'])->name('coupons');
 
+    Route::get('/gift-cards', [UserController::class, 'giftCards'])->name('gift-cards');
+
     Route::get('/points', [UserController::class, 'points'])->name('points');
 
     Route::get('/social', [UserController::class, 'social'])->name('social');

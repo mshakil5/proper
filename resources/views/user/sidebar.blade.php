@@ -32,6 +32,11 @@
             <i class="fas fa-ticket-alt"></i>
             <span>Coupons</span>
         </a>
+
+        <a href="{{ route('user.gift-cards') }}" class="user-nav-item {{ request()->routeIs('user.gift-cards') ? 'active' : '' }}" data-tab="coupons">
+            <i class="fas fa-gift"></i>
+            <span>Gift Cards</span>
+        </a>
         
         <a href="{{ route('user.points') }}" class="user-nav-item {{ request()->routeIs('user.points') ? 'active' : '' }}" data-tab="points">
             <i class="fas fa-star"></i>

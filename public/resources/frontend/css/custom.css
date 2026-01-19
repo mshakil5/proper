@@ -6142,3 +6142,263 @@ footer a:hover {
         font-size: 12px;
     }
 }
+
+/* Gift Cards Grid */
+.gift-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 28px;
+    margin-top: 20px;
+}
+
+.gift-card-display {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Gift Card Coupon */
+.gift-card-coupon {
+    background: linear-gradient(to right, #f5e6d3 0%, #fffef9 100%);
+    border: 3px dashed #333;
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.gift-card-coupon:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+.coupon-border {
+    position: absolute;
+    left: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background: #f5e6d3;
+    border-radius: 50%;
+}
+
+.coupon-border::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background: #f5e6d3;
+    border-radius: 50%;
+}
+
+/* Coupon Content */
+.coupon-content {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.coupon-left {
+    font-size: 48px;
+    color: #333;
+    min-width: 70px;
+    text-align: center;
+}
+
+.coupon-middle {
+    flex: 1;
+}
+
+.coupon-right {
+    min-width: 70px;
+    text-align: center;
+}
+
+/* Branding */
+.coupon-branding {
+    margin-bottom: 10px;
+}
+
+.brand-logo {
+    font-size: 16px;
+    font-weight: 900;
+    color: #ffb81c;
+    letter-spacing: 1px;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.brand-url {
+    font-size: 10px;
+    color: #333;
+    font-weight: 600;
+}
+
+/* Amount */
+.coupon-amount {
+    font-size: 44px;
+    font-weight: 900;
+    color: #333;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.coupon-label {
+    font-size: 14px;
+    font-weight: 800;
+    color: #333;
+    letter-spacing: 0.5px;
+}
+
+/* QR Code */
+.coupon-qr {
+    font-size: 40px;
+    color: #333;
+}
+
+/* Gift Card Code */
+.coupon-code {
+    margin-top: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #333;
+    text-align: center;
+}
+
+/* Status Badge */
+.coupon-status-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.coupon-status-badge.badge-new {
+    background: #4caf50;
+    color: white;
+}
+
+.coupon-status-badge.badge-used {
+    background: #ff9800;
+    color: white;
+}
+
+.coupon-status-badge.badge-expired {
+    background: #f44336;
+    color: white;
+}
+
+/* Actions */
+.gift-card-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.btn-action {
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-direction: column;
+}
+
+.btn-copy {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-copy:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.btn-download {
+    background: #ffb81c;
+    color: #333;
+}
+
+.btn-download:hover {
+    background: #ff9800;
+    transform: translateY(-2px);
+}
+
+.btn-share {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-share:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.btn-action i {
+    font-size: 14px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    color: #999;
+    margin-bottom: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .gift-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .coupon-content {
+        gap: 12px;
+    }
+
+    .coupon-left {
+        font-size: 40px;
+        min-width: 60px;
+    }
+
+    .coupon-amount {
+        font-size: 36px;
+    }
+
+    .coupon-label {
+        font-size: 12px;
+    }
+
+    .coupon-qr {
+        font-size: 32px;
+    }
+}
