@@ -45,9 +45,21 @@
                     <ul class="list-unstyled mt-2">
                         <li><a href="{{ route('home') }}">Home</a></li>
                         <li><a href="{{ route('menu') }}">Menu</a></li>
+                        <li><a href="{{ route('gift-cards') }}">Gift Cards</a></li>
                         <li><a href="{{ route('our-story') }}">Our Story</a></li>
                         <li><a href="{{ route('find-us') }}">Find Us</a></li>
                         <li><a href="{{ route('contact') }}">Contact</a></li>
+                        <li>
+                        @auth
+                            <a href="{{ route('dashboard') }}">
+                                Dashboard
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}">
+                                Login
+                            </a>
+                        @endauth
+                    </li>
                     </ul>
                 </div>
 

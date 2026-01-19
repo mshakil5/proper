@@ -170,6 +170,13 @@
                 </li>
 
                 <li class="nav-item">
+                    <a href="{{ route('giftcard-packages.index') }}" class="nav-link {{ Route::is('giftcard-packages.index') ? 'active' : '' }}">
+                        <i class="ri-gift-line"></i>
+                        <span>Gift Cards</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link menu-link {{ $settingsRoute ? 'active' : '' }}" 
                       href="#sidebarSettings" data-bs-toggle="collapse" role="button" 
                       aria-expanded="{{ $settingsRoute ? 'true' : 'false' }}" 

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CompanyDetailsController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\GiftcardPackageController;
 
 Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], function(){
 
@@ -135,4 +136,11 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::post('/coupons-status', [CouponController::class, 'toggleStatus'])->name('coupons.status');
     Route::post('/coupons/validate', [CouponController::class, 'validateCoupon'])->name('coupons.validate');
     Route::get('/coupons/{id}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
+
+    Route::get('/giftcard-packages', [GiftcardPackageController::class, 'index'])->name('giftcard-packages.index');
+    Route::post('/giftcard-packages', [GiftcardPackageController::class, 'store'])->name('giftcard-packages.store');
+    Route::get('/giftcard-packages/{id}/edit', [GiftcardPackageController::class, 'edit'])->name('giftcard-packages.edit');
+    Route::put('/giftcard-packages/{id}', [GiftcardPackageController::class, 'update'])->name('giftcard-packages.update');
+    Route::delete('/giftcard-packages/{id}', [GiftcardPackageController::class, 'destroy'])->name('giftcard-packages.destroy');
+    Route::post('/giftcard-packages-status', [GiftcardPackageController::class, 'toggleStatus']);
 });

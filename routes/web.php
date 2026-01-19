@@ -36,6 +36,14 @@ Route::get('/menu', [FrontendController::class, 'menu'])->name('menu');
 
 Route::get('/our-story', [FrontendController::class, 'ourStory'])->name('our-story');
 
+Route::get('/gift-cards', [FrontendController::class, 'giftCards'])->name('gift-cards');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/giftcard/checkout', [FrontendController::class, 'giftCardCheckout'])->name('giftcard.checkout');
+    Route::get('/giftcard/payment/success', [FrontendController::class, 'giftCardPaymentSuccess'])->name('giftcard.payment.success');
+    Route::get('/giftcard/payment/cancel', [FrontendController::class, 'giftCardPaymentCancel'])->name('giftcard.payment.cancel');
+});
+
 Route::get('/checkout', [FrontendController::class, 'checkout'])->name('checkout');
 
 Route::post('/coupons/validate', [FrontendController::class, 'validateCoupon']);

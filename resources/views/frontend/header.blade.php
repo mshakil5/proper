@@ -27,6 +27,9 @@
                 <a class="nav-link {{ request()->routeIs('menu') ? 'active' : '' }}" href="{{ route('menu') }}">Menu</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('gift-cards') ? 'active' : '' }}" href="{{ route('gift-cards') }}">Gift Cards</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('our-story') ? 'active' : '' }}" href="{{ route('our-story') }}">Our Story</a>
             </li>
             <li class="nav-item">

@@ -36,6 +36,8 @@ use App\Models\OrderItem;
 use App\Models\OrderItemOption;
 use Illuminate\Support\Str;
 use App\Models\UserPoint;
+use App\Models\GiftcardPackage;
+use App\Models\GiftCard;
 
 class FrontendController extends Controller
 {
@@ -276,6 +278,118 @@ class FrontendController extends Controller
             $menu->meta_image ? asset('uploads/meta_image/' . $menu->meta_image) : null
         );
         return view('frontend.our-story');
+    }
+
+    public function giftCards()
+    {
+        $menu = Master::firstOrCreate(['name' => 'gift-cards']);
+        $this->seo(
+            $menu->meta_title,
+            $menu->meta_description,
+            $menu->meta_keywords,
+            $menu->meta_image ? asset('uploads/meta_image/' . $menu->meta_image) : null
+        );
+        $packages = GiftcardPackage::where('is_active', true)->orderBy('amount', 'asc')->get();
+        return view('frontend.gift-cards', compact('packages'));
+    }
+
+    public function giftCardCheckout(Request $request)
+    {
+        $request->validate([
+            'package_id' => 'required|exists:giftcard_packages,id',
+            'amount' => 'required|numeric'
+        ]);
+
+        $package = GiftcardPackage::findOrFail($request->package_id);
+        $user = auth()->user();
+
+        try {
+            session([
+                'giftcard_checkout' => [
+                    'package_id' => $package->id,
+                    'amount' => $package->amount,
+                    'user_id' => $user->id
+                ]
+            ]);
+
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'GBP',
+                        'product_data' => [
+                            'name' => $package->name,
+                            'description' => 'Gift Card - £' . number_format($package->amount, 2)
+                        ],
+                        'unit_amount' => intval($package->amount * 100),
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => route('giftcard.payment.success'),
+                'cancel_url' => route('giftcard.payment.cancel'),
+                'customer_email' => $user->email,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'redirectUrl' => $session->url
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create payment session'
+            ], 500);
+        }
+    }
+
+    public function giftCardPaymentSuccess()
+    {
+        $checkoutData = session('giftcard_checkout');
+
+        if (!$checkoutData) {
+            return redirect()->route('gift-cards')->with('error', 'Invalid payment session');
+        }
+
+        try {
+            $package = GiftcardPackage::find($checkoutData['package_id']);
+
+            $giftCard = GiftCard::create([
+                'code' => $this->generateGiftCardCode(),
+                'amount' => $package->amount,
+                'balance' => $package->amount,
+                'status' => 'new',
+                'is_active' => true,
+                'purchased_by' => $checkoutData['user_id'],
+                'purchased_at' => now(),
+                'expires_at' => now()->addYear()
+            ]);
+
+            session()->forget('giftcard_checkout');
+
+            return redirect()->route('gift-cards')->with('success', 'Gift card purchased successfully! Code: ' . $giftCard->code);
+
+        } catch (\Exception $e) {
+            return redirect()->route('gift-cards')->with('error', 'Error processing gift card');
+        }
+    }
+
+    public function giftCardPaymentCancel()
+    {
+        session()->forget('giftcard_checkout');
+        return redirect()->route('gift-cards')->with('error', 'Payment cancelled');
+    }
+
+    private function generateGiftCardCode()
+    {
+        do {
+            $code = 'GC-' . strtoupper(Str::random(3)) . '-' . Str::uuid();
+        } while (GiftCard::where('code', $code)->exists());
+
+        return $code;
     }
 
     public function checkout()
