@@ -9,7 +9,7 @@
                 <div class="checkout-card" style="text-align: center; background: linear-gradient(135deg, #fff8f0, #ffe8d6); border: 2px solid rgba(255, 138, 0, 0.3); margin-bottom: 30px;">
                     <div style="padding: 30px 20px;">
                         <i class="fas fa-check-circle" style="font-size: 60px; color: #ff8a00; margin-bottom: 16px; display: block;"></i>
-                        <h2 class="checkout-title" style="margin-bottom: 8px;">Order Confirmed!</h2>
+                        <h2 class="checkout-title" style="margin-bottom: 8px;">Order Received!</h2>
                         <p style="color: #666; margin: 0;">Thank you for your order. We've received it and will start preparing it soon.</p>
                     </div>
                 </div>
