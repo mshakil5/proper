@@ -43,6 +43,26 @@
             <input type="text" name="postcode" class="form-control" value="{{ $user->postcode }}" placeholder="Enter postal code">
         </div>
 
+        <div class="form-group">
+            <label class="form-label">Address Line 1</label>
+            <input type="text" name="address_1" class="form-control" value="{{ $user->address_1 }}" placeholder="Enter address 1">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Street</label>
+            <input type="text" name="street" class="form-control" value="{{ $user->street }}" placeholder="Enter street">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-control" value="{{ $user->city }}" placeholder="Enter city">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Address Line 2</label>
+            <input type="text" name="address_2" class="form-control" value="{{ $user->address_2 }}" placeholder="Enter address 2">
+        </div>
+
         <button type="submit" class="btn-save-profile" id="submitBtn">Save Changes</button>
     </form>
 </div>

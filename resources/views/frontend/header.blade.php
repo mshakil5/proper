@@ -113,7 +113,7 @@
 
 .order-btn-inside {
     display: none;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #ff8a00, #ff5a00) !important;
     color: #fff !important;
     padding: 8px 10px;
     border-radius: 20px;

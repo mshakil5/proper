@@ -26,6 +26,8 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::post('/client/update', [ClientController::class, 'update'])->name('client.update');
     Route::delete('/client/{id}', [ClientController::class, 'destroy'])->name('client.destroy');
     Route::post('/client/toggle-status', [ClientController::class, 'toggleStatus'])->name('client.toggleStatus');
+    Route::get('/client/export/csv', [ClientController::class, 'exportClients'])->name('client.export');
+    Route::post('/client/import/csv', [ClientController::class, 'importClients'])->name('client.import');
 
     // Company
     Route::get('/company-details', [CompanyDetailsController::class, 'index'])->name('admin.companyDetails');

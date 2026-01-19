@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
 
 class ClientController extends Controller
 {
@@ -45,16 +46,23 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|max:20',
+            'dob' => 'nullable|date|before:today',
+            'postcode' => 'nullable|string',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
         User::create([
-            'name' => $request->name,
+            'name' => $request->first_name . ' ' . $request->last_name,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'dob' => $request->dob,
+            'postcode' => $request->postcode,
             'password' => Hash::make($request->password),
             'user_type' => 2,
             'status' => 1,
@@ -73,9 +81,12 @@ class ClientController extends Controller
     {
         $rules = [
             'id' => 'required|exists:users,id',
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $request->id,
             'phone' => 'required|string|max:20',
+            'dob' => 'nullable|date|before:today',
+            'postcode' => 'nullable|string',
         ];
 
         // Only validate password if provided
@@ -88,9 +99,13 @@ class ClientController extends Controller
         $client = User::findOrFail($request->id);
         
         $data = [
-            'name' => $request->name,
+            'name' => $request->first_name . ' ' . $request->last_name,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'dob' => $request->dob,
+            'postcode' => $request->postcode,
         ];
 
         // Only update password if provided
@@ -116,5 +131,110 @@ class ClientController extends Controller
         $client->status = $client->status == 1 ? 0 : 1;
         $client->save();
         return response()->json(['message' => 'Status updated successfully.'], 200);
+    }
+
+    public function exportClients()
+    {
+        $clients = User::where('user_type', 2)->select('first_name', 'last_name', 'email', 'phone', 'total_orders', 'last_order_date')->get();
+
+        $filename = 'clients_' . date('Y-m-d_H-i-s') . '.csv';
+        $handle = fopen('php://memory', 'w');
+
+        fputcsv($handle, ['First Name', 'Last Name', 'Email', 'Telephone', 'Total Orders', 'Last Order Date']);
+
+        foreach ($clients as $client) {
+            fputcsv($handle, [
+                $client->first_name,
+                $client->last_name,
+                $client->email,
+                $client->phone,
+                $client->total_orders,
+                $client->last_order_date ? date('d-m-Y H:i', strtotime($client->last_order_date)) : ''
+            ]);
+        }
+
+        fseek($handle, 0);
+        return response()->stream(function() use ($handle) {
+            fpassthru($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+        ]);
+    }
+
+    public function importClients(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt'
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+
+        $header = fgetcsv($handle);
+        $updated = 0;
+        $created = 0;
+        $errors = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (count($row) < 6) continue;
+
+            $firstName = trim($row[0]);
+            $lastName = trim($row[1]);
+            $email = trim($row[2]);
+            $phone = trim($row[3]);
+            $totalOrders = (int)trim($row[4]);
+            
+            $lastOrderDate = null;
+            $lastOrderValue = trim($row[5]);
+            
+            if ($lastOrderValue) {
+                try {
+                    $lastOrderDate = Carbon::createFromFormat('d-m-Y H:i', $lastOrderValue)->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {
+                    try {
+                        $lastOrderDate = Carbon::createFromFormat('Y-m-d H:i:s', $lastOrderValue)->format('Y-m-d H:i:s');
+                    } catch (\Exception $e) {
+                        $errors[] = "Invalid date format for {$email}: {$lastOrderValue}";
+                        $lastOrderDate = null;
+                    }
+                }
+            }
+
+            $client = User::where('user_type', 2)->where('email', $email)->first();
+
+            if ($client) {
+                $client->update([
+                    'name' => $firstName . ' ' . $lastName,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'phone' => $phone,
+                    'total_orders' => $totalOrders,
+                    'last_order_date' => $lastOrderDate
+                ]);
+                $updated++;
+            } else {
+                User::create([
+                    'name' => $firstName . ' ' . $lastName,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'total_orders' => $totalOrders,
+                    'last_order_date' => $lastOrderDate,
+                    'user_type' => 2,
+                    'status' => 1,
+                    'password' => Hash::make('password123')
+                ]);
+                $created++;
+            }
+        }
+
+        fclose($handle);
+
+        return response()->json([
+            'message' => "Created $created new clients and updated $updated existing clients successfully",
+            'errors' => $errors
+        ], 200);
     }
 }

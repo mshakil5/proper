@@ -24,6 +24,10 @@ class UserController extends Controller
             'phone' => 'required|string|max:20',
             'dob' => 'nullable|date|before:today',
             'postcode' => 'nullable|string',
+            'address_1' => 'nullable|string',
+            'street' => 'nullable|string',
+            'city' => 'nullable|string',
+            'address_2' => 'nullable|string',
         ]);
 
         auth()->user()->update($validated);

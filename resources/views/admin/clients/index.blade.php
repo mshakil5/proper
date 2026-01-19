@@ -5,9 +5,13 @@
         <div class="row mb-3">
             <div class="col-auto">
                 <button class="btn btn-primary" id="newBtn">Add New Client</button>
+                <button class="btn btn-success" id="exportBtn"><i class="ri-download-line"></i> Export CSV</button>
+                <button class="btn btn-info" id="importBtn"><i class="ri-upload-cloud-line"></i> Import CSV</button>
             </div>
         </div>
     </div>
+
+    <input type="file" id="importFile" accept=".csv" style="display:none;">
 
     <div class="container-fluid" id="addThisFormContainer" style="display:none;">
         <div class="row justify-content-center">
@@ -21,8 +25,12 @@
                             @csrf
                             <input type="hidden" id="codeid" name="id">
                             <div class="mb-3">
-                                <label class="form-label">Name <span class="text-danger">*</span></label>
-                                <input type="text" id="name" name="name" class="form-control" required>
+                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" id="first_name" name="first_name" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" id="last_name" name="last_name" class="form-control" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Email <span class="text-danger">*</span></label>
@@ -31,6 +39,14 @@
                             <div class="mb-3">
                                 <label class="form-label">Phone <span class="text-danger">*</span></label>
                                 <input type="text" id="phone" name="phone" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" id="dob" name="dob" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Postal Code</label>
+                                <input type="text" id="postcode" name="postcode" class="form-control">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Password <span class="text-danger" id="passwordRequired">*</span></label>
@@ -62,7 +78,8 @@
                     <thead>
                         <tr>
                             <th>Sl</th>
-                            <th>Name</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
                             <th>Email</th>
                             <th>Phone</th>
                             <th>Status</th>
@@ -96,8 +113,12 @@
                         searchable: false
                     },
                     {
-                        data: 'name',
-                        name: 'name'
+                        data: 'first_name',
+                        name: 'first_name'
+                    },
+                    {
+                        data: 'last_name',
+                        name: 'last_name'
                     },
                     {
                         data: 'email',
@@ -180,9 +201,12 @@
                 var id = $(this).data('id');
                 $.get("{{ url('/admin/client') }}/" + id + "/edit", {}, function(res) {
                     $('#codeid').val(res.id);
-                    $('#name').val(res.name);
+                    $('#first_name').val(res.first_name);
+                    $('#last_name').val(res.last_name);
                     $('#email').val(res.email);
                     $('#phone').val(res.phone);
+                    $('#dob').val(res.dob);
+                    $('#postcode').val(res.postcode);
                     $('#password').val('');
                     $('#password_confirmation').val('');
                     $('#password').prop('required', false);
@@ -226,6 +250,48 @@
                     },
                     error: function(xhr) {
                         showError(xhr.responseJSON?.message ?? 'Failed');
+                    }
+                });
+            });
+
+            // Export CSV
+            $('#exportBtn').click(function() {
+                window.location.href = "{{ route('client.export') }}";
+            });
+
+            // Import CSV
+            $('#importBtn').click(function() {
+                $('#importFile').click();
+            });
+
+            $('#importFile').change(function() {
+                var file = this.files[0];
+                if (!file) return;
+
+                var fd = new FormData();
+                fd.append('file', file);
+
+                $.ajax({
+                    url: "{{ route('client.import') }}",
+                    type: 'POST',
+                    data: fd,
+                    contentType: false,
+                    processData: false,
+                    success: function(res) {
+                        showSuccess(res.message);
+                        if (res.errors.length > 0) {
+                            showError(res.errors.join(', '));
+                        }
+                        table.ajax.reload(null, false);
+                        $('#importFile').val('');
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422 && xhr.responseJSON) {
+                            showError(xhr.responseJSON.errors.file[0]);
+                        } else {
+                            showError(xhr.responseJSON?.message ?? 'Import failed');
+                        }
+                        $('#importFile').val('');
                     }
                 });
             });
