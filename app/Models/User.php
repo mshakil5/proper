@@ -87,6 +87,29 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'referred_by');
     }
 
+    public function deliverySubscription()
+    {
+        return $this->hasOne(DeliverySubscription::class);
+    }
+
+    public function hasActiveDeliverySubscription(): bool
+    {
+        $subscription = $this->deliverySubscription()
+            ->where('status', 'active')
+            ->where('ends_at', '>=', now())
+            ->first();
+        
+        return $subscription !== null;
+    }
+
+    public function getActiveDeliverySubscription()
+    {
+        return $this->deliverySubscription()
+            ->where('status', 'active')
+            ->where('ends_at', '>=', now())
+            ->first();
+    }
+
     protected function casts(): array
     {
         return [

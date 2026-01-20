@@ -27,6 +27,11 @@
             <i class="fas fa-shopping-bag"></i>
             <span>Orders</span>
         </a>
+
+        <a href="{{ route('user.subscription') }}" class="user-nav-item {{ request()->routeIs('user.subscription*') ? 'active' : '' }}" data-tab="subscription">
+            <i class="fas fa-truck"></i>
+            <span>Free Delivery</span>
+        </a>
         
         <a href="{{ route('user.coupons') }}" class="user-nav-item {{ request()->routeIs('user.coupons') ? 'active' : '' }}" data-tab="coupons">
             <i class="fas fa-ticket-alt"></i>

@@ -6411,3 +6411,375 @@ footer a:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 86, 179, 0.3);
 }
+
+/* SUBSCRIPTION STYLES - FIXED */
+
+.status-card {
+    background: white;
+    border-radius: 14px;
+    padding: 24px;
+    border: 2px solid rgba(255, 138, 0, 0.2);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    margin-bottom: 32px;
+}
+
+.status-card.active {
+    background: linear-gradient(135deg, #fff8f0, #ffe8d6);
+    border-color: rgba(255, 138, 0, 0.4);
+}
+
+.status-card.inactive {
+    background: #f8f9fa;
+    border-color: #ddd;
+}
+
+.status-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.status-header i {
+    font-size: 24px;
+    color: #ff8a00;
+}
+
+.status-card.inactive .status-header i {
+    color: #999;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.status-badge.inactive {
+    background: #999;
+}
+
+.status-details p {
+    margin: 10px 0;
+    font-size: 13px;
+    color: #666;
+}
+
+.date-value,
+.days-value,
+.renewal-month {
+    font-weight: 800;
+    color: #ff8a00;
+}
+
+.no-subscription-text {
+    font-size: 13px;
+    color: #666;
+    margin: 0;
+}
+
+/* Plan Container */
+.plan-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+}
+
+.plan-box {
+    background: white;
+    border-radius: 16px;
+    padding: 40px 32px;
+    border: 2px solid rgba(255, 138, 0, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    transition: all 0.35s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.plan-box:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(255, 138, 0, 0.2);
+    border-color: rgba(255, 138, 0, 0.4);
+}
+
+.plan-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #ff8a00, #ff5a00);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 40px;
+    margin: 0 auto 20px;
+    box-shadow: 0 12px 32px rgba(255, 138, 0, 0.3);
+}
+
+.plan-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0 0 16px;
+}
+
+.plan-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.amount {
+    font-size: 48px;
+    font-weight: 800;
+    color: #ff8a00;
+}
+
+.period {
+    font-size: 14px;
+    color: #999;
+    font-weight: 600;
+}
+
+.plan-benefits {
+    background: #FAFAFA;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 24px 0;
+    text-align: left;
+}
+
+.plan-benefits p {
+    margin: 12px 0;
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.plan-benefits i {
+    color: #28a745;
+    font-size: 14px;
+    min-width: 14px;
+}
+
+.btn-subscribe {
+    width: 100%;
+    padding: 13px 24px;
+    background: linear-gradient(135deg, #ff8a00, #ff5a00);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    box-shadow: 0 8px 20px rgba(255, 138, 0, 0.3);
+}
+
+.btn-subscribe:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(255, 138, 0, 0.4);
+}
+
+.btn-subscribe:active {
+    transform: translateY(-1px);
+}
+
+/* Payment History */
+.payment-history {
+    background: white;
+    border-radius: 14px;
+    padding: 24px;
+    border: 2px solid rgba(255, 138, 0, 0.2);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.history-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(255, 138, 0, 0.2);
+}
+
+.history-table {
+    overflow-x: auto;
+}
+
+.history-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table thead {
+    background: #FAFAFA;
+}
+
+.history-table th {
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-bottom: 2px solid #E8E8E8;
+}
+
+.history-table td {
+    padding: 12px;
+    font-size: 13px;
+    color: #666;
+    border-bottom: 1px solid #E8E8E8;
+}
+
+.history-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+
+.badge-paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.no-history {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .plan-box {
+        padding: 24px 20px;
+    }
+
+    .plan-title {
+        font-size: 20px;
+    }
+
+    .amount {
+        font-size: 40px;
+    }
+
+    .plan-benefits {
+        padding: 16px;
+    }
+
+    .plan-benefits p {
+        font-size: 12px;
+        margin: 10px 0;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .plan-box {
+        padding: 20px 16px;
+    }
+
+    .plan-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 32px;
+        margin: 0 auto 16px;
+    }
+
+    .plan-title {
+        font-size: 18px;
+        margin: 0 0 12px;
+    }
+
+    .amount {
+        font-size: 36px;
+    }
+
+    .period {
+        font-size: 12px;
+    }
+
+    .plan-price {
+        margin: 14px 0;
+    }
+
+    .plan-benefits {
+        padding: 14px;
+        margin: 20px 0;
+    }
+
+    .plan-benefits p {
+        font-size: 11px;
+        margin: 8px 0;
+    }
+
+    .btn-subscribe {
+        padding: 11px 16px;
+        font-size: 12px;
+    }
+
+    .status-card {
+        padding: 16px;
+    }
+
+    .status-details p {
+        font-size: 11px;
+        margin: 8px 0;
+    }
+
+    .history-title {
+        font-size: 14px;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 8px;
+        font-size: 11px;
+    }
+
+    .payment-history {
+        padding: 16px;
+    }
+}

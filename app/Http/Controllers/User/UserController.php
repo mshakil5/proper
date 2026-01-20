@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Order;
 use App\Models\UserPoint;
 use App\Models\User;
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
+use Carbon\Carbon;
+use App\Models\DeliverySubscription;
+use App\Models\DeliverySubscriptionPayment;
 
 class UserController extends Controller
 {
@@ -92,9 +97,9 @@ class UserController extends Controller
         $giftCards = auth()->user()->purchasedGiftCards()
             ->orderBy('created_at', 'desc')
             ->get();
-        
-         $logo = CompanyDetails::select('company_logo')->first()->company_logo;
-        
+
+        $logo = CompanyDetails::select('company_logo')->first()->company_logo;
+
         return view('user.gift-cards', compact('giftCards', 'logo'));
     }
 
@@ -174,5 +179,129 @@ class UserController extends Controller
             'success' => true,
             'message' => 'Referral applied! You and ' . $referrer->name . ' earned 50 points each.'
         ]);
+    }
+
+    public function subscription()
+    {
+        $subscription = auth()->user()->deliverySubscription()->first();
+
+        return view('user.subscription', compact('subscription'));
+    }
+
+    public function subscriptionCheckout(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:5'
+        ]);
+
+        $user = auth()->user();
+        $amount = 5.00;
+
+        try {
+            session([
+                'subscription_checkout' => [
+                    'amount' => $amount,
+                    'user_id' => $user->id
+                ]
+            ]);
+
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'GBP',
+                        'product_data' => [
+                            'name' => 'Free Delivery Subscription',
+                            'description' => '1 month unlimited free delivery'
+                        ],
+                        'unit_amount' => intval($amount * 100),
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => route('user.subscription.success'),
+                'cancel_url' => route('user.subscription.cancel'),
+                'customer_email' => $user->email,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'redirectUrl' => $session->url
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create payment session'
+            ], 500);
+        }
+    }
+
+    public function subscriptionSuccess()
+    {
+        $checkoutData = session('subscription_checkout');
+
+        if (!$checkoutData) {
+            return redirect()->route('user.subscription')->with('error', 'Invalid payment session');
+        }
+
+        try {
+            $user = auth()->user();
+            $amount = $checkoutData['amount'];
+            $existingSubscription = $user->deliverySubscription()->first();
+
+            if ($existingSubscription && $existingSubscription->isActive()) {
+                // RENEW: extend from current end date using addMonthNoOverflow
+                $currentEndDate = $existingSubscription->ends_at;
+                $newEndDate = $currentEndDate->copy()->addMonthNoOverflow();
+
+                $existingSubscription->update([
+                    'ends_at' => $newEndDate,
+                    'last_billed_at' => now()
+                ]);
+                $subscription = $existingSubscription;
+                $renewalStartMonth = $currentEndDate;
+            } else {
+                // NEW: first subscription starting today
+                $newEndDate = now()->copy()->addMonthNoOverflow();
+
+                $subscription = DeliverySubscription::create([
+                    'user_id' => $user->id,
+                    'amount' => $amount,
+                    'status' => 'active',
+                    'started_at' => now(),
+                    'ends_at' => $newEndDate,
+                    'last_billed_at' => now()
+                ]);
+                $renewalStartMonth = now();
+            }
+
+            // Create payment record - for the month being added
+            DeliverySubscriptionPayment::create([
+                'delivery_subscription_id' => $subscription->id,
+                'amount' => $amount,
+                'status' => 'paid',
+                'billing_month' => $renewalStartMonth->copy()->startOfMonth()->addMonthNoOverflow(),
+                'paid_at' => now(),
+                'payment_ref' => 'STRIPE_' . uniqid()
+            ]);
+
+            session()->forget('subscription_checkout');
+
+            return redirect()->route('user.subscription')
+                ->with('success', 'Subscription extended! Valid until ' . $subscription->ends_at->format('M d, Y'));
+        } catch (\Exception $e) {
+            \Log::error('Subscription creation error: ' . $e->getMessage());
+            return redirect()->route('user.subscription')
+                ->with('error', 'Error processing subscription');
+        }
+    }
+
+    public function subscriptionCancel()
+    {
+        session()->forget('subscription_checkout');
+        return redirect()->route('user.subscription')
+            ->with('error', 'Payment cancelled');
     }
 }

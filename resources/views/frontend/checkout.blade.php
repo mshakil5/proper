@@ -761,6 +761,12 @@
             });
 
             $('#applyPromoBtn').on('click', function() {
+
+                @if(!auth()->check())
+                    showError('Please login to apply coupon codes');
+                    return;
+                @endif
+
                 let promoCode = $('#promoCode').val().trim().toUpperCase();
 
                 if (!promoCode) {

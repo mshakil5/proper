@@ -32,4 +32,12 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth', 'is_user'], 'as' => '
 
     Route::post('/apply-referral', [UserController::class, 'applyReferral'])->name('apply.referral');
 
+    Route::get('/subscription', [UserController::class, 'subscription'])->name('subscription');
+
+    Route::post('/subscription/checkout', [UserController::class, 'subscriptionCheckout'])->name('subscription.checkout');
+
+    Route::get('/subscription/payment/success', [UserController::class, 'subscriptionSuccess'])->name('subscription.success');
+
+    Route::get('/subscription/payment/cancel', [UserController::class, 'subscriptionCancel'])->name('subscription.cancel');
+
 });
