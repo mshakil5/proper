@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Order;
+use App\Models\UserPoint;
+use App\Models\User;
 
 class UserController extends Controller
 {
@@ -101,5 +103,73 @@ class UserController extends Controller
     public function social()
     {
         return view('user.social');
+    }
+
+    public function socialShare(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user->canShareToday()) {
+            return response()->json(['success' => false, 'message' => 'Daily limit reached']);
+        }
+
+        UserPoint::create([
+            'user_id' => $user->id,
+            'source' => 'social_share',
+            'source_action' => $request->platform,
+            'point' => 10,
+            'description' => 'Shared on ' . ucfirst($request->platform)
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'You earned 10 points!']);
+    }
+
+    public function applyReferral(Request $request)
+    {
+        $request->validate([
+            'referral_code' => 'required|string|max:20',
+        ]);
+
+        $user = auth()->user();
+
+        if ($user->referred_by) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already used a referral code.'
+            ]);
+        }
+
+        $referrer = User::where('referral_code', $request->referral_code)->first();
+
+        if (!$referrer || $referrer->id == $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid referral code.'
+            ]);
+        }
+
+        UserPoint::create([
+            'user_id' => $user->id,
+            'referrer_id' => $referrer->id,
+            'source' => 'referral',
+            'point' => 50,
+            'description' => 'Used referral code ' . $referrer->referral_code,
+        ]);
+
+        UserPoint::create([
+            'user_id' => $referrer->id,
+            'referrer_id' => $user->id,
+            'source' => 'referral',
+            'point' => 50,
+            'description' => 'Referral bonus for ' . $user->name,
+        ]);
+
+        $user->referred_by = $referrer->id;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Referral applied! You and ' . $referrer->name . ' earned 50 points each.'
+        ]);
     }
 }

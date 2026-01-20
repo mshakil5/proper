@@ -15,8 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('order_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('referrer_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->string('source')->default('order'); // order, referral, social_share, giftcard_balance
+            $table->string('source_action')->nullable(); // facebook_share, twitter_share, instagram_share, etc
             $table->integer('point')->default(0);
+            $table->text('description')->nullable();
             $table->timestamps();
+            $table->index(['user_id', 'source']);
         });
     }
 

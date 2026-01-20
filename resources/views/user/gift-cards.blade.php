@@ -72,7 +72,7 @@
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
                 <p>No gift cards purchased yet.</p>
-                <a href="{{ route('gift-cards') }}" class="btn btn-primary">Buy Gift Card Now</a>
+                <a href="{{ route('gift-cards') }}" class="btn btn-other">Buy Gift Card Now</a>
             </div>
         @endforelse
     </div>

@@ -699,14 +699,6 @@ class FrontendController extends Controller
                 'status' => 'pending'
             ]);
 
-            if (auth()->check()) {
-                UserPoint::create([
-                    'user_id' => auth()->id(),
-                    'order_id' => $order->id,
-                    'point' => -($order->points_used ?? 0)
-                ]);
-            }
-
             // Send to HubRise
             $this->sendToHubRise(
                 $order,

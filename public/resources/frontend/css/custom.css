@@ -4328,7 +4328,7 @@ footer a:hover {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
     margin-bottom: 32px;
 }
@@ -6401,4 +6401,25 @@ footer a:hover {
     .coupon-qr {
         font-size: 32px;
     }
+}
+
+.btn-other {
+    padding: 10px 14px;
+    background: #1a1a1a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.btn-other:hover {
+    background: #ff8a00;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 86, 179, 0.3);
 }

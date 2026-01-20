@@ -28,4 +28,8 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth', 'is_user'], 'as' => '
 
     Route::get('/social', [UserController::class, 'social'])->name('social');
 
+    Route::post('/social/share', [UserController::class, 'socialShare'])->name('social.share');
+
+    Route::post('/apply-referral', [UserController::class, 'applyReferral'])->name('apply.referral');
+
 });
