@@ -23,7 +23,7 @@
 
                             <div class="coupon-middle">
                                 <div class="coupon-branding">
-                                    <div class="brand-logo">PROPER TAKEAWAYS</div>
+                                    <div class="brand-logo"><img src={{ asset('uploads/company/' . $logo) }} style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>
                                     <small class="brand-url">www.propertakeaways.co.uk</small>
                                 </div>
                                 

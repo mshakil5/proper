@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\CompanyDetails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Order;
@@ -92,7 +93,9 @@ class UserController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
-        return view('user.gift-cards', compact('giftCards'));
+         $logo = CompanyDetails::select('company_logo')->first()->company_logo;
+        
+        return view('user.gift-cards', compact('giftCards', 'logo'));
     }
 
     public function points()

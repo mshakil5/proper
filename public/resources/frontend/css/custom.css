@@ -4884,18 +4884,6 @@ footer a:hover {
     z-index: 1;
 }
 
-.coupon-code {
-    font-size: 18px;
-    font-weight: 800;
-    margin: 0 0 8px;
-    letter-spacing: 2px;
-    font-family: monospace;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 8px 12px;
-    border-radius: 8px;
-    display: inline-block;
-}
-
 .coupon-description {
     font-size: 13px;
     margin: 0;
@@ -5983,7 +5971,7 @@ footer a:hover {
 }
 
 .btn-buy-card i {
-    font-size: 13px;
+    font-size: 40px;
 }
 
 /* Responsive */
@@ -6159,7 +6147,7 @@ footer a:hover {
 
 /* Gift Card Coupon */
 .gift-card-coupon {
-    background: linear-gradient(to right, #f5e6d3 0%, #fffef9 100%);
+    background: linear-gradient(to right, rgb(245, 230, 211) 0%, rgb(255, 254, 249) 100%);
     border: 3px dashed #333;
     border-radius: 16px;
     padding: 20px;
@@ -6175,7 +6163,6 @@ footer a:hover {
 
 .coupon-border {
     position: absolute;
-    left: -3px;
     top: 50%;
     transform: translateY(-50%);
     width: 20px;
@@ -6268,10 +6255,11 @@ footer a:hover {
     background: rgba(255, 255, 255, 0.6);
     border-radius: 8px;
     font-family: 'Courier New', monospace;
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 700;
     letter-spacing: 1px;
     color: #333;
+    justify-content: center;
     text-align: center;
 }
 

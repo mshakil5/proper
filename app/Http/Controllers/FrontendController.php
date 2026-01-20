@@ -290,7 +290,8 @@ class FrontendController extends Controller
             $menu->meta_image ? asset('uploads/meta_image/' . $menu->meta_image) : null
         );
         $packages = GiftcardPackage::where('is_active', true)->orderBy('amount', 'asc')->get();
-        return view('frontend.gift-cards', compact('packages'));
+        $logo = CompanyDetails::select('company_logo')->first()->company_logo;
+        return view('frontend.gift-cards', compact('packages', 'logo'));
     }
 
     public function giftCardCheckout(Request $request)
@@ -386,7 +387,7 @@ class FrontendController extends Controller
     private function generateGiftCardCode()
     {
         do {
-            $code = 'GC-' . strtoupper(Str::random(3)) . '-' . Str::uuid();
+            $code = 'GC' . rand(10000000000000, 99999999999999);
         } while (GiftCard::where('code', $code)->exists());
 
         return $code;
