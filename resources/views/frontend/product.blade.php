@@ -59,7 +59,7 @@
                         </div>
 
                         <div class="option-group">
-                            @foreach ($option->items as $item)
+                            @foreach ($option->items->sortBy('override_price') as $item)
                                 <div class="option-item">
                                     <input type="{{ $option->type === 'single' ? 'radio' : 'checkbox' }}"
                                         name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
@@ -101,7 +101,7 @@
                     </div>
 
                     <div class="option-group">
-                        @foreach ($option->items as $item)
+                        @foreach ($option->items->sortBy('override_price') as $item)
                             <div class="option-item">
                                 <input type="{{ $option->type === 'single' ? 'radio' : 'checkbox' }}"
                                     name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
