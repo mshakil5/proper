@@ -46,7 +46,7 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/checkout', [FrontendController::class, 'checkout'])->name('checkout');
 
-Route::post('/coupons/validate', [FrontendController::class, 'validateCoupon']);
+Route::post('/validate-promo-code', [FrontendController::class, 'validatePromoCode']);
 
 Route::post('/place-order', [FrontendController::class, 'placeOrder']);
 
@@ -59,9 +59,9 @@ Route::get('/order-confirmation/{orderNumber}', [FrontendController::class, 'ord
 // For later
 Route::post('/stripe-webhook', [FrontendController::class, 'stripeWebhook'])->name('stripe.webhook');
 
-Route::post('/hubrise-webhook', [FrontendController::class, 'hubRiseOrderCallback']);
-
 Route::get('/setup-hubrise-callback', [FrontendController::class, 'setupHubRiseCallback']);
+
+Route::post('/hubrise-webhook', [FrontendController::class, 'hubRiseOrderCallback']);
 
 Route::get('/find-us', [FrontendController::class, 'findUs'])->name('find-us');
 

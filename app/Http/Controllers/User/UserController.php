@@ -252,7 +252,6 @@ class UserController extends Controller
             $existingSubscription = $user->deliverySubscription()->first();
 
             if ($existingSubscription && $existingSubscription->isActive()) {
-                // RENEW: extend from current end date using addMonthNoOverflow
                 $currentEndDate = $existingSubscription->ends_at;
                 $newEndDate = $currentEndDate->copy()->addMonthNoOverflow();
 
@@ -260,10 +259,10 @@ class UserController extends Controller
                     'ends_at' => $newEndDate,
                     'last_billed_at' => now()
                 ]);
+
                 $subscription = $existingSubscription;
                 $renewalStartMonth = $currentEndDate;
             } else {
-                // NEW: first subscription starting today
                 $newEndDate = now()->copy()->addMonthNoOverflow();
 
                 $subscription = DeliverySubscription::create([
@@ -274,10 +273,10 @@ class UserController extends Controller
                     'ends_at' => $newEndDate,
                     'last_billed_at' => now()
                 ]);
+
                 $renewalStartMonth = now();
             }
 
-            // Create payment record - for the month being added
             DeliverySubscriptionPayment::create([
                 'delivery_subscription_id' => $subscription->id,
                 'amount' => $amount,
@@ -292,7 +291,6 @@ class UserController extends Controller
             return redirect()->route('user.subscription')
                 ->with('success', 'Subscription extended! Valid until ' . $subscription->ends_at->format('M d, Y'));
         } catch (\Exception $e) {
-            \Log::error('Subscription creation error: ' . $e->getMessage());
             return redirect()->route('user.subscription')
                 ->with('error', 'Error processing subscription');
         }

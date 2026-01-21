@@ -458,7 +458,7 @@
     /* =======================
        Init
     ======================= */
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const consent = getCookie('cookie_consent');
 
         if (!consent) {
@@ -466,7 +466,15 @@
             return;
         }
 
-        const prefs = JSON.parse(consent);
+        let prefs;
+        try {
+            prefs = JSON.parse(consent);
+        } catch (e) {
+            // remove old invalid cookie like "accepted"
+            setCookie('cookie_consent', '', -1);
+            showBanner();
+            return;
+        }
 
         if (prefs.preferences) {
             storeSafeData();

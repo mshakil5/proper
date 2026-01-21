@@ -84,20 +84,20 @@
         </div>
         @if($order->coupon_discount)
         <div class="summary-row">
-            <span>Discount</span>
+            <span>Coupon/Voucher Discount</span>
             <span>-£{{ number_format($order->coupon_discount, 2) }}</span>
+        </div>
+        @endif
+        @if($order->gift_card_discount)
+        <div class="summary-row">
+            <span>Gift Card Discount</span>
+            <span>-£{{ number_format($order->gift_card_discount, 2) }}</span>
         </div>
         @endif
         @if($order->points_used)
         <div class="summary-row">
             <span>Points Used</span>
             <span>-£{{ number_format($order->points_used, 2) }}</span>
-        </div>
-        @endif
-        @if($order->other_discount)
-        <div class="summary-row">
-            <span>Other Discount</span>
-            <span>-£{{ number_format($order->other_discount, 2) }}</span>
         </div>
         @endif
 

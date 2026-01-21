@@ -353,7 +353,7 @@
 
                         <!-- Promo Code Section -->
                         <div class="promo-section-compact">
-                            <label class="form-label">Promo Code</label>
+                            <label class="form-label">Promo Code / Gift Card</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="promoCode" placeholder="Enter code">
                                 <button class="btn btn-outline-dark" type="button" id="applyPromoBtn">Apply</button>
@@ -505,8 +505,11 @@
             let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
             const userAvailablePoints = {{ auth()->check() ? auth()->user()->available_points ?? 0 : 0 }};
             
-            let appliedPromoDiscount = 0;
-            let appliedCoupon = null;
+            let appliedPromoCode = {
+                type: null,
+                id: null,
+                discount: 0
+            };
             let pointsUsedDiscount = 0;
             let pointsUsed = 0;
             let currentTab = 'guest';
@@ -761,7 +764,6 @@
             });
 
             $('#applyPromoBtn').on('click', function() {
-
                 @if(!auth()->check())
                     showError('Please login to apply coupon codes');
                     return;
@@ -775,7 +777,7 @@
                 }
 
                 $.ajax({
-                    url: '/coupons/validate',
+                    url: '/validate-promo-code',
                     type: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
@@ -786,28 +788,30 @@
                         subtotal: checkoutData.subtotal
                     }),
                     success: function(res) {
-                        appliedPromoDiscount = res.discount_amount;
-                        appliedCoupon = res.coupon;
+                        appliedPromoCode = {
+                            type: res.type,
+                            id: res.code_data.id,
+                            discount: res.discount_amount
+                        };
 
                         $('#promoMessageContainer').show();
-                        let discountText = res.coupon.discount_type === 'percent' ?
-                            res.coupon.discount_value + '%' :
-                            '£' + parseFloat(res.coupon.discount_value).toFixed(2);
+                        let message = res.type === 'gift_card' 
+                            ? `✓ Gift Card applied! Balance used: £${res.discount_amount.toFixed(2)}`
+                            : `✓ Coupon applied! Discount: ${res.code_data.discount_type === 'percent' ? res.code_data.discount_value + '%' : '£' + res.discount_amount.toFixed(2)}`;
 
-                        $('#promoMessage').html(`✓ Coupon applied! Discount: ${discountText}`)
+                        $('#promoMessage').html(message)
                             .removeClass('alert-danger').addClass('alert-success');
                         $('#discountRow').show();
                         $('#summaryDiscount').text(`-£${res.discount_amount.toFixed(2)}`);
 
                         updateTotals();
-                        showSuccess('Coupon applied successfully!');
+                        showSuccess(res.type === 'gift_card' ? 'Gift card applied!' : 'Coupon applied!');
                     },
                     error: function(err) {
-                        appliedPromoDiscount = 0;
-                        appliedCoupon = null;
+                        appliedPromoCode = { type: null, id: null, discount: 0 };
                         $('#discountRow').hide();
                         $('#promoMessageContainer').hide();
-                        let message = err.responseJSON?.message || 'Invalid coupon code';
+                        let message = err.responseJSON?.message || 'Invalid code';
                         showError(message);
                     }
                 });
@@ -935,10 +939,17 @@
             }
 
             function updateTotals() {
-                let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoDiscount - pointsUsedDiscount;
+                let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode.discount - pointsUsedDiscount;
                 
                 $('#summarySubtotal').text('£' + checkoutData.subtotal.toFixed(2));
                 $('#summaryDeliveryCharge').text('£' + checkoutData.deliveryCharge.toFixed(2));
+                
+                if (appliedPromoCode.discount > 0) {
+                    $('#discountRow').show();
+                    $('#summaryDiscount').text('-£' + appliedPromoCode.discount.toFixed(2));
+                } else {
+                    $('#discountRow').hide();
+                }
                 
                 if (pointsUsedDiscount > 0) {
                     $('#pointsDiscountRow').show();
@@ -990,7 +1001,7 @@
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Please wait...');
 
                 let hubRiseItems = [];
-                let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoDiscount - pointsUsedDiscount;
+                let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode.discount - pointsUsedDiscount;
 
                 checkoutData.cart.forEach(item => {
                     let itemPrice = Number(item.price);
@@ -1052,10 +1063,17 @@
                     }];
                 }
 
-                if (appliedPromoDiscount > 0 && appliedCoupon) {
+                if (appliedPromoCode.type === 'coupon' && appliedPromoCode.discount > 0) {
                     hubRiseOrder.discounts = [{
-                        name: 'Coupon: ' + appliedCoupon.code,
-                        price_off: appliedPromoDiscount.toFixed(2) + ' GBP'
+                        name: 'Coupon: ' + $('#promoCode').val().trim().toUpperCase(),
+                        price_off: appliedPromoCode.discount.toFixed(2) + ' GBP'
+                    }];
+                }
+
+                if (appliedPromoCode.type === 'gift_card' && appliedPromoCode.discount > 0) {
+                    hubRiseOrder.discounts = [{
+                        name: 'Gift Card',
+                        price_off: appliedPromoCode.discount.toFixed(2) + ' GBP'
                     }];
                 }
 
@@ -1070,9 +1088,10 @@
                     delivery: checkoutData.delivery,
                     subtotal: checkoutData.subtotal,
                     deliveryCharge: checkoutData.deliveryCharge,
-                    coupon_discount: appliedPromoDiscount,
+                    promo_type: appliedPromoCode.type,
+                    promo_id: appliedPromoCode.id,
+                    promo_discount: appliedPromoCode.discount,
                     points_used: parseInt($('#pointsToUse').val()) || 0,
-                    coupon_id: appliedCoupon?.id || null,
                     paymentMethod: selectedPaymentMethod,
                     total: totalPrice
                 };

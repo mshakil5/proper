@@ -89,23 +89,23 @@ class FrontendController extends Controller
         $centerLatitude = 51.996611;
         $centerLongitude = -0.802070;
         $deliveryRadius = 7.5;
-        $deliveryCharge = 2.00;
+        $defaultCharge = 2.00;
 
-        $latitude = (float) $request->latitude;
-        $longitude = (float) $request->longitude;
-        $postcode = strtoupper(trim($request->postcode));
+        $user = auth()->user();
+
+        $deliveryCharge = ($user && $user->hasActiveDeliverySubscription()) ? 0.00 : $defaultCharge;
 
         $lat1Rad = deg2rad($centerLatitude);
         $lon1Rad = deg2rad($centerLongitude);
-        $lat2Rad = deg2rad($latitude);
-        $lon2Rad = deg2rad($longitude);
+        $lat2Rad = deg2rad((float) $request->latitude);
+        $lon2Rad = deg2rad((float) $request->longitude);
 
         $dlat = $lat2Rad - $lat1Rad;
         $dlon = $lon2Rad - $lon1Rad;
 
-        $a = sin($dlat / 2) * sin($dlat / 2) +
+        $a = sin($dlat / 2) ** 2 +
             cos($lat1Rad) * cos($lat2Rad) *
-            sin($dlon / 2) * sin($dlon / 2);
+            sin($dlon / 2) ** 2;
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
         $distance = 3959 * $c;
@@ -113,16 +113,14 @@ class FrontendController extends Controller
         if ($distance <= $deliveryRadius) {
             return response()->json([
                 'available' => true,
-                'delivery_charge' => (float) $deliveryCharge,
+                'delivery_charge' => $deliveryCharge,
                 'distance' => round($distance, 2),
-                'postcode' => $postcode,
                 'message' => 'Delivery available'
             ]);
         }
 
         return response()->json([
             'available' => false,
-            'distance' => round($distance, 2),
             'message' => 'Outside delivery area'
         ], 422);
     }
@@ -136,13 +134,15 @@ class FrontendController extends Controller
         ]);
 
         $postcode = strtoupper(trim($request->postcode));
-        
-        $centerLatitude = 51.996611;
-        $centerLongitude = -0.802070;
-        $deliveryRadius = 7.5;
-        $deliveryCharge = 2.00;
 
-        $latitude = (float) $request->latitude;
+        $centerLatitude  = 51.996611;
+        $centerLongitude = -0.802070;
+        $deliveryRadius  = 7.5;
+
+        $user = auth()->user();
+        $deliveryCharge = ($user && $user->hasActiveDeliverySubscription()) ? 0.00 : 2.00;
+
+        $latitude  = (float) $request->latitude;
         $longitude = (float) $request->longitude;
 
         $lat1Rad = deg2rad($centerLatitude);
@@ -162,8 +162,8 @@ class FrontendController extends Controller
 
         if ($distance > $deliveryRadius) {
             return response()->json([
-                'message' => 'Outside delivery area',
-                'distance' => round($distance, 2)
+                'message'  => 'Outside delivery area',
+                'distance' => round($distance, 2),
             ], 422);
         }
 
@@ -176,12 +176,12 @@ class FrontendController extends Controller
         }
 
         return response()->json([
-            'available' => true,
+            'available'       => true,
             'delivery_charge' => (float) $deliveryCharge,
-            'distance' => round($distance, 2),
-            'postcode' => $postcode,
-            'addresses' => $addresses,
-            'message' => 'Delivery available'
+            'distance'        => round($distance, 2),
+            'postcode'        => $postcode,
+            'addresses'       => $addresses,
+            'message'         => 'Delivery available',
         ]);
     }
 
@@ -398,40 +398,83 @@ class FrontendController extends Controller
         return view('frontend.checkout');
     }
 
-    public function validateCoupon(Request $request)
+    public function validatePromoCode(Request $request)
     {
         $request->validate([
             'code' => 'required|string|uppercase',
             'subtotal' => 'required|numeric|min:0'
         ]);
 
-        $coupon = Coupon::where('code', $request->code)->first();
+        $code = $request->code;
+        $subtotal = $request->subtotal;
+        $userId = auth()->id();
+
+        $giftCard = GiftCard::where('code', $code)->first();
+        
+        if ($giftCard) {
+            if (!$giftCard->is_active) {
+                return response()->json(['message' => 'This gift card is inactive'], 400);
+            }
+            if ($giftCard->status === 'expired') {
+                return response()->json(['message' => 'This gift card has expired'], 400);
+            }
+            if ($giftCard->status === 'used') {
+                return response()->json(['message' => 'This gift card has already been used'], 400);
+            }
+            if ($giftCard->expires_at && $giftCard->expires_at < now()) {
+                return response()->json(['message' => 'This gift card has expired'], 400);
+            }
+
+            $discount_amount = min($giftCard->balance, $subtotal);
+
+            return response()->json([
+                'valid' => true,
+                'type' => 'gift_card',
+                'discount_amount' => (float) $discount_amount,
+                'code_data' => [
+                    'id' => $giftCard->id,
+                    'code' => $giftCard->code,
+                    'balance' => (float) $giftCard->balance
+                ]
+            ], 200);
+        }
+
+        $coupon = Coupon::where('code', $code)->first();
 
         if (!$coupon) {
-            return response()->json([
-                'message' => 'Invalid coupon code'
-            ], 404);
+            return response()->json(['message' => 'Invalid coupon or gift card code'], 404);
         }
 
         if (!$coupon->is_active) {
-            return response()->json([
-                'message' => 'This coupon is inactive'
-            ], 400);
+            return response()->json(['message' => 'This coupon is inactive'], 400);
+        }
+
+        if ($coupon->start_date && $coupon->start_date > now()) {
+            return response()->json(['message' => 'This coupon is not yet active'], 400);
         }
 
         if ($coupon->end_date && $coupon->end_date < now()) {
-            return response()->json([
-                'message' => 'This coupon has expired'
-            ], 400);
+            return response()->json(['message' => 'This coupon has expired'], 400);
         }
 
         if ($coupon->max_uses && $coupon->used_count >= $coupon->max_uses) {
-            return response()->json([
-                'message' => 'This coupon has reached its maximum usage limit'
-            ], 400);
+            return response()->json(['message' => 'This coupon has reached its maximum usage limit'], 400);
         }
 
-        if ($coupon->min_order_amount > 0 && $request->subtotal < $coupon->min_order_amount) {
+        // Check max uses per user
+        if ($coupon->max_uses_per_user && $userId) {
+            $userUsage = CouponUsage::where('coupon_id', $coupon->id)
+                ->where('user_id', $userId)
+                ->first();
+            
+            if ($userUsage && $userUsage->usage_count >= $coupon->max_uses_per_user) {
+                return response()->json([
+                    'message' => 'You have reached the maximum usage limit for this coupon'
+                ], 400);
+            }
+        }
+
+        if ($coupon->min_order_amount > 0 && $subtotal < $coupon->min_order_amount) {
             return response()->json([
                 'message' => 'Minimum order amount of £' . number_format($coupon->min_order_amount, 2) . ' required'
             ], 400);
@@ -440,15 +483,16 @@ class FrontendController extends Controller
         $discount_amount = 0;
         
         if ($coupon->discount_type === 'percent') {
-            $discount_amount = ($request->subtotal * $coupon->discount_value) / 100;
+            $discount_amount = ($subtotal * $coupon->discount_value) / 100;
         } else {
             $discount_amount = $coupon->discount_value;
         }
 
         return response()->json([
             'valid' => true,
-            'discount_amount' => $discount_amount,
-            'coupon' => [
+            'type' => 'coupon',
+            'discount_amount' => (float) $discount_amount,
+            'code_data' => [
                 'id' => $coupon->id,
                 'code' => $coupon->code,
                 'discount_type' => $coupon->discount_type,
@@ -482,7 +526,9 @@ class FrontendController extends Controller
 
                 'localOrder.paymentMethod' => 'required|in:cash,stripe,paypal',
                 'localOrder.points_used' => 'nullable|integer|min:0',
-                'localOrder.coupon_id' => 'nullable|integer',
+                'localOrder.promo_type' => 'nullable|in:coupon,gift_card',
+                'localOrder.promo_id' => 'nullable|integer',
+                'localOrder.promo_discount' => 'nullable|numeric|min:0',
             ]);
 
             if (($request->hubRiseOrder['service_type'] ?? '') === 'delivery') {
@@ -506,7 +552,6 @@ class FrontendController extends Controller
                 ], 500);
             }
 
-            // Validate service type
             $serviceType = $hubRiseOrder['service_type'] ?? 'delivery';
             if (!in_array($serviceType, ['delivery', 'collection'])) {
                 return response()->json([
@@ -515,7 +560,6 @@ class FrontendController extends Controller
                 ], 400);
             }
 
-            // For delivery only - validate address
             if ($serviceType === 'delivery') {
                 $customer = $hubRiseOrder['customer'] ?? [];
                 if (empty($customer['address_1']) || empty($customer['city']) || empty($customer['postal_code'])) {
@@ -526,14 +570,12 @@ class FrontendController extends Controller
                 }
             }
 
-            // Payment ref mapping
             $paymentRefMap = [
                 'cash' => '22',
                 'stripe' => '23',
                 'paypal' => '24'
             ];
 
-            // Create order in database
             $orderNumber = 'ORD-' . time() . '-' . rand(1000, 9999);
 
             $order = Order::create([
@@ -544,19 +586,20 @@ class FrontendController extends Controller
                 'last_name' => $localOrder['customer']['lastName'],
                 'email' => $localOrder['customer']['email'],
                 'phone' => $localOrder['customer']['phone'],
-                'address_1' => $localOrder['address'],
-                'address_2' => $localOrder['address2'],
-                'street' => $localOrder['address'],
-                'city' => $localOrder['city'],
-                'postcode' => $localOrder['postalCode'],
+                'address_1' => $localOrder['address'] ?? null,
+                'address_2' => $localOrder['address2'] ?? null,
+                'street' => $localOrder['address'] ?? null,
+                'city' => $localOrder['city'] ?? null,
+                'postcode' => $localOrder['postalCode'] ?? null,
                 'delivery_type' => $localOrder['delivery']['type'],
                 'time' => $localOrder['delivery']['time'],
                 'subtotal' => $localOrder['subtotal'],
                 'delivery_charge' => $localOrder['deliveryCharge'],
-                'coupon_discount' => $localOrder['coupon_discount'],
-                'coupon_id' => $localOrder['coupon_id'],
+                'coupon_discount' => $localOrder['promo_type'] === 'coupon' ? $localOrder['promo_discount'] : 0,
+                'coupon_id' => $localOrder['promo_type'] === 'coupon' ? $localOrder['promo_id'] : null,
+                'gift_card_discount' => $localOrder['promo_type'] === 'gift_card' ? $localOrder['promo_discount'] : 0,
+                'gift_card_id' => $localOrder['promo_type'] === 'gift_card' ? $localOrder['promo_id'] : null,
                 'points_used' => intval($localOrder['points_used'] ?? 0) / 100,
-                'other_discount' => 0.00,
                 'total' => $localOrder['total'],
                 'payment_method' => $localOrder['paymentMethod'],
                 'payment_status' => 'pending',
@@ -566,7 +609,6 @@ class FrontendController extends Controller
                 'payment_transaction_id' => null
             ]);
 
-            // Save order items
             foreach ($localOrder['cart'] as $item) {
                 $orderItem = OrderItem::create([
                     'order_id' => $order->id,
@@ -578,7 +620,6 @@ class FrontendController extends Controller
                     'total' => $item['price'] * $item['quantity']
                 ]);
 
-                // Save item options
                 if ($item['type'] === 'custom' && !empty($item['options'])) {
                     foreach ($item['options'] as $optionName => $optionValues) {
                         foreach ($optionValues as $opt) {
@@ -594,7 +635,21 @@ class FrontendController extends Controller
                 }
             }
 
-            // Route based on payment method
+            if ($localOrder['promo_type'] === 'gift_card' && $localOrder['promo_id']) {
+                $giftCard = GiftCard::find($localOrder['promo_id']);
+                if ($giftCard) {
+                    $newBalance = $giftCard->balance - $localOrder['promo_discount'];
+                    
+                    $giftCard->update([
+                        'balance' => $newBalance,
+                        'status' => $newBalance <= 0 ? 'used' : 'new',
+                        'order_id' => $order->id,
+                        'redeemed_by' => auth()->id(),
+                        'redeemed_at' => now()
+                    ]);
+                }
+            }
+
             if ($localOrder['paymentMethod'] === 'stripe') {
                 return $this->initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
             } elseif ($localOrder['paymentMethod'] === 'paypal') {
@@ -603,7 +658,6 @@ class FrontendController extends Controller
                     'message' => 'PayPal not yet implemented'
                 ], 400);
             } else {
-                // Cash on Delivery
                 $this->sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
 
                 return response()->json([
@@ -891,7 +945,6 @@ class FrontendController extends Controller
     public function hubRiseOrderCallback(Request $request)
     {
         try {
-            // Get the callback data
             $data = $request->json()->all();
 
             Log::info('HubRise webhook received', [
@@ -906,7 +959,6 @@ class FrontendController extends Controller
             $newState = $data['new_state'] ?? [];
             $orderStatus = $newState['status'] ?? null;
 
-            // Only handle order.update events
             if ($resourceType !== 'order' || $eventType !== 'update') {
                 Log::info('Ignoring non-order or non-update event', [
                     'resource_type' => $resourceType,
@@ -920,7 +972,6 @@ class FrontendController extends Controller
                 return response()->json(['success' => true], 200);
             }
 
-            // Find order by HubRise ID
             $order = Order::where('hubrise_order_id', $hubRiseOrderId)->first();
 
             if (!$order) {
@@ -930,7 +981,6 @@ class FrontendController extends Controller
 
             $oldStatus = $order->status;
 
-            // Map HubRise status to local status
             $statusMap = [
                 'new' => 'pending',
                 'accepted' => 'confirmed',
@@ -945,21 +995,54 @@ class FrontendController extends Controller
 
             $newLocalStatus = $statusMap[$orderStatus] ?? $orderStatus;
 
-            // Update order status
             $order->update(['status' => $newLocalStatus]);
 
+            // Handle gift card when order is cancelled/rejected
+            if (($orderStatus === 'cancelled' || $orderStatus === 'rejected') && $order->gift_card_id) {
+                $giftCard = GiftCard::find($order->gift_card_id);
+                if ($giftCard) {
+                    $giftCard->update([
+                        'balance' => $giftCard->balance + $order->gift_card_discount,
+                        'status' => 'new',
+                        'redeemed_by' => null,
+                        'redeemed_at' => null,
+                        'order_id' => null
+                    ]);
+                }
+            }
+
             // Handle points when order is delivered
-            if ($order->status === 'delivered' && $order->user_id) {
+            if ($newLocalStatus === 'delivered' && $order->user_id) {
+
+                if ($order->coupon_id) {
+                    $coupon = Coupon::find($order->coupon_id);
+                    if ($coupon) {
+                        // Increment global usage
+                        $coupon->increment('used_count');
+                        
+                        // Increment per-user usage
+                        CouponUsage::updateOrCreate(
+                            [
+                                'coupon_id' => $coupon->id,
+                                'user_id' => $order->user_id
+                            ],
+                            [
+                                'usage_count' => \DB::raw('usage_count + 1')
+                            ]
+                        );
+                    }
+                }
+
                 // Deduct the points that were used for this order (if any)
                 if ($order->points_used > 0) {
                     UserPoint::create([
                         'user_id' => $order->user_id,
                         'order_id' => $order->id,
-                        'point' => -($order->points_used)
+                        'point' => -($order->points_used * 100)
                     ]);
                 }
 
-                // Add new points earned from this order
+                // Add new points earned from total (after all discounts)
                 $pointsEarned = floor($order->total);
                 UserPoint::create([
                     'user_id' => $order->user_id,
@@ -977,20 +1060,15 @@ class FrontendController extends Controller
                 'new_status' => $newLocalStatus
             ]);
 
-            // Handle order accepted (confirmed)
-            if ($orderStatus === 'confirmed') {
+            if ($orderStatus === 'accepted') {
                 Log::info('Order ACCEPTED by EPOS', [
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
                     'customer_email' => $order->email,
                     'customer_name' => $order->first_name . ' ' . $order->last_name
                 ]);
-                
-                // TODO: Send acceptance email to customer
-                // Mail::to($order->email)->send(new OrderAcceptedMail($order));
             }
 
-            // Handle order cancelled/rejected
             if ($orderStatus === 'cancelled' || $orderStatus === 'rejected') {
                 $cancellationReason = $newState['cancellation_reason'] ?? 'Not specified';
                 
@@ -1001,12 +1079,8 @@ class FrontendController extends Controller
                     'customer_name' => $order->first_name . ' ' . $order->last_name,
                     'reason' => $cancellationReason
                 ]);
-                
-                // TODO: Send rejection email to customer with reason
-                // Mail::to($order->email)->send(new OrderRejectedMail($order, $cancellationReason));
             }
 
-            // Return 200 to acknowledge receipt (HubRise will delete the event)
             return response()->json(['success' => true], 200);
 
         } catch (\Exception $e) {
@@ -1015,7 +1089,6 @@ class FrontendController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            // Still return 2xx to prevent HubRise retries
             return response()->json(['success' => false], 200);
         }
     }

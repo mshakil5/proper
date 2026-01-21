@@ -147,7 +147,13 @@
                     </div>
                     @if($order->coupon_discount > 0)
                     <div class="summary-row" style="color: #28a745;">
-                        <span>Promo Discount</span>
+                        <span>Coupon/Voucher Discount</span>
+                        <span style="color: #28a745;">-£{{ number_format($order->coupon_discount, 2) }}</span>
+                    </div>
+                    @endif
+                    @if($order->gift_card_discount)
+                    <div class="summary-row" style="color: #28a745;">
+                        <span>Gift Card Discount</span>
                         <span style="color: #28a745;">-£{{ number_format($order->coupon_discount, 2) }}</span>
                     </div>
                     @endif
