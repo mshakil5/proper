@@ -19,6 +19,23 @@
             <p class="subtxt">Discover our most-loved dishes, crafted with the finest ingredients and bursting with
                 flavour</p>
         </section>
+        <div class="search-wrapper">
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input 
+                        type="text" 
+                        id="productSearch" 
+                        class="search-input" 
+                        placeholder="Search products, categories..."
+                    >
+                    <button id="clearSearch" class="search-clear-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="searchResults"></div>
+            </div>
+        </div>
         <div class="category-pills" id="categoryPills">
             <div class="pill" data-filter="all">All</div>
             @foreach ($categories as $key => $category)

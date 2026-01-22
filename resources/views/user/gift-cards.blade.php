@@ -9,9 +9,9 @@
     </h3>
     <p class="dashboard-subtitle">View and manage your purchased gift cards</p>
 
-    <div class="gift-cards-grid">
+    <div class="gift-cards-grid" id="giftCardsGrid">
         @forelse($giftCards as $giftCard)
-            <div class="gift-card-display">
+            <div class="gift-card-display" data-code="{{ strtolower($giftCard->code) }}" data-status="{{ $giftCard->status }}">
                 <div class="gift-card-visual">
                     <div class="gift-card-coupon">
                         <div class="coupon-border"></div>
@@ -23,7 +23,7 @@
 
                             <div class="coupon-middle">
                                 <div class="coupon-branding">
-                                    <div class="brand-logo"><img src={{ asset('uploads/company/' . $logo) }} style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>
+                                    <div class="brand-logo"><img src="{{ asset('uploads/company/' . $logo) }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>
                                     <small class="brand-url">www.propertakeaways.co.uk</small>
                                 </div>
                                 
@@ -32,7 +32,7 @@
                                 </div>
                                 
                                 <div class="coupon-label">
-                                    OFF GIFT CARD
+                                    REMAINING
                                 </div>
                             </div>
 
@@ -49,6 +49,21 @@
 
                         <div class="coupon-status-badge badge-{{ $giftCard->status }}">
                             {{ ucfirst($giftCard->status) }}
+                        </div>
+                    </div>
+
+                    <div class="gift-card-balance-row">
+                        <div class="balance-col">
+                            <span class="balance-label">Total</span>
+                            <span class="balance-value">£{{ number_format($giftCard->amount, 2) }}</span>
+                        </div>
+                        <div class="balance-col">
+                            <span class="balance-label">Used</span>
+                            <span class="balance-value">£{{ number_format($giftCard->amount - $giftCard->balance, 2) }}</span>
+                        </div>
+                        <div class="balance-col">
+                            <span class="balance-label">Remaining</span>
+                            <span class="balance-value highlight">£{{ number_format($giftCard->balance, 2) }}</span>
                         </div>
                     </div>
                 </div>

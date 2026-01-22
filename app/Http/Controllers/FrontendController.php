@@ -510,25 +510,99 @@ class FrontendController extends Controller
                 'hubRiseOrder.service_type' => 'required|in:delivery,collection',
 
                 'localOrder' => 'required|array',
-                'localOrder.customer.firstName' => 'required|string|max:100',
-                'localOrder.customer.lastName' => 'nullable|string|max:100',
-                'localOrder.customer.email' => 'required|email',
-                'localOrder.customer.phone' => 'required|string|max:20',
+                'localOrder.customer.firstName' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
+                'localOrder.customer.lastName' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
+                'localOrder.customer.email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
+                'localOrder.customer.phone' => ['required', 'string', 'regex:/^(?:\+44\s?|0)[0-9\s]{9,11}$/'],
 
                 'localOrder.cart' => 'required|array|min:1',
-                'localOrder.cart.*.title' => 'required|string',
-                'localOrder.cart.*.quantity' => 'required|integer|min:1',
-                'localOrder.cart.*.price' => 'required|numeric|min:0',
+                'localOrder.cart.*.title' => ['required', 'string', 'max:255'],
+                'localOrder.cart.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
+                'localOrder.cart.*.price' => ['required', 'numeric', 'min:0', 'max:99999.99'],
 
-                'localOrder.subtotal' => 'required|numeric|min:0',
-                'localOrder.deliveryCharge' => 'required|numeric|min:0',
-                'localOrder.total' => 'required|numeric|min:0',
+                'localOrder.subtotal' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+                'localOrder.deliveryCharge' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+                'localOrder.total' => ['required', 'numeric', 'min:0', 'max:999999.99'],
 
                 'localOrder.paymentMethod' => 'required|in:cash,stripe,paypal',
-                'localOrder.points_used' => 'nullable|integer|min:0',
+                'localOrder.points_used' => ['nullable', 'integer', 'min:0', 'max:999999'],
                 'localOrder.promo_type' => 'nullable|in:coupon,gift_card',
-                'localOrder.promo_id' => 'nullable|integer',
-                'localOrder.promo_discount' => 'nullable|numeric|min:0',
+                'localOrder.promo_id' => ['nullable', 'integer', 'min:1', 'exists:coupons,id'],
+                'localOrder.promo_discount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            ], [
+                'hubRiseOrder.required' => 'HubRise order data is required',
+                'hubRiseOrder.array' => 'HubRise order must be an array',
+                'hubRiseOrder.service_type.required' => 'Service type is required',
+                'hubRiseOrder.service_type.in' => 'Service type must be either delivery or collection',
+
+                'localOrder.required' => 'Local order data is required',
+                'localOrder.array' => 'Local order must be an array',
+
+                'localOrder.customer.firstName.required' => 'Customer first name is required',
+                'localOrder.customer.firstName.string' => 'First name must be text',
+                'localOrder.customer.firstName.max' => 'First name cannot exceed 100 characters',
+                'localOrder.customer.firstName.regex' => 'First name can only contain letters, spaces, hyphens and apostrophes',
+
+                'localOrder.customer.lastName.string' => 'Last name must be text',
+                'localOrder.customer.lastName.max' => 'Last name cannot exceed 100 characters',
+                'localOrder.customer.lastName.regex' => 'Last name can only contain letters, spaces, hyphens and apostrophes',
+
+                'localOrder.customer.email.required' => 'Customer email is required',
+                'localOrder.customer.email.email' => 'Please enter a valid email address',
+                'localOrder.customer.email.max' => 'Email cannot exceed 255 characters',
+
+                'localOrder.customer.phone.required' => 'Customer phone number is required',
+                'localOrder.customer.phone.regex' => 'Please enter a valid UK phone number',
+
+                'localOrder.cart.required' => 'Cart items are required',
+                'localOrder.cart.array' => 'Cart must be an array',
+                'localOrder.cart.min' => 'Cart must contain at least one item',
+
+                'localOrder.cart.*.title.required' => 'Product title is required',
+                'localOrder.cart.*.title.string' => 'Product title must be text',
+                'localOrder.cart.*.title.max' => 'Product title cannot exceed 255 characters',
+
+                'localOrder.cart.*.quantity.required' => 'Product quantity is required',
+                'localOrder.cart.*.quantity.integer' => 'Quantity must be a whole number',
+                'localOrder.cart.*.quantity.min' => 'Quantity must be at least 1',
+                'localOrder.cart.*.quantity.max' => 'Quantity cannot exceed 999',
+
+                'localOrder.cart.*.price.required' => 'Product price is required',
+                'localOrder.cart.*.price.numeric' => 'Price must be a valid number',
+                'localOrder.cart.*.price.min' => 'Price cannot be negative',
+                'localOrder.cart.*.price.max' => 'Price is too high',
+
+                'localOrder.subtotal.required' => 'Subtotal is required',
+                'localOrder.subtotal.numeric' => 'Subtotal must be a valid number',
+                'localOrder.subtotal.min' => 'Subtotal cannot be negative',
+                'localOrder.subtotal.max' => 'Subtotal amount is too high',
+
+                'localOrder.deliveryCharge.required' => 'Delivery charge is required',
+                'localOrder.deliveryCharge.numeric' => 'Delivery charge must be a valid number',
+                'localOrder.deliveryCharge.min' => 'Delivery charge cannot be negative',
+                'localOrder.deliveryCharge.max' => 'Delivery charge is too high',
+
+                'localOrder.total.required' => 'Total amount is required',
+                'localOrder.total.numeric' => 'Total must be a valid number',
+                'localOrder.total.min' => 'Total cannot be negative',
+                'localOrder.total.max' => 'Total amount is too high',
+
+                'localOrder.paymentMethod.required' => 'Payment method is required',
+                'localOrder.paymentMethod.in' => 'Payment method must be cash, stripe, or paypal',
+
+                'localOrder.points_used.integer' => 'Points used must be a whole number',
+                'localOrder.points_used.min' => 'Points used cannot be negative',
+                'localOrder.points_used.max' => 'Points used amount is too high',
+
+                'localOrder.promo_type.in' => 'Promo type must be coupon or gift_card',
+
+                'localOrder.promo_id.integer' => 'Promo ID must be a number',
+                'localOrder.promo_id.min' => 'Invalid promo ID',
+                'localOrder.promo_id.exists' => 'Promo code not found or invalid',
+
+                'localOrder.promo_discount.numeric' => 'Promo discount must be a valid number',
+                'localOrder.promo_discount.min' => 'Promo discount cannot be negative',
+                'localOrder.promo_discount.max' => 'Promo discount amount is too high',
             ]);
 
             if (($request->hubRiseOrder['service_type'] ?? '') === 'delivery') {

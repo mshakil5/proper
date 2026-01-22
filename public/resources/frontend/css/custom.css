@@ -6783,3 +6783,229 @@ footer a:hover {
         padding: 16px;
     }
 }
+
+/* ===== SEARCH STYLES ===== */
+
+.search-wrapper {
+    margin: 0 0 40px 0;
+    animation: slideDown 0.6s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.search-container {
+    position: relative;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 50px;
+    border: 2px solid rgba(255, 138, 0, 0.2);
+    padding: 0 24px;
+    box-shadow: 0 8px 32px rgba(255, 138, 0, 0.12);
+    transition: all 0.35s cubic-bezier(0.2, 0.9, 0.2, 1);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-box:focus-within {
+    border-color: #ff8a00;
+    box-shadow: 0 16px 48px rgba(255, 138, 0, 0.25);
+    transform: translateY(-4px);
+}
+
+.search-icon {
+    font-size: 18px;
+    color: #ff8a00;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 16px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: #bbb;
+    font-weight: 500;
+}
+
+.search-clear-btn {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    display: none;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.search-input:not(:placeholder-shown) ~ .search-clear-btn {
+    display: block;
+}
+
+.search-clear-btn:hover {
+    color: #ff8a00;
+    transform: rotate(90deg);
+}
+
+.search-no-results {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 20px;
+    background: white;
+    border-radius: 14px;
+    padding: 40px 20px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    border: 2px solid rgba(255, 138, 0, 0.1);
+    min-width: 300px;
+    z-index: 100;
+    animation: slideUp 0.4s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.search-no-results i {
+    font-size: 48px;
+    color: #ddd;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.search-no-results p {
+    margin: 0;
+    font-size: 14px;
+    color: #999;
+    font-weight: 600;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-box {
+        padding: 0 18px;
+    }
+
+    .search-input {
+        font-size: 14px;
+        padding: 14px 0;
+    }
+
+    .search-icon {
+        font-size: 16px;
+    }
+
+    .search-no-results {
+        min-width: 280px;
+        padding: 32px 16px;
+    }
+
+    .search-no-results i {
+        font-size: 40px;
+    }
+
+    .search-no-results p {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 576px) {
+    .search-box {
+        padding: 0 14px;
+    }
+
+    .search-input {
+        font-size: 13px;
+        padding: 12px 0;
+    }
+
+    .search-icon {
+        font-size: 14px;
+        margin-right: 8px;
+    }
+
+    .search-no-results {
+        min-width: calc(100vw - 40px);
+        padding: 28px 14px;
+    }
+
+    .search-no-results i {
+        font-size: 36px;
+        margin-bottom: 12px;
+    }
+
+    .search-no-results p {
+        font-size: 12px;
+    }
+}
+
+.gift-card-balance-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 8px;
+    background: rgba(255, 138, 0, 0.05);
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.balance-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: center;
+}
+
+.balance-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #999;
+}
+
+.balance-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: #333;
+}
+
+.balance-value.highlight {
+    color: #ff8a00;
+}
+
+@media (max-width: 576px) {
+    .gift-card-balance-row {
+        gap: 6px;
+        padding: 6px;
+        margin-top: 8px;
+    }
+
+    .balance-label {
+        font-size: 9px;
+    }
+
+    .balance-value {
+        font-size: 11px;
+    }
+}

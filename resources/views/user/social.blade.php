@@ -57,7 +57,9 @@
     <div class="user-dashboard-card" style="margin-top: 32px;">
         <div class="social-sharing-section">
             <h4 class="sharing-title">Share on Facebook</h4>
-            <p class="sharing-subtitle">Share and earn 10 points ({{ auth()->user()->facebookSharesToday() }}/5 today)</p>
+            <p class="sharing-subtitle">
+                {{ auth()->user()->facebookShareStatusText() }}
+            </p>
             
             <div class="sharing-buttons">
                 <button class="social-btn social-btn-facebook" id="facebookBtn" title="Share on Facebook" {{ auth()->user()->canShareToday() ? '' : 'disabled' }}>

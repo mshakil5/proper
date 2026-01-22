@@ -38,9 +38,9 @@
 <script>
 function copyCoupon(code) {
     navigator.clipboard.writeText(code).then(() => {
-        alert('Coupon code ' + code + ' copied!');
+        showSuccess('Coupon code ' + code + ' copied!');
     }).catch(() => {
-        alert('Failed to copy coupon code');
+        showError('Failed to copy coupon code');
     });
 }
 </script>

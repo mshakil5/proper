@@ -42,11 +42,43 @@ class User extends Authenticatable
 
     public function canShareToday()
     {
-        return $this->userPoints()
+        $lifetime = $this->userPoints()
+            ->where('source', 'social_share')
+            ->where('source_action', 'facebook')
+            ->count();
+
+        if ($lifetime >= 5) {
+            return false;
+        }
+
+        $today = $this->userPoints()
             ->where('source', 'social_share')
             ->where('source_action', 'facebook')
             ->whereDate('created_at', today())
-            ->count() < 5;
+            ->count();
+
+        return $today < 1;
+    }
+
+    public function facebookSharesLifetime()
+    {
+        return $this->userPoints()
+            ->where('source','social_share')
+            ->where('source_action','facebook')
+            ->count();
+    }
+
+    public function facebookShareStatusText()
+    {
+        if ($this->facebookSharesToday() >= 1) {
+            return "✅ You’ve already shared today.";
+        }
+
+        if ($this->facebookSharesLifetime() >= 5) {
+            return "🚫 Lifetime sharing limit reached.";
+        }
+
+        return "Share and earn 10 points ({$this->facebookSharesToday()}/1 today, max 5 total)";
     }
 
     public function facebookSharesToday()

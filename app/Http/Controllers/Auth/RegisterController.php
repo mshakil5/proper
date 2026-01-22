@@ -46,36 +46,54 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\'-]+$/'],
+            'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\'-]+$/'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:users'],
+            'phone' => ['required', 'string', 'regex:/^(?:\+44\s?|0)[0-9\s]{9,11}$/'],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'],
             'terms' => ['required', 'accepted']
         ], [
             'first_name.required' => 'First name is required',
+            'first_name.string' => 'First name must be a valid text',
+            'first_name.max' => 'First name cannot exceed 255 characters',
+            'first_name.regex' => 'First name can only contain letters, spaces, hyphens and apostrophes',
+            
             'last_name.required' => 'Last name is required',
-            'email.required' => 'Email is required',
-            'email.email' => 'Please enter a valid email',
-            'email.unique' => 'This email is already registered',
-            'phone.required' => 'Phone number is required',
+            'last_name.string' => 'Last name must be a valid text',
+            'last_name.max' => 'Last name cannot exceed 255 characters',
+            'last_name.regex' => 'Last name can only contain letters, spaces, hyphens and apostrophes',
+            
+            'email.required' => 'Email address is required',
+            'email.email' => 'Please enter a valid email address',
+            'email.unique' => 'This email address is already registered',
+            'email.max' => 'Email address cannot exceed 255 characters',
+            
+            'phone.required' => 'UK phone number is required',
+            'phone.regex' => 'Please enter a valid UK phone number',
+            'phone.string' => 'Phone number must be valid',
+            
             'password.required' => 'Password is required',
-            'password.min' => 'Password must be at least 6 characters',
+            'password.min' => 'Password must be at least 8 characters long',
             'password.confirmed' => 'Passwords do not match',
-            'terms.required' => 'You must accept the terms and conditions'
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)',
+            
+            'terms.required' => 'You must accept the terms and conditions',
+            'terms.accepted' => 'You must accept the terms and conditions'
         ]);
     }
 
     protected function create(array $data)
     {
         $fullName = $data['first_name'] . ' ' . $data['last_name'];
+        
+        $phone = preg_replace('/\s+/', '', $data['phone']);
 
         return User::create([
             'name' => $fullName,
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
+            'email' => strtolower($data['email']),
+            'phone' => $phone,
             'password' => Hash::make($data['password']),
             'user_type' => '2',
             'status' => 1,

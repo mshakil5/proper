@@ -26,6 +26,11 @@
         <div class="stat-box-value">{{ \App\Models\Coupon::active()->count() }}</div>
         <div class="stat-box-label">Active Coupons</div>
     </div>
+    <div class="stat-box">
+        <div class="stat-box-icon"><i class="fas fa-gift"></i></div>
+        <div class="stat-box-value">{{ auth()->user()->purchasedGiftCards()->where('balance','>',0)->count(); }}</div>
+        <div class="stat-box-label">Active Gift Cards</div>
+    </div>
 </div>
 
 <!-- Quick Actions -->
