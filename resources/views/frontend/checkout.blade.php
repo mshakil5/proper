@@ -822,10 +822,10 @@
 
                 if (isAuthenticated) {
                     customerData = {
-                        firstName: '{{ auth()->check() ? auth()->user()->first_name : '' }}',
-                        lastName: '{{ auth()->check() ? auth()->user()->last_name : '' }}',
-                        email: '{{ auth()->check() ? auth()->user()->email : '' }}',
-                        phone: '{{ auth()->check() ? auth()->user()->phone : '' }}',
+                        firstName: $('#authFirstName').val() || '{{ auth()->check() ? auth()->user()->first_name : '' }}',
+                        lastName: $('#authLastName').val() || '{{ auth()->check() ? auth()->user()->last_name : '' }}',
+                        email: $('#authEmail').val() || '{{ auth()->check() ? auth()->user()->email : '' }}',
+                        phone: $('#authPhone').val() || '{{ auth()->check() ? auth()->user()->phone : '' }}',
                         type: 'authenticated'
                     };
                 } else if (currentTab === 'guest') {

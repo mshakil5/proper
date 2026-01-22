@@ -134,6 +134,11 @@ class User extends Authenticatable
         return $subscription !== null;
     }
 
+    public function deliverySubscriptionPayments()
+    {
+        return $this->hasManyThrough(DeliverySubscriptionPayment::class, DeliverySubscription::class);
+    }
+
     public function getActiveDeliverySubscription()
     {
         return $this->deliverySubscription()

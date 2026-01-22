@@ -108,6 +108,13 @@
                 </li>
 
                 <li class="nav-item">
+                    <a href="{{ route('admin.orders.index') }}" class="nav-link {{ Route::is('admin.orders.index') || Route::is('admin.orders.details') ? 'active' : '' }}">
+                        <i class="ri-file-list-line me-2"></i>
+                        <span>Orders</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link menu-link {{ $productActive ? 'active' : '' }}"
                     href="#sidebarAllProducts"
                     data-bs-toggle="collapse"
@@ -150,8 +157,9 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{{ route('allslider') }}" 
-                        class="nav-link {{ Route::is('allslider') ? 'active' : '' }}"><i class="ri-slideshow-line"></i>Sliders
+                    <a href="{{ route('allslider') }}" class="nav-link {{ Route::is('allslider') ? 'active' : '' }}">
+                        <i class="ri-slideshow-line"></i>
+                        <span>Sliders</span>
                     </a>
                 </li>
 
@@ -172,7 +180,7 @@
                 <li class="nav-item">
                     <a href="{{ route('giftcard-packages.index') }}" class="nav-link {{ Route::is('giftcard-packages.index') ? 'active' : '' }}">
                         <i class="ri-gift-line"></i>
-                        <span>Gift Cards</span>
+                        <span>Gift Card Packages</span>
                     </a>
                 </li>
 

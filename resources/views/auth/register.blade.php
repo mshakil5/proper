@@ -142,7 +142,7 @@
                         <div style="margin-bottom: 20px;">
                             <label class="remember-checkbox">
                                 <input type="checkbox" name="terms" id="regTerms" required>
-                                <span>I agree to the <a href="#" style="color: #ff8a00; text-decoration: none;">Terms & Conditions</a></span>
+                                <span>I agree to the <a href="{{ route('terms-and-conditions') }}" style="color: #ff8a00; text-decoration: none;" target="_blank">Terms & Conditions</a></span>
                             </label>
                         </div>
 

@@ -24,42 +24,86 @@
                         <form id="createThisForm">
                             @csrf
                             <input type="hidden" id="codeid" name="id">
-                            <div class="mb-3">
-                                <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                <input type="text" id="first_name" name="first_name" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" id="last_name" name="last_name" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email <span class="text-danger">*</span></label>
-                                <input type="email" id="email" name="email" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Phone <span class="text-danger">*</span></label>
-                                <input type="text" id="phone" name="phone" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Date of Birth</label>
-                                <input type="date" id="dob" name="dob" class="form-control">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Postal Code</label>
-                                <input type="text" id="postcode" name="postcode" class="form-control">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Password <span class="text-danger" id="passwordRequired">*</span></label>
-                                <input type="password" id="password" name="password" class="form-control">
-                                <small class="form-text text-muted">Leave empty to keep current password (edit mode only)</small>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Confirm Password <span class="text-danger" id="confirmRequired">*</span></label>
-                                <input type="password" id="password_confirmation" name="password_confirmation" class="form-control">
-                            </div>
-                            <div class="mb-3 text-end">
-                                <button type="button" id="addBtn" class="btn btn-primary" value="Create">Create</button>
-                                <button type="button" id="FormCloseBtn" class="btn btn-light">Cancel</button>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                        <input type="text" id="first_name" name="first_name" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                        <input type="text" id="last_name" name="last_name" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                                        <input type="email" id="email" name="email" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Phone <span class="text-danger">*</span></label>
+                                        <input type="text" id="phone" name="phone" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Date of Birth</label>
+                                        <input type="date" id="dob" name="dob" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Postal Code</label>
+                                        <input type="text" id="postcode" name="postcode" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Address Line 1</label>
+                                        <input type="text" id="address_1" name="address_1" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Street</label>
+                                        <input type="text" id="street" name="street" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">City</label>
+                                        <input type="text" id="city" name="city" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Address Line 2</label>
+                                        <input type="text" id="address_2" name="address_2" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Password <span class="text-danger" id="passwordRequired">*</span></label>
+                                        <input type="password" id="password" name="password" class="form-control">
+                                        <small class="form-text text-muted">Leave empty to keep current password (edit mode only)</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Confirm Password <span class="text-danger" id="confirmRequired">*</span></label>
+                                        <input type="password" id="password_confirmation" name="password_confirmation" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mb-3 text-end">
+                                        <button type="button" id="addBtn" class="btn btn-primary" value="Create">Create</button>
+                                        <button type="button" id="FormCloseBtn" class="btn btn-light">Cancel</button>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -83,6 +127,10 @@
                             <th>Email</th>
                             <th>Phone</th>
                             <th>Status</th>
+                            <th>Orders</th>
+                            <th>Gift Cards</th>
+                            <th>Points</th>
+                            <th>Subscription</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -131,6 +179,30 @@
                     {
                         data: 'status',
                         name: 'status',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'orders',
+                        name: 'orders',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'gift_cards',
+                        name: 'gift_cards',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'points',
+                        name: 'points',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'subscription',
+                        name: 'subscription',
                         orderable: false,
                         searchable: false
                     },
@@ -207,6 +279,10 @@
                     $('#phone').val(res.phone);
                     $('#dob').val(res.dob);
                     $('#postcode').val(res.postcode);
+                    $('#address_1').val(res.address_1);
+                    $('#street').val(res.street);
+                    $('#city').val(res.city);
+                    $('#address_2').val(res.address_2);
                     $('#password').val('');
                     $('#password_confirmation').val('');
                     $('#password').prop('required', false);

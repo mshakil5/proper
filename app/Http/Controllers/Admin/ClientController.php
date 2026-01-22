@@ -8,20 +8,47 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
+use App\Models\GiftCard;
+use App\Models\UserPoint;
+use App\Models\DeliverySubscription;
 
 class ClientController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $clients = User::where('user_type', 2)->latest();
+            $clients = User::where('user_type', 2)
+                ->with(['orders', 'purchasedGiftCards', 'userPoints', 'deliverySubscription', 'deliverySubscriptionPayments'])
+                ->latest();
+            
             return DataTables::of($clients)
                 ->addIndexColumn()
+                ->addColumn('orders', function($row){
+                    $ordersCount = $row->orders()->count();
+                    return '<a href="'.route('admin.orders.index', ['client_id' => $row->id]).'" class="badge bg-primary">'.$ordersCount.'</a>';
+                })
+                ->addColumn('gift_cards', function($row){
+                    $giftCardsCount = $row->purchasedGiftCards()->count();
+                    return '<a href="'.route('gift-cards.index', ['client_id' => $row->id]).'" class="badge bg-info">'.$giftCardsCount.'</a>';
+                })
+                ->addColumn('points', function($row){
+                    $pointsCount = $row->userPoints()->sum('point');
+                    return '<a href="'.route('points.index', ['client_id' => $row->id]).'" class="badge bg-success">'.$pointsCount.'</a>';
+                })
+                ->addColumn('subscription', function($row){
+                    $subscription = $row->deliverySubscription()->first();
+                    $paymentsCount = $row->deliverySubscriptionPayments()->count();
+                    
+                    if ($subscription && $subscription->isActive()) {
+                        return '<a href="'.route('subscriptions.index', ['client_id' => $row->id]).'" class="badge bg-warning">Active ('.$paymentsCount.')</a>';
+                    }
+                    return '<span class="badge bg-secondary">None</span>';
+                })
                 ->addColumn('status', function($row){
                     $checked = $row->status == 1 ? 'checked' : '';
                     return '<div class="form-check form-switch" dir="ltr">
                                 <input type="checkbox" class="form-check-input toggle-status" 
-                                       id="customSwitchStatus'.$row->id.'" data-id="'.$row->id.'" '.$checked.'>
+                                    id="customSwitchStatus'.$row->id.'" data-id="'.$row->id.'" '.$checked.'>
                                 <label class="form-check-label" for="customSwitchStatus'.$row->id.'"></label>
                             </div>';
                 })
@@ -36,7 +63,7 @@ class ClientController extends Controller
                             </ul>
                         </div>';
                 })
-                ->rawColumns(['status', 'action'])
+                ->rawColumns(['orders', 'gift_cards', 'points', 'subscription', 'status', 'action'])
                 ->make(true);
         }
 
@@ -52,6 +79,10 @@ class ClientController extends Controller
             'phone' => 'required|string|max:20',
             'dob' => 'nullable|date|before:today',
             'postcode' => 'nullable|string',
+            'address_1' => 'nullable|string',
+            'street' => 'nullable|string',
+            'city' => 'nullable|string',
+            'address_2' => 'nullable|string',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
@@ -63,6 +94,10 @@ class ClientController extends Controller
             'phone' => $request->phone,
             'dob' => $request->dob,
             'postcode' => $request->postcode,
+            'address_1' => $request->address_1,
+            'street' => $request->street,
+            'city' => $request->city,
+            'address_2' => $request->address_2,
             'password' => Hash::make($request->password),
             'user_type' => 2,
             'status' => 1,
@@ -87,6 +122,10 @@ class ClientController extends Controller
             'phone' => 'required|string|max:20',
             'dob' => 'nullable|date|before:today',
             'postcode' => 'nullable|string',
+            'address_1' => 'nullable|string',
+            'street' => 'nullable|string',
+            'city' => 'nullable|string',
+            'address_2' => 'nullable|string',
         ];
 
         // Only validate password if provided
@@ -106,6 +145,10 @@ class ClientController extends Controller
             'phone' => $request->phone,
             'dob' => $request->dob,
             'postcode' => $request->postcode,
+            'address_1' => $request->address_1,
+            'street' => $request->street,
+            'city' => $request->city,
+            'address_2' => $request->address_2,
         ];
 
         // Only update password if provided
@@ -236,5 +279,94 @@ class ClientController extends Controller
             'message' => "Created $created new clients and updated $updated existing clients successfully",
             'errors' => $errors
         ], 200);
+    }
+
+    public function giftCards(Request $request)
+    {
+        if ($request->ajax()) {
+            $query = GiftCard::with('purchasedBy')->latest();
+
+            if ($request->has('client_id') && $request->client_id) {
+                $query->where('purchased_by', $request->client_id);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('client_name', function($row){
+                    return $row->purchasedBy->first_name . ' ' . $row->purchasedBy->last_name;
+                })
+                ->addColumn('amount', function($row){
+                    return '£' . number_format($row->amount, 2);
+                })
+                ->addColumn('balance', function($row){
+                    return '£' . number_format($row->balance, 2);
+                })
+                ->addColumn('created_at', function($row){
+                    return $row->created_at->format('d F Y');
+                })
+                ->rawColumns(['amount', 'balance', 'created_at'])
+                ->make(true);
+        }
+
+        return view('admin.gift-cards.index');
+    }
+
+    public function points(Request $request)
+    {
+        if ($request->ajax()) {
+            $query = UserPoint::with('user')->latest();
+
+            if ($request->has('client_id') && $request->client_id) {
+                $query->where('user_id', $request->client_id);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('client_name', function($row){
+                    return $row->user->first_name . ' ' . $row->user->last_name;
+                })
+                ->addColumn('created_at', function($row){
+                    return $row->created_at->format('d F Y');
+                })
+                ->rawColumns(['created_at'])
+                ->make(true);
+        }
+
+        return view('admin.points.index');
+    }
+
+    public function subscriptions(Request $request)
+    {
+        if ($request->ajax()) {
+            $query = DeliverySubscription::with(['user', 'payments'])->latest();
+
+            if ($request->has('client_id') && $request->client_id) {
+                $query->where('user_id', $request->client_id);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('client_name', function($row){
+                    return $row->user->first_name . ' ' . $row->user->last_name;
+                })
+                ->addColumn('status', function($row){
+                    $badgeClass = $row->status == 'active' ? 'bg-success' : 'bg-danger';
+                    return '<span class="badge '.$badgeClass.'">'.$row->status.'</span>';
+                })
+                ->addColumn('payments', function($row){
+                    $paymentsCount = $row->payments->count();
+                    return '<span class="badge bg-info">'.$paymentsCount.'</span>';
+                })
+                ->addColumn('started_at', function($row){
+                    return $row->started_at->format('d F Y');
+                })
+                ->addColumn('ends_at', function($row){
+                    return $row->ends_at->format('d F Y');
+                })
+                ->rawColumns(['status', 'payments', 'started_at', 'ends_at'])
+                ->make(true);
+        }
+
+        return view('admin.subscriptions.index');
     }
 }

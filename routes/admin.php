@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\GiftcardPackageController;
+use App\Http\Controllers\Admin\OrderController;
 
 Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], function(){
 
@@ -29,6 +30,10 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::post('/client/toggle-status', [ClientController::class, 'toggleStatus'])->name('client.toggleStatus');
     Route::get('/client/export/csv', [ClientController::class, 'exportClients'])->name('client.export');
     Route::post('/client/import/csv', [ClientController::class, 'importClients'])->name('client.import');
+
+    Route::get('/gift-cards', [ClientController::class, 'giftCards'])->name('gift-cards.index');
+    Route::get('/points', [ClientController::class, 'points'])->name('points.index');
+    Route::get('/subscriptions', [ClientController::class, 'subscriptions'])->name('subscriptions.index');
 
     // Company
     Route::get('/company-details', [CompanyDetailsController::class, 'index'])->name('admin.companyDetails');
@@ -143,4 +148,8 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::put('/giftcard-packages/{id}', [GiftcardPackageController::class, 'update'])->name('giftcard-packages.update');
     Route::delete('/giftcard-packages/{id}', [GiftcardPackageController::class, 'destroy'])->name('giftcard-packages.destroy');
     Route::post('/giftcard-packages-status', [GiftcardPackageController::class, 'toggleStatus']);
+
+    // Orders
+    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.details');
 });
