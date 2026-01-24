@@ -7008,3 +7008,230 @@ footer a:hover {
         font-size: 11px;
     }
 }
+
+.delivery-charge-promo {
+    background: linear-gradient(135deg, #ff8a00, #ff5a00);
+    border-radius: 10px;
+    padding: 12px;
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-shadow: 0 6px 16px rgba(255, 138, 0, 0.2);
+}
+
+.promo-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.promo-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.promo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.promo-text strong {
+    font-size: 12px;
+    font-weight: 800;
+    color: white;
+}
+
+.promo-text small {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+}
+
+.btn-promo-link {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-promo-link:hover {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.6);
+    color: white;
+    text-decoration: none;
+    transform: translateX(2px);
+}
+
+@media (max-width: 576px) {
+    .delivery-charge-promo {
+        padding: 10px;
+        margin: 10px 0;
+    }
+
+    .promo-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+
+    .promo-text strong {
+        font-size: 11px;
+    }
+
+    .promo-text small {
+        font-size: 9px;
+    }
+
+    .btn-promo-link {
+        padding: 5px 8px;
+        font-size: 10px;
+    }
+}
+
+.subscription-alert {
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-left: 4px solid;
+    animation: slideDown 0.4s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.subscription-alert.alert-danger {
+    background: linear-gradient(135deg, #ffe8e8, #ffdbdb);
+    border-left-color: #dc3545;
+}
+
+.subscription-alert.alert-warning {
+    background: linear-gradient(135deg, #fff8e8, #fff3d6);
+    border-left-color: #ff9800;
+}
+
+.subscription-alert.alert-info {
+    background: linear-gradient(135deg, #e8f4ff, #d6ebff);
+    border-left-color: #0dcaf0;
+}
+
+.alert-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+}
+
+.alert-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.subscription-alert.alert-danger .alert-icon {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+.subscription-alert.alert-warning .alert-icon {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+}
+
+.subscription-alert.alert-info .alert-icon {
+    background: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0;
+}
+
+.alert-text {
+    flex: 1;
+}
+
+.alert-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0 0 4px;
+}
+
+.alert-message {
+    font-size: 13px;
+    color: #666;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.btn-alert-action {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #ff8a00, #ff5a00);
+    color: white;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-alert-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 138, 0, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .subscription-alert {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px;
+    }
+
+    .btn-alert-action {
+        width: 100%;
+        justify-content: center;
+    }
+}

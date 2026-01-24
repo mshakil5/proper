@@ -102,6 +102,12 @@
             <span>Delivery Charge</span>
             <span class="cart-total-price" id="cartDeliveryCharge">£0.00</span>
         </div>
+        <script>
+            const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+            const hasActiveSubscription = {{ auth()->check() ? (auth()->user()->hasActiveDeliverySubscription() ? 'true' : 'false') : 'false' }};
+            const subscriptionCheckoutRoute = '{{ route("user.subscription.checkout") }}';
+            const csrfToken = '{{ csrf_token() }}';
+        </script>
         <div class="cart-summary-row" style="border-top: 1px solid #E8E8E8; padding-top: 8px; margin-top: 8px; font-weight: 800; font-size: 14px;">
             <span>Total</span>
             <span class="cart-total-price" id="cartTotal">£0.00</span>

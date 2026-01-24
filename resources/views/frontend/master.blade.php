@@ -150,6 +150,14 @@
     <script src="{{ asset('resources/frontend/js/cart.js') }}"></script>
 
     @yield('script')
+    
+    @if(session('success'))
+        showSuccess('{{ session("success") }}');
+    @endif
+
+    @if(session('error'))
+        showError('{{ session("error") }}');
+    @endif
 
 </body>
 

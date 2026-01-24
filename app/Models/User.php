@@ -233,6 +233,55 @@ class User extends Authenticatable
             ->first();
     }
 
+    public function getSubscriptionWarningMessage()
+    {
+        $subscription = $this->deliverySubscription()->first();
+        
+        if (!$subscription) {
+            return null;
+        }
+        
+        if (!$subscription->isActive()) {
+            return [
+                'type' => 'danger',
+                'icon' => 'fas fa-times-circle',
+                'title' => 'Subscription Expired',
+                'message' => 'Your Free Delivery Pass has expired. Renew now to continue enjoying unlimited free delivery!',
+                'action' => 'Renew Subscription'
+            ];
+        }
+        
+        $daysRemaining = (int) now()->diffInDays($subscription->ends_at, false);
+        
+        if ($daysRemaining <= 0) {
+            return [
+                'type' => 'danger',
+                'icon' => 'fas fa-exclamation-circle',
+                'title' => 'Subscription Expired',
+                'message' => 'Your Free Delivery Pass expired. Renew now to get unlimited free delivery again!',
+                'action' => 'Renew Now'
+            ];
+        } elseif ($daysRemaining <= 7) {
+            return [
+                'type' => 'warning',
+                'icon' => 'fas fa-clock',
+                'title' => 'Renewal Reminder',
+                'message' => "Your Free Delivery Pass expires in {$daysRemaining} day" . ($daysRemaining !== 1 ? 's' : '') . ". Renew now to avoid paying delivery charges!",
+                'action' => 'Renew Subscription'
+            ];
+        } elseif ($daysRemaining <= 14) {
+            return [
+                'type' => 'info',
+                'icon' => 'fas fa-info-circle',
+                'title' => 'Upcoming Renewal',
+                'message' => "Your Free Delivery Pass expires in {$daysRemaining} days. Plan ahead and renew!",
+                'action' => 'Renew Subscription'
+            ];
+        }
+        
+        return null;
+    }
+
     protected function casts(): array
     {
         return [

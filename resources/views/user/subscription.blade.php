@@ -8,6 +8,8 @@
         Free Delivery Subscription
     </h3>
     <p class="dashboard-subtitle">£5.00 per month - Unlimited free delivery</p>
+    
+    @include('user.subscription-message')
 
     <!-- Current Status -->
     @if($subscription && $subscription->isActive())

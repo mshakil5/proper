@@ -888,4 +888,67 @@ $(function () {
     loadDeliveryData();
     updateCartUI();
 
+    // Show subscription promo in cart
+    function showSubscriptionPromo() {
+        if (!isAuthenticated || hasActiveSubscription) {
+            return;
+        }
+        
+        let promoHTML = `
+            <div class="delivery-charge-promo" id="deliveryPromo">
+                <div class="promo-content">
+                    <div class="promo-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="promo-text">
+                        <strong>Why not Free Delivery?</strong>
+                        <small>Just £5/month - Unlimited free delivery</small>
+                    </div>
+                </div>
+                <button class="btn-promo-link" id="cartSubscribeBtn">
+                    Subscribe <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        `;
+        
+        // Remove if already exists
+        $('#deliveryPromo').remove();
+        
+        $('#cartDeliveryCharge').closest('.cart-summary-row').after(promoHTML);
+        
+        $('#cartSubscribeBtn').on('click', function(e) {
+            e.preventDefault();
+            $('#loadingModal').css('display', 'flex');
+            
+            $.ajax({
+                url: subscriptionCheckoutRoute,
+                method: 'POST',
+                data: {
+                    _token: csrfToken,
+                    amount: 5.00
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = response.redirectUrl;
+                    } else {
+                        $('#loadingModal').css('display', 'none');
+                        showError(response.message || 'Failed to process');
+                    }
+                },
+                error: function(xhr) {
+                    $('#loadingModal').css('display', 'none');
+                    showError(xhr.responseJSON?.message || 'Error processing subscription');
+                }
+            });
+        });
+    }
+
+    // Call this function when cart opens
+    $('#cartFloatBtn').on('click', function () {
+        renderCart();
+        showSubscriptionPromo();
+        $('#cartOffcanvas').addClass('open');
+        $('#cartOverlay').addClass('open');
+    });
+
 });

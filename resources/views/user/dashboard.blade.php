@@ -9,6 +9,8 @@
     </div>
 </div>
 
+@include('user.subscription-message')
+
 <!-- Stats Grid -->
 <div class="stats-grid">
     <div class="stat-box">
