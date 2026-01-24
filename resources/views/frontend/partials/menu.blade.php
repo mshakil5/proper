@@ -69,12 +69,12 @@
                                     @if($product->stock_status === 'in_stock')
                                     <a href="javascript:void(0)"
                                         class="btn btn-gradient open-product addToOrderBtn"
-                                        {{-- class="btn btn-gradient open-product addToOrderBtn d-none" --}}
                                         data-id="{{ $product->id }}"
                                         data-price="{{ $product->price }}"
                                         data-title="{{ $product->title }}"
                                         data-image="{{ $product->image }}"
                                         data-sku-ref="{{ $product->sku_ref }}"
+                                        data-category="{{ $category->name }}"
                                         data-has-options="{{ $product->options()->exists() ? 1 : 0 }}"
                                         >Add to Order</a>
                                     @else

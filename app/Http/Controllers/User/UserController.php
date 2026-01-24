@@ -116,17 +116,28 @@ class UserController extends Controller
     public function socialShare(Request $request)
     {
         $user = auth()->user();
+        $platform = $request->platform;
 
-        if (!$user->canShareToday()) {
-            return response()->json(['success' => false, 'message' => 'Daily limit reached']);
+        if ($platform === 'facebook') {
+            if (!$user->canShareToday()) {
+                return response()->json(['success' => false, 'message' => 'Daily limit reached for Facebook']);
+            }
+        } elseif ($platform === 'tiktok') {
+            if (!$user->canShareTikTokToday()) {
+                return response()->json(['success' => false, 'message' => 'Daily limit reached for TikTok']);
+            }
+        } elseif ($platform === 'instagram') {
+            if (!$user->canShareInstagramToday()) {
+                return response()->json(['success' => false, 'message' => 'Daily limit reached for Instagram']);
+            }
         }
 
         UserPoint::create([
             'user_id' => $user->id,
             'source' => 'social_share',
-            'source_action' => $request->platform,
+            'source_action' => $platform,
             'point' => 10,
-            'description' => 'Shared on ' . ucfirst($request->platform)
+            'description' => 'Shared on ' . ucfirst($platform)
         ]);
 
         return response()->json(['success' => true, 'message' => 'You earned 10 points!']);

@@ -10,24 +10,44 @@ $(function () {
 
     function loadDeliveryData() {
         let stored = localStorage.getItem('deliveryOptions');
-        if (stored) {
-            selectedDelivery = JSON.parse(stored);
-            if (selectedDelivery.type === 'collection') {
-                $('input[name="deliveryType"][value="collection"]').prop('checked', true);
-                $('#deliveryMode').hide();
-                $('#collectionMode').show();
+        if (!stored) return;
+
+        selectedDelivery = JSON.parse(stored);
+
+        if (selectedDelivery.type === 'collection') {
+            $('input[name="deliveryType"][value="collection"]').prop('checked', true);
+            $('#deliveryMode').hide();
+            $('#collectionMode').show();
+
+            if (
+                selectedDelivery.time &&
+                $('#collectionMode .delivery-time-select option[value="' + selectedDelivery.time + '"]').length
+            ) {
+                $('#collectionMode .delivery-time-select').val(selectedDelivery.time);
             } else {
-                $('input[name="deliveryType"][value="delivery"]').prop('checked', true);
-                $('#deliveryMode').show();
-                $('#collectionMode').hide();
-                if (selectedDelivery.postcode) {
-                    $('#deliveryPostcode').val(selectedDelivery.postcode);
-                }
+                selectedDelivery.time = '';
             }
-            if (selectedDelivery.time) {
-                $('select.delivery-time-select').val(selectedDelivery.time);
+
+        } else {
+            $('input[name="deliveryType"][value="delivery"]').prop('checked', true);
+            $('#deliveryMode').show();
+            $('#collectionMode').hide();
+
+            if (selectedDelivery.postcode) {
+                $('#deliveryPostcode').val(selectedDelivery.postcode);
+            }
+
+            if (
+                selectedDelivery.time &&
+                $('#deliveryMode .delivery-time-select option[value="' + selectedDelivery.time + '"]').length
+            ) {
+                $('#deliveryMode .delivery-time-select').val(selectedDelivery.time);
+            } else {
+                selectedDelivery.time = '';
             }
         }
+
+        saveDeliveryData();
     }
 
     function saveDeliveryData() {
@@ -172,6 +192,7 @@ $(function () {
                 image: String(element.data('image') || '').trim(),
                 price: Number(element.data('price')) || 0,
                 skuRef: String(element.data('sku-ref') || '').trim(),
+                category: String(element.data('category') || '').trim(),
                 quantity: 1,
                 type: "direct"
             });
@@ -661,6 +682,67 @@ $(function () {
     $(document).on('click', '.cart-checkout-btn', function(e) {
         e.preventDefault();
         
+        let cart = sanitizeCart();
+        let subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        
+        if (subtotal < 25) {
+            let hasFriesOrDrinks = cart.some(item => {
+                let category = item.category ? item.category.toLowerCase() : '';
+                return category.includes('fries') || category.includes('drinks');
+            });
+            
+            if (!hasFriesOrDrinks) {
+                Swal.fire({
+                    title: 'Have you forgotten to add Fries or Drinks?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'swal-confirm-popup',
+                        confirmButton: 'swal-confirm-btn',
+                        cancelButton: 'swal-cancel-btn'
+                    }
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        continueCheckout();
+                    }
+                });
+                return;
+            }
+        } else {
+            let hasPetFood = cart.some(item => {
+                let category = item.category ? item.category.toLowerCase() : '';
+                return category.includes('pet food') || category.includes('dog') || category.includes('cat');
+            });
+            
+            if (!hasPetFood) {
+                Swal.fire({
+                    title: 'Have you forgotten about your Dog/Cat or Pet Food?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'swal-confirm-popup',
+                        confirmButton: 'swal-confirm-btn',
+                        cancelButton: 'swal-cancel-btn'
+                    }
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        continueCheckout();
+                    }
+                });
+                return;
+            }
+        }
+        
+        continueCheckout();
+    });
+
+    function continueCheckout() {
         if (selectedDelivery.type === 'delivery') {
             if (!selectedDelivery.isValid) {
                 showError('Please verify your postcode for delivery');
@@ -690,15 +772,13 @@ $(function () {
         };
 
         localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-
-        // console.log('Checkout Data:', checkoutData);
         
         showSuccess('Proceeding to checkout...');
         
         setTimeout(() => {
             window.location.href = '/checkout';
         }, 1000);
-    });
+    }
 
     $(document).on('change', 'input[name="attribute_select"]', function() {
         if ($(this).val() === 'with_options') {
@@ -803,9 +883,9 @@ $(function () {
     }
 
     updateDeliveryStartTimes();
-    loadDeliveryData();
     populateTimeSlots('#deliveryMode .delivery-time-select', 16, 45);
     populateTimeSlots('#collectionMode .delivery-time-select', 16, 15);
+    loadDeliveryData();
     updateCartUI();
 
 });

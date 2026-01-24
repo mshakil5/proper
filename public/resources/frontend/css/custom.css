@@ -4328,7 +4328,7 @@ footer a:hover {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 32px;
 }
@@ -5037,19 +5037,24 @@ footer a:hover {
     color: white;
 }
 
-.social-btn-twitter {
-    background: #1DA1F2;
+.social-btn-tiktok {
+    background: #000;
     color: white;
 }
 
-.social-btn-whatsapp {
-    background: #25D366;
+.social-btn-instagram {
+    background: linear-gradient(135deg, #833AB4, #FD1D1D);
     color: white;
 }
 
-.social-btn-linkedin {
-    background: #0A66C2;
-    color: white;
+.social-btn-tiktok:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
+
+.social-btn-instagram:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(253, 29, 29, 0.3);
 }
 
 .social-btn:hover {
@@ -6147,18 +6152,18 @@ footer a:hover {
 
 /* Gift Card Coupon */
 .gift-card-coupon {
-    background: linear-gradient(to right, rgb(245, 230, 211) 0%, rgb(255, 254, 249) 100%);
-    border: 3px dashed #333;
+    background: linear-gradient(to right, #1a1a1a 0%, #2d2d2d 100%);
+    border: 3px dashed #fff;
     border-radius: 16px;
     padding: 20px;
     position: relative;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
 }
 
 .gift-card-coupon:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
 
 .coupon-border {
@@ -6167,7 +6172,7 @@ footer a:hover {
     transform: translateY(-50%);
     width: 20px;
     height: 20px;
-    background: #f5e6d3;
+    background: #1a1a1a;
     border-radius: 50%;
 }
 
@@ -6179,11 +6184,10 @@ footer a:hover {
     transform: translateY(-50%);
     width: 20px;
     height: 20px;
-    background: #f5e6d3;
+    background: #1a1a1a;
     border-radius: 50%;
 }
 
-/* Coupon Content */
 .coupon-content {
     display: flex;
     gap: 16px;
@@ -6192,7 +6196,7 @@ footer a:hover {
 
 .coupon-left {
     font-size: 48px;
-    color: #333;
+    color: #fff;
     min-width: 70px;
     text-align: center;
 }
@@ -6206,7 +6210,6 @@ footer a:hover {
     text-align: center;
 }
 
-/* Branding */
 .coupon-branding {
     margin-bottom: 10px;
 }
@@ -6222,15 +6225,14 @@ footer a:hover {
 
 .brand-url {
     font-size: 10px;
-    color: #333;
+    color: #ccc;
     font-weight: 600;
 }
 
-/* Amount */
 .coupon-amount {
     font-size: 44px;
     font-weight: 900;
-    color: #333;
+    color: #fff;
     line-height: 1;
     margin-bottom: 2px;
 }
@@ -6238,32 +6240,29 @@ footer a:hover {
 .coupon-label {
     font-size: 14px;
     font-weight: 800;
-    color: #333;
+    color: #ccc;
     letter-spacing: 0.5px;
 }
 
-/* QR Code */
 .coupon-qr {
     font-size: 40px;
-    color: #333;
+    color: #fff;
 }
 
-/* Gift Card Code */
 .coupon-code {
     margin-top: 12px;
     padding: 10px;
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     font-family: 'Courier New', monospace;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 1px;
-    color: #333;
+    color: #fff;
     justify-content: center;
     text-align: center;
 }
 
-/* Status Badge */
 .coupon-status-badge {
     position: absolute;
     top: 12px;

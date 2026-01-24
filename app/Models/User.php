@@ -90,6 +90,92 @@ class User extends Authenticatable
             ->count();
     }
 
+    public function tikTokSharesLifetime()
+    {
+        return $this->userPoints()
+            ->where('source','social_share')
+            ->where('source_action','tiktok')
+            ->count();
+    }
+
+    public function tikTokSharesToday()
+    {
+        return $this->userPoints()
+            ->where('source', 'social_share')
+            ->where('source_action', 'tiktok')
+            ->whereDate('created_at', today())
+            ->count();
+    }
+
+    public function instagramSharesLifetime()
+    {
+        return $this->userPoints()
+            ->where('source','social_share')
+            ->where('source_action','instagram')
+            ->count();
+    }
+
+    public function instagramSharesToday()
+    {
+        return $this->userPoints()
+            ->where('source', 'social_share')
+            ->where('source_action', 'instagram')
+            ->whereDate('created_at', today())
+            ->count();
+    }
+
+    public function canShareTikTokToday()
+    {
+        $lifetime = $this->tikTokSharesLifetime();
+
+        if ($lifetime >= 5) {
+            return false;
+        }
+
+        $today = $this->tikTokSharesToday();
+
+        return $today < 1;
+    }
+
+    public function canShareInstagramToday()
+    {
+        $lifetime = $this->instagramSharesLifetime();
+
+        if ($lifetime >= 5) {
+            return false;
+        }
+
+        $today = $this->instagramSharesToday();
+
+        return $today < 1;
+    }
+
+    public function tikTokShareStatusText()
+    {
+        if ($this->tikTokSharesToday() >= 1) {
+            return "✅ You've already shared on TikTok today.";
+        }
+
+        if ($this->tikTokSharesLifetime() >= 5) {
+            return "🚫 TikTok lifetime sharing limit reached.";
+        }
+
+        return "Share and earn 10 points ({$this->tikTokSharesToday()}/1 today, max 5 total)";
+    }
+
+    public function instagramShareStatusText()
+    {
+        if ($this->instagramSharesToday() >= 1) {
+            return "✅ You've already shared on Instagram today.";
+        }
+
+        if ($this->instagramSharesLifetime() >= 5) {
+            return "🚫 Instagram lifetime sharing limit reached.";
+        }
+
+        return "Share and earn 10 points ({$this->instagramSharesToday()}/1 today, max 5 total)";
+    }
+
     public function getReferralCount()
     {
         return $this->userPoints()

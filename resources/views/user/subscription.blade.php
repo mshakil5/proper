@@ -45,6 +45,8 @@
             <div class="plan-benefits">
                 <p><i class="fas fa-check"></i> Unlimited free delivery</p>
                 <p><i class="fas fa-check"></i> All orders included</p>
+                <p><i class="fas fa-check"></i> No minimum spend</p>
+                <p><i class="fas fa-check"></i> No contract</p>
                 <p><i class="fas fa-check"></i> Pay monthly</p>
             </div>
 

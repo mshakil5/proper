@@ -56,15 +56,34 @@
 
     <div class="user-dashboard-card" style="margin-top: 32px;">
         <div class="social-sharing-section">
-            <h4 class="sharing-title">Share on Facebook</h4>
-            <p class="sharing-subtitle">
-                {{ auth()->user()->facebookShareStatusText() }}
-            </p>
+            <h4 class="sharing-title">Share on Social Media</h4>
+            <p class="sharing-subtitle">Share and earn 10 points per platform (1 share/day, max 5 total)</p>
             
             <div class="sharing-buttons">
                 <button class="social-btn social-btn-facebook" id="facebookBtn" title="Share on Facebook" {{ auth()->user()->canShareToday() ? '' : 'disabled' }}>
                     <i class="fab fa-facebook-f"></i>
                 </button>
+                <button class="social-btn social-btn-tiktok" id="tiktokBtn" title="Share on TikTok" {{ auth()->user()->canShareTikTokToday() ? '' : 'disabled' }}>
+                    <i class="fab fa-tiktok"></i>
+                </button>
+                <button class="social-btn social-btn-instagram" id="instagramBtn" title="Share on Instagram" {{ auth()->user()->canShareInstagramToday() ? '' : 'disabled' }}>
+                    <i class="fab fa-instagram"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid" style="margin-top: 20px;">
+            <div class="stat-box">
+                <div class="stat-box-label">Facebook</div>
+                <p style="margin: 8px 0 0; font-size: 12px; color: #999;">{{ auth()->user()->facebookShareStatusText() }}</p>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-label">TikTok</div>
+                <p style="margin: 8px 0 0; font-size: 12px; color: #999;">{{ auth()->user()->tikTokShareStatusText() }}</p>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-label">Instagram</div>
+                <p style="margin: 8px 0 0; font-size: 12px; color: #999;">{{ auth()->user()->instagramShareStatusText() }}</p>
             </div>
         </div>
     </div>
@@ -187,6 +206,36 @@ $(document).ready(function() {
         }
     });
 
+    // TikTok sharing
+    $('#tiktokBtn').click(function() {
+        const $btn = $(this);
+        if ($btn.data('shared')) return;
+
+        const shareText = "Check this out! Join using my referral code: " + referralCode;
+        
+        window.open(
+            `https://www.tiktok.com/share?url=${encodeURIComponent(referralUrl)}`,
+            '_blank',
+            'width=600,height=400'
+        );
+        recordShare('tiktok');
+    });
+
+    // Instagram sharing
+    $('#instagramBtn').click(function() {
+        const $btn = $(this);
+        if ($btn.data('shared')) return;
+
+        const shareText = "Check this out! Join using my referral code: " + referralCode;
+        
+        window.open(
+            `https://www.instagram.com/?url=${encodeURIComponent(referralUrl)}`,
+            '_blank',
+            'width=600,height=400'
+        );
+        recordShare('instagram');
+    });
+
     function recordShare(platform) {
         $.ajax({
             url: shareRoute,
@@ -197,8 +246,13 @@ $(document).ready(function() {
             success: function(data) {
                 if (data.success) {
                     showSuccess(data.message);
-                    $('#facebookBtn').data('shared', true).prop('disabled', true);
-                    // Reload or update share count dynamically
+                    if (platform === 'facebook') {
+                        $('#facebookBtn').data('shared', true).prop('disabled', true);
+                    } else if (platform === 'tiktok') {
+                        $('#tiktokBtn').data('shared', true).prop('disabled', true);
+                    } else if (platform === 'instagram') {
+                        $('#instagramBtn').data('shared', true).prop('disabled', true);
+                    }
                     location.reload();
                 } else {
                     showError(data.message);
