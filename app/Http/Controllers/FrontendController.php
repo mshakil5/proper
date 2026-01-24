@@ -89,11 +89,8 @@ class FrontendController extends Controller
         $centerLatitude = 51.996611;
         $centerLongitude = -0.802070;
         $deliveryRadius = 7.5;
-        $defaultCharge = 2.00;
 
         $user = auth()->user();
-
-        $deliveryCharge = ($user && $user->hasActiveDeliverySubscription()) ? 0.00 : $defaultCharge;
 
         $lat1Rad = deg2rad($centerLatitude);
         $lon1Rad = deg2rad($centerLongitude);
@@ -111,6 +108,14 @@ class FrontendController extends Controller
         $distance = 3959 * $c;
 
         if ($distance <= $deliveryRadius) {
+            if ($user && $user->hasActiveDeliverySubscription()) {
+                $deliveryCharge = 0.00;
+            } elseif ($distance <= 4) {
+                $deliveryCharge = 2.00;
+            } else {
+                $deliveryCharge = 3.00;
+            }
+
             return response()->json([
                 'available' => true,
                 'delivery_charge' => $deliveryCharge,
@@ -140,7 +145,6 @@ class FrontendController extends Controller
         $deliveryRadius  = 7.5;
 
         $user = auth()->user();
-        $deliveryCharge = ($user && $user->hasActiveDeliverySubscription()) ? 0.00 : 2.00;
 
         $latitude  = (float) $request->latitude;
         $longitude = (float) $request->longitude;
@@ -165,6 +169,14 @@ class FrontendController extends Controller
                 'message'  => 'Outside delivery area',
                 'distance' => round($distance, 2),
             ], 422);
+        }
+
+        if ($user && $user->hasActiveDeliverySubscription()) {
+            $deliveryCharge = 0.00;
+        } elseif ($distance <= 4) {
+            $deliveryCharge = 2.00;
+        } else {
+            $deliveryCharge = 3.00;
         }
 
         $addresses = $this->getAddressesFromNominatim($latitude, $longitude, $postcode);
