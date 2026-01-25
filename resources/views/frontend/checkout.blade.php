@@ -436,7 +436,7 @@
                             <span id="summaryTotal">£0.00</span>
                         </div>
 
-                        <button id="confirmOrderBtn" class="btn-place-order">Confirm Order</button>
+                        <button id="confirmOrderBtn" class="btn-place-order" disabled>Confirm Order</button>
                     </div>
                 </div>
             </div>
