@@ -888,12 +888,42 @@ $(function () {
     loadDeliveryData();
     updateCartUI();
 
-    // Show subscription promo in cart
+    // Show subscription promo or login prompt in cart
     function showSubscriptionPromo() {
-        if (!isAuthenticated || hasActiveSubscription) {
+        if (!isAuthenticated) {
+            // Show login prompt when not authenticated
+            let loginPromoHTML = `
+                <div class="delivery-charge-promo login-promo" id="deliveryPromo">
+                    <div class="promo-content">
+                        <div class="promo-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="promo-text">
+                            <strong>Sign In for Special Deals</strong>
+                            <small>Get exclusive discounts on delivery charges</small>
+                        </div>
+                    </div>
+                    <button class="btn-promo-link" id="cartLoginBtn">
+                        Sign In <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            `;
+            
+            $('#deliveryPromo').remove();
+            $('#cartDeliveryCharge').closest('.cart-summary-row').after(loginPromoHTML);
+
+            $('#cartLoginBtn').on('click', function(e) {
+                e.preventDefault();
+                window.location.href = '/login';
+            });
+            return;
+        }
+
+        if (hasActiveSubscription) {
             return;
         }
         
+        // Show subscription promo when authenticated but no active subscription
         let promoHTML = `
             <div class="delivery-charge-promo" id="deliveryPromo">
                 <div class="promo-content">
@@ -911,21 +941,93 @@ $(function () {
             </div>
         `;
         
-        // Remove if already exists
         $('#deliveryPromo').remove();
-        
         $('#cartDeliveryCharge').closest('.cart-summary-row').after(promoHTML);
-        
+
         $('#cartSubscribeBtn').on('click', function(e) {
             e.preventDefault();
+            showCartSubscriptionModal();
+        });
+    }
+
+    // Show cart subscription payment modal
+    function showCartSubscriptionModal() {
+        let modalHTML = `
+            <div id="cartSubscriptionPaymentModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title">Select Payment Method</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="payment-options">
+                                <div class="payment-option" data-method="stripe">
+                                    <input type="radio" name="cartSubscriptionPaymentMethod" id="cartSubscriptionPaymentStripe" value="stripe" class="form-check-input">
+                                    <label for="cartSubscriptionPaymentStripe" class="payment-option-label">
+                                        <i class="fab fa-stripe"></i>
+                                        <div class="payment-option-text">
+                                            <strong>Stripe</strong>
+                                            <small>Secure card payment</small>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="payment-option" data-method="paypal">
+                                    <input type="radio" name="cartSubscriptionPaymentMethod" id="cartSubscriptionPaymentPaypal" value="paypal" class="form-check-input">
+                                    <label for="cartSubscriptionPaymentPaypal" class="payment-option-label">
+                                        <i class="fab fa-paypal"></i>
+                                        <div class="payment-option-text">
+                                            <strong>PayPal</strong>
+                                            <small>Fast and secure checkout</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-gradient" id="confirmCartSubscriptionPaymentBtn">Confirm & Pay</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove if already exists
+        $('#cartSubscriptionPaymentModal').remove();
+        
+        // Add modal to body
+        $('body').append(modalHTML);
+
+        // Set default payment method
+        $('#cartSubscriptionPaymentStripe').prop('checked', true);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('cartSubscriptionPaymentModal'));
+        modal.show();
+
+        // Handle confirm button
+        $('#confirmCartSubscriptionPaymentBtn').off('click').on('click', function() {
+            let selectedPaymentMethod = $('input[name="cartSubscriptionPaymentMethod"]:checked').val();
+            
+            if (!selectedPaymentMethod) {
+                showError('Please select a payment method');
+                return;
+            }
+
+            modal.hide();
             $('#loadingModal').css('display', 'flex');
             
             $.ajax({
-                url: subscriptionCheckoutRoute,
+                url: '/user/subscription/checkout',
                 method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 data: {
-                    _token: csrfToken,
-                    amount: 5.00
+                    amount: 5.00,
+                    payment_method: selectedPaymentMethod
                 },
                 success: function(response) {
                     if (response.success) {
@@ -941,7 +1043,20 @@ $(function () {
                 }
             });
         });
+
+        // Clean up modal on hide
+        document.getElementById('cartSubscriptionPaymentModal').addEventListener('hidden.bs.modal', function() {
+            $('#cartSubscriptionPaymentModal').remove();
+        });
     }
+
+    // Call this function when cart opens
+    $('#cartFloatBtn').on('click', function () {
+        renderCart();
+        showSubscriptionPromo();
+        $('#cartOffcanvas').addClass('open');
+        $('#cartOverlay').addClass('open');
+    });
 
     // Call this function when cart opens
     $('#cartFloatBtn').on('click', function () {

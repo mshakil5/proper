@@ -52,7 +52,7 @@
                 <p><i class="fas fa-check"></i> Pay monthly</p>
             </div>
 
-            <button class="btn-subscribe" id="subscribeBtn">
+            <button class="btn-subscribe" id="subscribeBtn" data-bs-toggle="modal" data-bs-target="#subscriptionPaymentModal">
                 <i class="fas fa-credit-card"></i> 
                 @if($subscription && $subscription->isActive())
                     Renew Now - {{ $subscription->ends_at->copy()->addMonthNoOverflow()->format('M d') }}
@@ -101,6 +101,47 @@
     @endif
 </div>
 
+<!-- Payment Method Modal -->
+<div id="subscriptionPaymentModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Select Payment Method</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-options">
+                    <div class="payment-option" data-method="stripe">
+                        <input type="radio" name="subscriptionPaymentMethod" id="subscriptionPaymentStripe" value="stripe" class="form-check-input">
+                        <label for="subscriptionPaymentStripe" class="payment-option-label">
+                            <i class="fab fa-stripe"></i>
+                            <div class="payment-option-text">
+                                <strong>Stripe</strong>
+                                <small>Secure card payment</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="payment-option" data-method="paypal">
+                        <input type="radio" name="subscriptionPaymentMethod" id="subscriptionPaymentPaypal" value="paypal" class="form-check-input">
+                        <label for="subscriptionPaymentPaypal" class="payment-option-label">
+                            <i class="fab fa-paypal"></i>
+                            <div class="payment-option-text">
+                                <strong>PayPal</strong>
+                                <small>Fast and secure checkout</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-gradient" id="confirmSubscriptionPaymentBtn">Confirm & Pay</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Loading Modal -->
 <div id="loadingModal" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 9999;">
     <div style="background: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
@@ -115,6 +156,7 @@
 @section('script')
 <script>
 $(function() {
+    let selectedPaymentMethod = null;
 
     @if(session('success'))
         showSuccess('{{ session("success") }}');
@@ -124,7 +166,20 @@ $(function() {
         showError('{{ session("error") }}');
     @endif
 
-    $('#subscribeBtn').on('click', function() {
+    $('#subscriptionPaymentModal').on('show.bs.modal', function() {
+        $('#subscriptionPaymentStripe').prop('checked', true);
+        selectedPaymentMethod = 'stripe';
+    });
+
+    $('#confirmSubscriptionPaymentBtn').on('click', function() {
+        selectedPaymentMethod = $('input[name="subscriptionPaymentMethod"]:checked').val();
+        
+        if (!selectedPaymentMethod) {
+            showError('Please select a payment method');
+            return;
+        }
+
+        $('#subscriptionPaymentModal').modal('hide');
         $('#loadingModal').css('display', 'flex');
         
         $.ajax({
@@ -132,7 +187,8 @@ $(function() {
             method: 'POST',
             data: {
                 _token: '{{ csrf_token() }}',
-                amount: 5.00
+                amount: 5.00,
+                payment_method: selectedPaymentMethod
             },
             success: function(response) {
                 if (response.success) {

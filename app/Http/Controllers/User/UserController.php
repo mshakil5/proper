@@ -202,54 +202,135 @@ class UserController extends Controller
     public function subscriptionCheckout(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:5'
+            'amount' => 'required|numeric|min:5',
+            'payment_method' => 'required|in:stripe,paypal'
         ]);
 
         $user = auth()->user();
         $amount = 5.00;
+        $paymentMethod = $request->payment_method;
 
         try {
-            session([
-                'subscription_checkout' => [
-                    'amount' => $amount,
-                    'user_id' => $user->id
-                ]
-            ]);
+            if ($paymentMethod === 'stripe') {
+                return $this->initiateStripeSubscription($user, $amount);
+            } elseif ($paymentMethod === 'paypal') {
+                return $this->initiatePayPalSubscription($user, $amount);
+            }
 
-            Stripe::setApiKey(config('services.stripe.secret'));
-
-            $session = Session::create([
-                'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'GBP',
-                        'product_data' => [
-                            'name' => 'Free Delivery Subscription',
-                            'description' => '1 month unlimited free delivery'
-                        ],
-                        'unit_amount' => intval($amount * 100),
-                    ],
-                    'quantity' => 1,
-                ]],
-                'mode' => 'payment',
-                'success_url' => route('user.subscription.success'),
-                'cancel_url' => route('user.subscription.cancel'),
-                'customer_email' => $user->email,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'redirectUrl' => $session->url
-            ]);
-        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create payment session'
+                'message' => 'Invalid payment method'
+            ], 400);
+
+        } catch (\Exception $e) {
+            \Log::error('Subscription Checkout Error:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process subscription: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    public function subscriptionSuccess()
+    private function initiateStripeSubscription($user, $amount)
+    {
+        session([
+            'subscription_checkout' => [
+                'amount' => $amount,
+                'user_id' => $user->id,
+                'payment_method' => 'stripe'
+            ]
+        ]);
+
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        $session = Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'GBP',
+                    'product_data' => [
+                        'name' => 'Free Delivery Subscription',
+                        'description' => '1 month unlimited free delivery'
+                    ],
+                    'unit_amount' => intval($amount * 100),
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => route('user.subscription.success'),
+            'cancel_url' => route('user.subscription.cancel'),
+            'customer_email' => $user->email,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'redirectUrl' => $session->url
+        ]);
+    }
+
+    private function initiatePayPalSubscription($user, $amount)
+    {
+        session([
+            'subscription_checkout' => [
+                'amount' => $amount,
+                'user_id' => $user->id,
+                'payment_method' => 'paypal'
+            ]
+        ]);
+
+        try {
+            $provider = new \Srmklive\PayPal\Services\PayPal;
+            $provider->setApiCredentials(config('paypal'));
+            $paypalToken = $provider->getAccessToken();
+
+            $response = $provider->createOrder([
+                "intent" => "CAPTURE",
+                "application_context" => [
+                    "return_url" => route('user.subscription.success'),
+                    "cancel_url" => route('user.subscription.cancel'),
+                ],
+                "purchase_units" => [
+                    [
+                        "amount" => [
+                            "currency_code" => "GBP",
+                            "value" => number_format((float)$amount, 2, '.', '')
+                        ],
+                        "description" => 'Free Delivery Subscription - 1 month'
+                    ]
+                ]
+            ]);
+
+            \Log::info('PayPal Subscription Response:', $response);
+
+            if (isset($response['id']) && $response['id'] != null) {
+                foreach ($response['links'] as $links) {
+                    if ($links['rel'] == 'approve') {
+                        return response()->json([
+                            'success' => true,
+                            'redirectUrl' => $links['href']
+                        ]);
+                    }
+                }
+            }
+
+            \Log::error('PayPal Subscription Order Creation Failed:', ['response' => $response]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => $response['message'] ?? 'Failed to create PayPal order'
+            ], 500);
+
+        } catch (\Exception $e) {
+            \Log::error('PayPal Subscription Exception:', ['error' => $e->getMessage()]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'PayPal error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function subscriptionSuccess(Request $request)
     {
         $checkoutData = session('subscription_checkout');
 
@@ -258,6 +339,12 @@ class UserController extends Controller
         }
 
         try {
+            $paymentMethod = $checkoutData['payment_method'] ?? 'stripe';
+
+            if ($paymentMethod === 'paypal') {
+                $this->handlePayPalSubscription($request, $checkoutData);
+            }
+
             $user = auth()->user();
             $amount = $checkoutData['amount'];
             $existingSubscription = $user->deliverySubscription()->first();
@@ -294,16 +381,38 @@ class UserController extends Controller
                 'status' => 'paid',
                 'billing_month' => $renewalStartMonth->copy()->startOfMonth()->addMonthNoOverflow(),
                 'paid_at' => now(),
-                'payment_ref' => 'STRIPE_' . uniqid()
+                'payment_ref' => ($paymentMethod === 'paypal' ? 'PAYPAL_' : 'STRIPE_') . uniqid()
             ]);
 
             session()->forget('subscription_checkout');
 
             return redirect()->route('user.subscription')
                 ->with('success', 'Subscription extended! Valid until ' . $subscription->ends_at->format('M d, Y'));
+
         } catch (\Exception $e) {
+            \Log::error('Subscription Success Error:', ['error' => $e->getMessage()]);
             return redirect()->route('user.subscription')
-                ->with('error', 'Error processing subscription');
+                ->with('error', 'Error processing subscription: ' . $e->getMessage());
+        }
+    }
+
+    private function handlePayPalSubscription(Request $request, $checkoutData)
+    {
+        $token = $request->input('token');
+
+        if (!$token) {
+            throw new \Exception('PayPal token missing');
+        }
+
+        $provider = new \Srmklive\PayPal\Services\PayPal;
+        $provider->setApiCredentials(config('paypal'));
+        $provider->getAccessToken();
+        $response = $provider->capturePaymentOrder($token);
+
+        \Log::info('PayPal Subscription Capture Response:', $response);
+
+        if (!isset($response['status']) || $response['status'] !== 'COMPLETED') {
+            throw new \Exception($response['message'] ?? 'PayPal payment capture failed');
         }
     }
 

@@ -59,6 +59,47 @@
         </div>
     </section>
 
+    <!-- Payment Method Modal -->
+    <div id="paymentMethodModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Select Payment Method</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="payment-options">
+                        <div class="payment-option" data-method="stripe">
+                            <input type="radio" name="giftcardPaymentMethod" id="giftcardPaymentStripe" value="stripe" class="form-check-input">
+                            <label for="giftcardPaymentStripe" class="payment-option-label">
+                                <i class="fab fa-stripe"></i>
+                                <div class="payment-option-text">
+                                    <strong>Stripe</strong>
+                                    <small>Secure card payment</small>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="payment-option" data-method="paypal">
+                            <input type="radio" name="giftcardPaymentMethod" id="giftcardPaymentPaypal" value="paypal" class="form-check-input">
+                            <label for="giftcardPaymentPaypal" class="payment-option-label">
+                                <i class="fab fa-paypal"></i>
+                                <div class="payment-option-text">
+                                    <strong>PayPal</strong>
+                                    <small>Fast and secure checkout</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-gradient" id="confirmPaymentMethodBtn">Confirm & Pay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="loadingModal" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 9999;">
         <div style="background: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
             <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #ff8a00; margin-bottom: 16px; display: block;"></i>
@@ -71,6 +112,9 @@
 @section('script')
 <script>
 $(function() {
+    let selectedPackageId = null;
+    let selectedAmount = null;
+    let selectedPaymentMethod = null;
 
     @if(session('success'))
         showSuccess('{{ session("success") }}');
@@ -81,40 +125,51 @@ $(function() {
     @endif
 
     $(document).on('click', '.btn-buy-card', function() {
-        let packageId = $(this).data('package-id');
-        let amount = $(this).data('amount');
-        let btn = $(this);
+        selectedPackageId = $(this).data('package-id');
+        selectedAmount = $(this).data('amount');
         
         @if(auth()->check())
-            btn.prop('disabled', true);
-            $('#loadingModal').css('display', 'flex');
-            initiateGiftCardPayment(packageId, amount, btn);
+            $('#giftcardPaymentStripe').prop('checked', true);
+            selectedPaymentMethod = 'stripe';
+            $('#paymentMethodModal').modal('show');
         @else
             showError('Please login to purchase gift cards');
         @endif
     });
 
-    window.initiateGiftCardPayment = function(packageId, amount, btn) {
+    $('#confirmPaymentMethodBtn').on('click', function() {
+        selectedPaymentMethod = $('input[name="giftcardPaymentMethod"]:checked').val();
+        
+        if (!selectedPaymentMethod) {
+            showError('Please select a payment method');
+            return;
+        }
+
+        $('#paymentMethodModal').modal('hide');
+        $('#loadingModal').css('display', 'flex');
+        initiateGiftCardPayment(selectedPackageId, selectedAmount, selectedPaymentMethod);
+    });
+
+    window.initiateGiftCardPayment = function(packageId, amount, paymentMethod) {
         $.ajax({
             url: '{{ route("giftcard.checkout") }}',
             method: 'POST',
             data: {
                 _token: '{{ csrf_token() }}',
                 package_id: packageId,
-                amount: amount
+                amount: amount,
+                payment_method: paymentMethod
             },
             success: function(response) {
                 if (response.success) {
                     window.location.href = response.redirectUrl;
                 } else {
                     showError(response.message);
-                    btn.prop('disabled', false);
                     $('#loadingModal').css('display', 'none');
                 }
             },
             error: function(xhr) {
                 showError(xhr.responseJSON?.message ?? 'Failed to process payment');
-                btn.prop('disabled', false);
                 $('#loadingModal').css('display', 'none');
             }
         });

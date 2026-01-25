@@ -86,8 +86,8 @@ class FrontendController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $centerLatitude = 51.996611;
-        $centerLongitude = -0.802070;
+        $centerLatitude = 52.0406;
+        $centerLongitude = -0.7594;
         $deliveryRadius = 7.5;
 
         $user = auth()->user();
@@ -140,8 +140,8 @@ class FrontendController extends Controller
 
         $postcode = strtoupper(trim($request->postcode));
 
-        $centerLatitude  = 51.996611;
-        $centerLongitude = -0.802070;
+        $centerLatitude  = 52.0406;
+        $centerLongitude = -0.7594;
         $deliveryRadius  = 7.5;
 
         $user = auth()->user();
@@ -292,7 +292,7 @@ class FrontendController extends Controller
         return view('frontend.our-story');
     }
 
-    public function giftCards()
+   public function giftCards()
     {
         $menu = Master::firstOrCreate(['name' => 'gift-cards']);
         $this->seo(
@@ -310,56 +310,137 @@ class FrontendController extends Controller
     {
         $request->validate([
             'package_id' => 'required|exists:giftcard_packages,id',
-            'amount' => 'required|numeric'
+            'amount' => 'required|numeric',
+            'payment_method' => 'required|in:stripe,paypal'
         ]);
 
         $package = GiftcardPackage::findOrFail($request->package_id);
         $user = auth()->user();
+        $paymentMethod = $request->payment_method;
 
         try {
-            session([
-                'giftcard_checkout' => [
-                    'package_id' => $package->id,
-                    'amount' => $package->amount,
-                    'user_id' => $user->id
-                ]
-            ]);
+            if ($paymentMethod === 'stripe') {
+                return $this->initiateStripeGiftCardPayment($package, $user);
+            } elseif ($paymentMethod === 'paypal') {
+                return $this->initiatePayPalGiftCardPayment($package, $user);
+            }
 
-            Stripe::setApiKey(config('services.stripe.secret'));
-
-            $session = Session::create([
-                'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'GBP',
-                        'product_data' => [
-                            'name' => $package->name,
-                            'description' => 'Gift Card - £' . number_format($package->amount, 2)
-                        ],
-                        'unit_amount' => intval($package->amount * 100),
-                    ],
-                    'quantity' => 1,
-                ]],
-                'mode' => 'payment',
-                'success_url' => route('giftcard.payment.success'),
-                'cancel_url' => route('giftcard.payment.cancel'),
-                'customer_email' => $user->email,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'redirectUrl' => $session->url
-            ]);
-
-        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create payment session'
+                'message' => 'Invalid payment method'
+            ], 400);
+
+        } catch (\Exception $e) {
+            \Log::error('Gift Card Checkout Error:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process payment: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    public function giftCardPaymentSuccess()
+    private function initiateStripeGiftCardPayment($package, $user)
+    {
+        session([
+            'giftcard_checkout' => [
+                'package_id' => $package->id,
+                'amount' => $package->amount,
+                'user_id' => $user->id,
+                'payment_method' => 'stripe'
+            ]
+        ]);
+
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        $session = Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'GBP',
+                    'product_data' => [
+                        'name' => $package->name,
+                        'description' => 'Gift Card - £' . number_format($package->amount, 2)
+                    ],
+                    'unit_amount' => intval($package->amount * 100),
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => route('giftcard.payment.success'),
+            'cancel_url' => route('giftcard.payment.cancel'),
+            'customer_email' => $user->email,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'redirectUrl' => $session->url
+        ]);
+    }
+
+    private function initiatePayPalGiftCardPayment($package, $user)
+    {
+        session([
+            'giftcard_checkout' => [
+                'package_id' => $package->id,
+                'amount' => $package->amount,
+                'user_id' => $user->id,
+                'payment_method' => 'paypal'
+            ]
+        ]);
+
+        try {
+            $provider = new \Srmklive\PayPal\Services\PayPal;
+            $provider->setApiCredentials(config('paypal'));
+            $paypalToken = $provider->getAccessToken();
+
+            $response = $provider->createOrder([
+                "intent" => "CAPTURE",
+                "application_context" => [
+                    "return_url" => route('giftcard.payment.success'),
+                    "cancel_url" => route('giftcard.payment.cancel'),
+                ],
+                "purchase_units" => [
+                    [
+                        "amount" => [
+                            "currency_code" => "GBP",
+                            "value" => number_format((float)$package->amount, 2, '.', '')
+                        ],
+                        "description" => $package->name . ' - Gift Card'
+                    ]
+                ]
+            ]);
+
+            \Log::info('PayPal Gift Card Response:', $response);
+
+            if (isset($response['id']) && $response['id'] != null) {
+                foreach ($response['links'] as $links) {
+                    if ($links['rel'] == 'approve') {
+                        return response()->json([
+                            'success' => true,
+                            'redirectUrl' => $links['href']
+                        ]);
+                    }
+                }
+            }
+
+            \Log::error('PayPal Gift Card Order Creation Failed:', ['response' => $response]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => $response['message'] ?? 'Failed to create PayPal order'
+            ], 500);
+
+        } catch (\Exception $e) {
+            \Log::error('PayPal Gift Card Exception:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'PayPal error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function giftCardPaymentSuccess(Request $request)
     {
         $checkoutData = session('giftcard_checkout');
 
@@ -368,6 +449,12 @@ class FrontendController extends Controller
         }
 
         try {
+            $paymentMethod = $checkoutData['payment_method'] ?? 'stripe';
+
+            if ($paymentMethod === 'paypal') {
+                $this->handlePayPalGiftCardPayment($request, $checkoutData);
+            }
+
             $package = GiftcardPackage::find($checkoutData['package_id']);
 
             $giftCard = GiftCard::create([
@@ -386,7 +473,28 @@ class FrontendController extends Controller
             return redirect()->route('gift-cards')->with('success', 'Gift card purchased successfully! Code: ' . $giftCard->code);
 
         } catch (\Exception $e) {
-            return redirect()->route('gift-cards')->with('error', 'Error processing gift card');
+            \Log::error('Gift Card Payment Success Error:', ['error' => $e->getMessage()]);
+            return redirect()->route('gift-cards')->with('error', 'Error processing gift card: ' . $e->getMessage());
+        }
+    }
+
+    private function handlePayPalGiftCardPayment(Request $request, $checkoutData)
+    {
+        $token = $request->input('token');
+
+        if (!$token) {
+            throw new \Exception('PayPal token missing');
+        }
+
+        $provider = new \Srmklive\PayPal\Services\PayPal;
+        $provider->setApiCredentials(config('paypal'));
+        $provider->getAccessToken();
+        $response = $provider->capturePaymentOrder($token);
+
+        \Log::info('PayPal Capture Response:', $response);
+
+        if (!isset($response['status']) || $response['status'] !== 'COMPLETED') {
+            throw new \Exception($response['message'] ?? 'PayPal payment capture failed');
         }
     }
 
@@ -739,10 +847,7 @@ class FrontendController extends Controller
             if ($localOrder['paymentMethod'] === 'stripe') {
                 return $this->initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
             } elseif ($localOrder['paymentMethod'] === 'paypal') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'PayPal not yet implemented'
-                ], 400);
+                return $this->initiatePayPalPayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
             } else {
                 $this->sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
 
@@ -758,6 +863,70 @@ class FrontendController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error placing order: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function initiatePayPalPayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
+    {
+        try {
+            session([
+                'checkout_data' => [
+                    'order_id' => $order->id,
+                    'hubRiseOrder' => $hubRiseOrder,
+                    'localOrder' => $localOrder,
+                    'accessToken' => $accessToken,
+                    'locationId' => $locationId,
+                    'paymentRefMap' => $paymentRefMap
+                ]
+            ]);
+
+            $provider = new \Srmklive\PayPal\Services\PayPal;
+            $provider->setApiCredentials(config('paypal'));
+            $paypalToken = $provider->getAccessToken();
+
+            $response = $provider->createOrder([
+                "intent" => "CAPTURE",
+                "application_context" => [
+                    "return_url" => route('payment.success', ['order_id' => $order->id]),
+                    "cancel_url" => route('payment.cancel'),
+                ],
+                "purchase_units" => [
+                    [
+                        "amount" => [
+                            "currency_code" => "GBP",
+                            "value" => number_format((float)$localOrder['total'], 2, '.', '')
+                        ]
+                    ]
+                ]
+            ]);
+
+            if (isset($response['id']) && $response['id'] != null) {
+                foreach ($response['links'] as $links) {
+                    if ($links['rel'] == 'approve') {
+                        $order->update([
+                            'payment_transaction_id' => $response['id']
+                        ]);
+
+                        return response()->json([
+                            'success' => true,
+                            'redirectUrl' => $links['href'],
+                            'orderId' => $order->id,
+                            'orderNumber' => $order->order_number
+                        ]);
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $response['message'] ?? 'Failed to create PayPal order'
+            ], 500);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PayPal error: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -817,68 +986,6 @@ class FrontendController extends Controller
                 'message' => 'Failed to create payment session'
             ], 500);
         }
-    }
-
-    public function paymentSuccess(Request $request)
-    {
-        $orderId = $request->input('order_id');
-        $checkoutData = session('checkout_data');
-
-        if (!$checkoutData || $checkoutData['order_id'] != $orderId) {
-            return view('frontend.payment-error', ['message' => 'Invalid payment session']);
-        }
-
-        $order = Order::find($orderId);
-        if (!$order) {
-            return view('frontend.payment-error', ['message' => 'Order not found']);
-        }
-
-        try {
-            // Update order - payment confirmed
-            $order->update([
-                'payment_status' => 'paid',
-                'status' => 'pending'
-            ]);
-
-            // Send to HubRise
-            $this->sendToHubRise(
-                $order,
-                $checkoutData['hubRiseOrder'],
-                $checkoutData['localOrder'],
-                $checkoutData['accessToken'],
-                $checkoutData['locationId'],
-                $checkoutData['paymentRefMap']
-            );
-
-            // Clear session
-            session()->forget('checkout_data');
-
-            return view('frontend.payment-success', [
-                'order' => $order,
-                'orderNumber' => $order->order_number,
-                'orderId' => $order->id
-            ]);
-
-        } catch (\Exception $e) {
-            return view('frontend.payment-error', ['message' => 'Error processing order']);
-        }
-    }
-
-    public function paymentCancel()
-    {
-        session()->forget('checkout_data');
-        return view('frontend.payment-cancelled');
-    }
-
-    public function orderConfirmation($orderNumber)
-    {
-        $order = Order::with(['items.options'])->where('order_number', $orderNumber)->first();
-
-        if (!$order) {
-            return redirect('/')->with('error', 'Order not found');
-        }
-
-        return view('frontend.order-confirmation', compact('order'));
     }
 
     private function sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
@@ -983,6 +1090,96 @@ class FrontendController extends Controller
             // 'hubrise_order_id' => str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT),
             'status' => 'pending'
         ]);
+    }
+    
+    public function paymentSuccess(Request $request)
+    {
+        $orderId = $request->input('order_id');
+        $token = $request->input('token');
+        $checkoutData = session('checkout_data');
+
+        if (!$checkoutData || $checkoutData['order_id'] != $orderId) {
+            return view('frontend.payment-error', ['message' => 'Invalid payment session']);
+        }
+
+        $order = Order::find($orderId);
+        if (!$order) {
+            return view('frontend.payment-error', ['message' => 'Order not found']);
+        }
+
+        try {
+            if ($order->payment_method === 'stripe') {
+                $this->handleStripePaymentSuccess($order);
+            } elseif ($order->payment_method === 'paypal') {
+                $this->handlePayPalPaymentSuccess($order, $token);
+            }
+
+            $order->update([
+                'payment_status' => 'paid',
+                'status' => 'pending'
+            ]);
+
+            $this->sendToHubRise(
+                $order,
+                $checkoutData['hubRiseOrder'],
+                $checkoutData['localOrder'],
+                $checkoutData['accessToken'],
+                $checkoutData['locationId'],
+                $checkoutData['paymentRefMap']
+            );
+
+            session()->forget('checkout_data');
+
+            return view('frontend.payment-success', [
+                'order' => $order,
+                'orderNumber' => $order->order_number,
+                'orderId' => $order->id
+            ]);
+
+        } catch (\Exception $e) {
+            return view('frontend.payment-error', ['message' => $e->getMessage()]);
+        }
+    }
+
+    private function handleStripePaymentSuccess($order)
+    {
+        Stripe::setApiKey(config('services.stripe.secret'));
+        $session = Session::retrieve($order->payment_transaction_id);
+        
+        if ($session->payment_status !== 'paid') {
+            throw new \Exception('Stripe payment not confirmed');
+        }
+    }
+
+    private function handlePayPalPaymentSuccess($order, $token)
+    {
+        $provider = new \Srmklive\PayPal\Services\PayPal;
+        $provider->setApiCredentials(config('paypal'));
+        $provider->getAccessToken();
+        $response = $provider->capturePaymentOrder($token);
+
+        if (isset($response['status']) && $response['status'] == 'COMPLETED') {
+            return true;
+        } else {
+            throw new \Exception($response['message'] ?? 'Payment capture failed');
+        }
+    }
+
+    public function paymentCancel()
+    {
+        session()->forget('checkout_data');
+        return view('frontend.payment-cancelled');
+    }
+
+    public function orderConfirmation($orderNumber)
+    {
+        $order = Order::with(['items.options'])->where('order_number', $orderNumber)->first();
+
+        if (!$order) {
+            return redirect('/')->with('error', 'Order not found');
+        }
+
+        return view('frontend.order-confirmation', compact('order'));
     }
 
     public function setupHubRiseCallback()

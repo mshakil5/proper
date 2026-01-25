@@ -11,16 +11,13 @@
                         <div class="checkout-card">
                             <h5 class="checkout-title">Checkout As</h5>
                             <div class="nav nav-tabs" role="tablist" id="customerTypeTabs">
-                                <button class="nav-link active" id="guest-tab" data-bs-toggle="tab"
-                                    data-bs-target="#guestPanel" type="button" role="tab">
+                                <button class="nav-link {{ !$errors->any() ? 'active' : '' }}" id="guest-tab" data-bs-toggle="tab" data-bs-target="#guestPanel" type="button" role="tab">
                                     <i class="fas fa-user-secret"></i> Guest
                                 </button>
-                                <button class="nav-link" id="existing-tab" data-bs-toggle="tab"
-                                    data-bs-target="#existingPanel" type="button" role="tab">
+                                <button class="nav-link {{ $errors->any() && !old('first_name') && !old('last_name') && !old('phone') ? 'active' : '' }}" id="existing-tab" data-bs-toggle="tab" data-bs-target="#existingPanel" type="button" role="tab">
                                     <i class="fas fa-sign-in-alt"></i> Login
                                 </button>
-                                <button class="nav-link" id="register-tab" data-bs-toggle="tab"
-                                    data-bs-target="#registerPanel" type="button" role="tab">
+                                <button class="nav-link {{ (old('first_name') || old('last_name') || old('phone')) && $errors->any() ? 'active' : '' }}" id="register-tab" data-bs-toggle="tab" data-bs-target="#registerPanel" type="button" role="tab">
                                     <i class="fas fa-user-plus"></i> Register
                                 </button>
                             </div>
@@ -29,7 +26,7 @@
                         <!-- Tab Panels -->
                         <div class="tab-content" id="customerTypeContent">
                             <!-- Guest Checkout Panel -->
-                            <div class="tab-pane fade show active" id="guestPanel" role="tabpanel">
+                            <div class="tab-pane fade {{ !$errors->any() ? 'show active' : '' }}" id="guestPanel" role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Guest Details</h5>
                                     <div class="alert alert-info mb-3">
@@ -64,7 +61,7 @@
                             </div>
 
                             <!-- Existing Customer Panel -->
-                            <div class="tab-pane fade" id="existingPanel" role="tabpanel">
+                            <div class="tab-pane fade {{ $errors->any() && !old('first_name') && !old('last_name') && !old('phone') ? 'show active' : '' }}" id="existingPanel" role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Login to Your Account</h5>
                                     <form id="loginForm" method="POST" action="{{ route('login') }}">
@@ -101,7 +98,7 @@
                             </div>
 
                             <!-- Register Panel -->
-                            <div class="tab-pane fade" id="registerPanel" role="tabpanel">
+                            <div class="tab-pane fade {{ (old('first_name') || old('last_name') || old('phone')) && $errors->any() ? 'show active' : '' }}" id="registerPanel" role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Create New Account</h5>
                                     <form id="registerForm" method="POST" action="{{ route('register') }}">

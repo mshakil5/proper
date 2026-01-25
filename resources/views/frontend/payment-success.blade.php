@@ -41,7 +41,5 @@
     localStorage.removeItem('cartSummary');
     localStorage.removeItem('deliveryOptions');
     localStorage.removeItem('checkoutData');
-    
-    console.log('Payment successful - localStorage cleared');
 </script>
 @endsection
