@@ -9,7 +9,7 @@
                 <div class="col-md-6">
                     <div class="btn-group">
                         <a href="{{ route('admin.orders.index') }}" class="btn btn-{{ request('status') == null ? 'primary' : 'light' }}">
-                            All Orders
+                            All
                         </a>
                         <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" class="btn btn-{{ request('status') == 'pending' ? 'warning' : 'light' }}">
                             Pending
