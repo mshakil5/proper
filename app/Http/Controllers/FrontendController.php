@@ -38,6 +38,7 @@ use Illuminate\Support\Str;
 use App\Models\UserPoint;
 use App\Models\GiftcardPackage;
 use App\Models\GiftCard;
+use App\Mail\OrderConfirmationMail;
 
 class FrontendController extends Controller
 {
@@ -1102,6 +1103,8 @@ class FrontendController extends Controller
             // 'hubrise_order_id' => str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT),
             'status' => 'pending'
         ]);
+
+        $this->sendOrderConfirmationEmail($order);
     }
     
     public function paymentSuccess(Request $request)
@@ -1192,6 +1195,18 @@ class FrontendController extends Controller
         }
 
         return view('frontend.order-confirmation', compact('order'));
+    }
+
+    private function sendOrderConfirmationEmail($order)
+    {
+        try {
+            Mail::to($order->email)->send(new OrderConfirmationMail($order));
+        } catch (\Exception $e) {
+            Log::error('Failed to send order confirmation email', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function setupHubRiseCallback()
