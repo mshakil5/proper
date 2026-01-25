@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('coupons', function (Blueprint $table) {
             $table->enum('coupon_type', ['coupon', 'voucher'])->default('coupon')->after('is_active');
+            $table->boolean('is_birthday_voucher')->default(false)->after('coupon_type');
             $table->integer('max_uses_per_user')->nullable()->after('max_uses');
         });
     }
@@ -24,6 +25,7 @@ return new class extends Migration
     {
         Schema::table('coupons', function (Blueprint $table) {
             $table->dropColumn('coupon_type');
+            $table->dropColumn('is_birthday_voucher');
             $table->dropColumn('max_uses_per_user');
         });
     }

@@ -15,7 +15,7 @@ class CouponController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $coupons = Coupon::select(['id', 'code', 'name', 'image', 'discount_type', 'discount_value', 'min_order_amount', 'start_date', 'end_date', 'is_active', 'used_count', 'max_uses', 'coupon_type', 'max_uses_per_user'])
+            $coupons = Coupon::select(['id', 'code', 'name', 'image', 'discount_type', 'discount_value', 'min_order_amount', 'start_date', 'end_date', 'is_active', 'used_count', 'max_uses', 'coupon_type', 'max_uses_per_user', 'is_birthday_voucher'])
                 ->when($request->coupon_type, function($q) use ($request) {
                     $q->where('coupon_type', $request->coupon_type);
                 })
@@ -126,14 +126,10 @@ class CouponController extends Controller
             'max_uses' => 'nullable|integer|min:1',
             'max_uses_per_user' => 'nullable|integer|min:1',
             'coupon_type' => 'required|in:coupon,voucher',
+            'is_birthday_voucher' => 'nullable|boolean',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ], [
-            'code.required' => 'Coupon code is required.',
-            'code.unique' => 'This coupon code already exists.',
-            'code.uppercase' => 'Coupon code must be uppercase.',
-            'discount_value.min' => 'Discount value must be greater than 0.'
         ]);
 
         $data = new Coupon;
@@ -146,6 +142,7 @@ class CouponController extends Controller
         $data->max_uses = $request->max_uses;
         $data->max_uses_per_user = $request->max_uses_per_user;
         $data->coupon_type = $request->coupon_type;
+        $data->is_birthday_voucher = $request->is_birthday_voucher ? true : false;
         $data->start_date = $request->start_date;
         $data->end_date = $request->end_date;
 
@@ -192,6 +189,7 @@ class CouponController extends Controller
             'max_uses' => $coupon->max_uses,
             'max_uses_per_user' => $coupon->max_uses_per_user,
             'coupon_type' => $coupon->coupon_type,
+            'is_birthday_voucher' => $coupon->is_birthday_voucher,
             'start_date' => $coupon->start_date ? Carbon::parse($coupon->start_date)->format('Y-m-d') : null,
             'end_date' => $coupon->end_date ? Carbon::parse($coupon->end_date)->format('Y-m-d') : null,
             'image' => $coupon->image ? url($coupon->image) : null,
@@ -209,14 +207,10 @@ class CouponController extends Controller
             'max_uses' => 'nullable|integer|min:1',
             'max_uses_per_user' => 'nullable|integer|min:1',
             'coupon_type' => 'required|in:coupon,voucher',
+            'is_birthday_voucher' => 'nullable|boolean',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ], [
-            'code.required' => 'Coupon code is required.',
-            'code.unique' => 'This coupon code already exists.',
-            'code.uppercase' => 'Coupon code must be uppercase.',
-            'discount_value.min' => 'Discount value must be greater than 0.'
         ]);
 
         $data = Coupon::findOrFail($request->codeid);
@@ -229,6 +223,7 @@ class CouponController extends Controller
         $data->max_uses = $request->max_uses;
         $data->max_uses_per_user = $request->max_uses_per_user;
         $data->coupon_type = $request->coupon_type;
+        $data->is_birthday_voucher = $request->is_birthday_voucher ? true : false;
         $data->start_date = $request->start_date;
         $data->end_date = $request->end_date;
         

@@ -105,6 +105,16 @@
                                 </div>
 
                                 <div class="col-md-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_birthday_voucher" name="is_birthday_voucher" value="1">
+                                        <label class="form-check-label" for="is_birthday_voucher">
+                                            <i class="fas fa-birthday-cake"></i> Birthday Voucher (auto-sent on birthdays)
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Enable this if you want this voucher to be sent automatically to customers on their birthdays</small>
+                                </div>
+
+                                <div class="col-md-12">
                                     <label class="form-label">Image (Optional)</label>
                                     <input type="file" class="form-control" id="image" accept="image/*"
                                         onchange="previewImage(event, '#preview-image')">
@@ -318,6 +328,7 @@
                 form_data.append("coupon_type", $('input[name="coupon_type"]:checked').val());
                 form_data.append("start_date", $("#start_date").val());
                 form_data.append("end_date", $("#end_date").val());
+                form_data.append("is_birthday_voucher", $('#is_birthday_voucher').is(':checked') ? 1 : 0);
 
                 var imageInput = document.getElementById('image');
                 if (imageInput.files && imageInput.files[0]) {
@@ -368,6 +379,7 @@
                 form_data.append("coupon_type", $('input[name="coupon_type"]:checked').val());
                 form_data.append("start_date", $("#start_date").val());
                 form_data.append("end_date", $("#end_date").val());
+                form_data.append("is_birthday_voucher", $('#is_birthday_voucher').is(':checked') ? 1 : 0);
                 form_data.append("codeid", $("#codeid").val());
 
                 var imageInput = document.getElementById('image');
@@ -430,6 +442,7 @@
             $('input[name="coupon_type"][value="' + data.coupon_type + '"]').prop('checked', true);
             $("#start_date").val(data.start_date);
             $("#end_date").val(data.end_date);
+            $("#is_birthday_voucher").prop('checked', data.is_birthday_voucher ? true : false);
             $("#codeid").val(data.id);
             $("#addBtn").val('Update');
             $("#addBtn").html('Update');
