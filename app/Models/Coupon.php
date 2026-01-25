@@ -39,4 +39,27 @@ class Coupon extends Model
     {
         return $query->where('coupon_type', $type);
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'coupon_users')
+            ->withPivot('used_count', 'sent_at', 'sent_year')
+            ->withTimestamps();
+    }
+
+    public function hasUserBirthdayVoucher($userId)
+    {
+        return $this->users()
+            ->where('user_id', $userId)
+            ->wherePivot('sent_at', '!=', null)
+            ->exists();
+    }
+
+    public function isUserBirthdayVoucherUsed($userId)
+    {
+        return $this->users()
+            ->where('user_id', $userId)
+            ->wherePivot('used_count', '>', 0)
+            ->exists();
+    }
 }

@@ -23,6 +23,8 @@ return new class extends Migration
             $table->unique('user_id');
             $table->index('status');
             $table->index('ends_at');
+            $table->boolean('sent_7_day_reminder')->default(false);
+            $table->boolean('sent_1_day_reminder')->default(false);
         });
     }
 

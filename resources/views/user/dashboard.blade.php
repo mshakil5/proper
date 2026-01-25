@@ -25,7 +25,7 @@
     </div>
     <div class="stat-box">
         <div class="stat-box-icon"><i class="fas fa-ticket-alt"></i></div>
-        <div class="stat-box-value">{{ \App\Models\Coupon::active()->count() }}</div>
+        <div class="stat-box-value">{{ \App\Models\Coupon::where('is_birthday_voucher', false)->where('is_active', true)->count() + \App\Models\Coupon::where('is_birthday_voucher', true)->where('is_active', true)->count() }}</div>
         <div class="stat-box-label">Active Coupons</div>
     </div>
     <div class="stat-box">

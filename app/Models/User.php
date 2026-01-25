@@ -282,6 +282,28 @@ class User extends Authenticatable
         return null;
     }
 
+    public function coupons()
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_users')
+            ->withPivot('used_count', 'sent_at')
+            ->withTimestamps();
+    }
+
+    public function getDaysUntilBirthdayAttribute()
+    {
+        if (!$this->dob) return null;
+        
+        $today = \Carbon\Carbon::now();
+        $dob = \Carbon\Carbon::parse($this->dob);
+        $birthday = $dob->copy()->year($today->year);
+        
+        if ($birthday < $today) {
+            $birthday = $dob->copy()->year($today->year + 1);
+        }
+        
+        return (int) $today->diffInDays($birthday);
+    }
+
     protected function casts(): array
     {
         return [

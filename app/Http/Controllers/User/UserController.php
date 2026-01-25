@@ -14,6 +14,7 @@ use Stripe\Checkout\Session;
 use Carbon\Carbon;
 use App\Models\DeliverySubscription;
 use App\Models\DeliverySubscriptionPayment;
+use App\Models\Coupon;
 
 class UserController extends Controller
 {
@@ -89,7 +90,25 @@ class UserController extends Controller
 
     public function coupons()
     {
-        return view('user.coupons');
+        $user = auth()->user();
+        
+        // Regular coupons - show to everyone
+        $regularCoupons = Coupon::where('is_birthday_voucher', false)
+            ->where('is_active', true)
+            ->get();
+        
+        // Birthday vouchers - only if user has them assigned this year
+        $birthdayVouchers = $user ? $user->coupons()
+            ->where('is_birthday_voucher', true)
+            ->where('is_active', true)
+            ->wherePivot('sent_year', now()->year)
+            ->get()
+            : collect();
+        
+        return view('user.coupons', [
+            'regularCoupons' => $regularCoupons,
+            'birthdayVouchers' => $birthdayVouchers
+        ]);
     }
 
     public function giftCards()

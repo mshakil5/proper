@@ -594,6 +594,18 @@ class FrontendController extends Controller
             }
         }
 
+        if ($coupon->is_birthday_voucher && $userId) {
+            $birthdayVoucherUsage = $coupon->users()
+                ->where('user_id', $userId)
+                ->first();
+            
+            if ($birthdayVoucherUsage && $birthdayVoucherUsage->pivot->used_count > 0) {
+                return response()->json([
+                    'message' => 'You have already used this birthday voucher'
+                ], 400);
+            }
+        }
+
         if ($coupon->min_order_amount > 0 && $subtotal < $coupon->min_order_amount) {
             return response()->json([
                 'message' => 'Minimum order amount of £' . number_format($coupon->min_order_amount, 2) . ' required'
@@ -1303,16 +1315,23 @@ class FrontendController extends Controller
                         // Increment global usage
                         $coupon->increment('used_count');
                         
-                        // Increment per-user usage
-                        CouponUsage::updateOrCreate(
-                            [
-                                'coupon_id' => $coupon->id,
-                                'user_id' => $order->user_id
-                            ],
-                            [
-                                'usage_count' => \DB::raw('usage_count + 1')
-                            ]
-                        );
+                        // Handle birthday voucher
+                        if ($coupon->is_birthday_voucher) {
+                            $coupon->users()->updateExistingPivot($order->user_id, [
+                                'used_count' => 1
+                            ]);
+                        } else {
+                            // Handle regular coupon - increment per-user usage
+                            CouponUsage::updateOrCreate(
+                                [
+                                    'coupon_id' => $coupon->id,
+                                    'user_id' => $order->user_id
+                                ],
+                                [
+                                    'usage_count' => \DB::raw('usage_count + 1')
+                                ]
+                            );
+                        }
                     }
                 }
 
