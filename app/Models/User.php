@@ -316,7 +316,11 @@ class User extends Authenticatable
     {
         parent::boot();
         static::creating(function ($user) {
-            $user->referral_code = 'REF' . date('Y') . strtoupper(substr($user->name, 0, 4)) . str_pad($user->id ?? 0, 4, '0', STR_PAD_LEFT);
+            do {
+                $code = 'REF' . date('Y') . strtoupper(substr($user->name, 0, 4)) . Str::random(4);
+            } while (User::where('referral_code', $code)->exists());
+            
+            $user->referral_code = $code;
         });
     }
 }
