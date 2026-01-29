@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use App\Models\DeliverySubscription;
 use App\Models\DeliverySubscriptionPayment;
 use App\Models\Coupon;
+use App\Models\Credential;
 
 class UserController extends Controller
 {
@@ -252,6 +253,15 @@ class UserController extends Controller
 
     private function initiateStripeSubscription($user, $amount)
     {
+        $stripeCredential = Credential::where('gateway', 'Stripe')->first();
+
+        if (!$stripeCredential || !$stripeCredential->client_secret) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stripe credentials not configured'
+            ], 400);
+        }
+
         session([
             'subscription_checkout' => [
                 'amount' => $amount,
@@ -260,7 +270,7 @@ class UserController extends Controller
             ]
         ]);
 
-        Stripe::setApiKey(config('services.stripe.secret'));
+        Stripe::setApiKey($stripeCredential->client_secret);
 
         $session = Session::create([
             'payment_method_types' => ['card'],
@@ -298,6 +308,8 @@ class UserController extends Controller
         ]);
 
         try {
+            $this->setPayPalConfig();
+
             $provider = new \Srmklive\PayPal\Services\PayPal;
             $provider->setApiCredentials(config('paypal'));
             $paypalToken = $provider->getAccessToken();
@@ -423,6 +435,8 @@ class UserController extends Controller
             throw new \Exception('PayPal token missing');
         }
 
+        $this->setPayPalConfig();
+
         $provider = new \Srmklive\PayPal\Services\PayPal;
         $provider->setApiCredentials(config('paypal'));
         $provider->getAccessToken();
@@ -433,6 +447,23 @@ class UserController extends Controller
         if (!isset($response['status']) || $response['status'] !== 'COMPLETED') {
             throw new \Exception($response['message'] ?? 'PayPal payment capture failed');
         }
+    }
+
+    private function setPayPalConfig()
+    {
+        $credential = Credential::where('gateway', 'Paypal')->first();
+
+        if (!$credential || !$credential->client_id || !$credential->client_secret) {
+            throw new \Exception('PayPal credentials not configured');
+        }
+
+        config([
+            'paypal.mode' => $credential->mode,
+            'paypal.sandbox.client_id' => $credential->client_id,
+            'paypal.sandbox.client_secret' => $credential->client_secret,
+            'paypal.live.client_id' => $credential->client_id,
+            'paypal.live.client_secret' => $credential->client_secret,
+        ]);
     }
 
     public function subscriptionCancel()

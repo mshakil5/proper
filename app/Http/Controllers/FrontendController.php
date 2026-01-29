@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ContactMail;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+
 use App\Models\DeliveryZone;
 use App\Models\Coupon;
 use App\Models\Order;
@@ -39,6 +39,8 @@ use App\Models\UserPoint;
 use App\Models\GiftcardPackage;
 use App\Models\GiftCard;
 use App\Mail\OrderConfirmationMail;
+use App\Models\Credential;
+use App\Helpers\PayPalHelper;
 
 class FrontendController extends Controller
 {
@@ -332,7 +334,6 @@ class FrontendController extends Controller
             ], 400);
 
         } catch (\Exception $e) {
-            \Log::error('Gift Card Checkout Error:', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to process payment: ' . $e->getMessage()
@@ -342,6 +343,15 @@ class FrontendController extends Controller
 
     private function initiateStripeGiftCardPayment($package, $user)
     {
+        $stripeCredential = Credential::where('gateway', 'Stripe')->first();
+
+        if (!$stripeCredential || !$stripeCredential->client_secret) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stripe credentials not configured'
+            ], 400);
+        }
+
         session([
             'giftcard_checkout' => [
                 'package_id' => $package->id,
@@ -351,7 +361,7 @@ class FrontendController extends Controller
             ]
         ]);
 
-        Stripe::setApiKey(config('services.stripe.secret'));
+        Stripe::setApiKey($stripeCredential->client_secret);
 
         $session = Session::create([
             'payment_method_types' => ['card'],
@@ -380,16 +390,18 @@ class FrontendController extends Controller
 
     private function initiatePayPalGiftCardPayment($package, $user)
     {
-        session([
-            'giftcard_checkout' => [
-                'package_id' => $package->id,
-                'amount' => $package->amount,
-                'user_id' => $user->id,
-                'payment_method' => 'paypal'
-            ]
-        ]);
-
         try {
+            $this->setPayPalConfig();
+
+            session([
+                'giftcard_checkout' => [
+                    'package_id' => $package->id,
+                    'amount' => $package->amount,
+                    'user_id' => $user->id,
+                    'payment_method' => 'paypal'
+                ]
+            ]);
+
             $provider = new \Srmklive\PayPal\Services\PayPal;
             $provider->setApiCredentials(config('paypal'));
             $paypalToken = $provider->getAccessToken();
@@ -411,8 +423,6 @@ class FrontendController extends Controller
                 ]
             ]);
 
-            \Log::info('PayPal Gift Card Response:', $response);
-
             if (isset($response['id']) && $response['id'] != null) {
                 foreach ($response['links'] as $links) {
                     if ($links['rel'] == 'approve') {
@@ -423,8 +433,6 @@ class FrontendController extends Controller
                     }
                 }
             }
-
-            \Log::error('PayPal Gift Card Order Creation Failed:', ['response' => $response]);
             
             return response()->json([
                 'success' => false,
@@ -432,8 +440,6 @@ class FrontendController extends Controller
             ], 500);
 
         } catch (\Exception $e) {
-            \Log::error('PayPal Gift Card Exception:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            
             return response()->json([
                 'success' => false,
                 'message' => 'PayPal error: ' . $e->getMessage()
@@ -474,7 +480,6 @@ class FrontendController extends Controller
             return redirect()->route('gift-cards')->with('success', 'Gift card purchased successfully! Code: ' . $giftCard->code);
 
         } catch (\Exception $e) {
-            \Log::error('Gift Card Payment Success Error:', ['error' => $e->getMessage()]);
             return redirect()->route('gift-cards')->with('error', 'Error processing gift card: ' . $e->getMessage());
         }
     }
@@ -487,12 +492,12 @@ class FrontendController extends Controller
             throw new \Exception('PayPal token missing');
         }
 
+        $this->setPayPalConfig();
+
         $provider = new \Srmklive\PayPal\Services\PayPal;
         $provider->setApiCredentials(config('paypal'));
         $provider->getAccessToken();
         $response = $provider->capturePaymentOrder($token);
-
-        \Log::info('PayPal Capture Response:', $response);
 
         if (!isset($response['status']) || $response['status'] !== 'COMPLETED') {
             throw new \Exception($response['message'] ?? 'PayPal payment capture failed');
@@ -512,6 +517,23 @@ class FrontendController extends Controller
         } while (GiftCard::where('code', $code)->exists());
 
         return $code;
+    }
+
+    private function setPayPalConfig()
+    {
+        $credential = Credential::where('gateway', 'Paypal')->first();
+
+        if (!$credential || !$credential->client_id || !$credential->client_secret) {
+            throw new \Exception('PayPal credentials not configured');
+        }
+
+        config([
+            'paypal.mode' => $credential->mode,
+            'paypal.sandbox.client_id' => $credential->client_id,
+            'paypal.sandbox.client_secret' => $credential->client_secret,
+            'paypal.live.client_id' => $credential->client_id,
+            'paypal.live.client_secret' => $credential->client_secret,
+        ]);
     }
 
     public function checkout()
@@ -894,6 +916,8 @@ class FrontendController extends Controller
                 ]
             ]);
 
+            $this->setPayPalConfig();
+
             $provider = new \Srmklive\PayPal\Services\PayPal;
             $provider->setApiCredentials(config('paypal'));
             $paypalToken = $provider->getAccessToken();
@@ -947,6 +971,15 @@ class FrontendController extends Controller
     private function initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
     {
         try {
+            $stripeCredential = Credential::where('gateway', 'Stripe')->first();
+
+            if (!$stripeCredential || !$stripeCredential->client_secret) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stripe credentials not configured'
+                ], 400);
+            }
+
             session([
                 'checkout_data' => [
                     'order_id' => $order->id,
@@ -958,8 +991,7 @@ class FrontendController extends Controller
                 ]
             ]);
 
-            // Set Stripe API key
-            Stripe::setApiKey(config('services.stripe.secret'));
+            Stripe::setApiKey($stripeCredential->client_secret);
 
             // Create Stripe Checkout Session
             $session = Session::create([
@@ -1158,7 +1190,13 @@ class FrontendController extends Controller
 
     private function handleStripePaymentSuccess($order)
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        $stripeCredential = Credential::where('gateway', 'Stripe')->first();
+
+        if (!$stripeCredential || !$stripeCredential->client_secret) {
+            throw new \Exception('Stripe credentials not configured');
+        }
+
+        Stripe::setApiKey($stripeCredential->client_secret);
         $session = Session::retrieve($order->payment_transaction_id);
         
         if ($session->payment_status !== 'paid') {
@@ -1168,6 +1206,7 @@ class FrontendController extends Controller
 
     private function handlePayPalPaymentSuccess($order, $token)
     {
+        $this->setPayPalConfig();
         $provider = new \Srmklive\PayPal\Services\PayPal;
         $provider->setApiCredentials(config('paypal'));
         $provider->getAccessToken();
@@ -1202,10 +1241,6 @@ class FrontendController extends Controller
         try {
             Mail::to($order->email)->send(new OrderConfirmationMail($order));
         } catch (\Exception $e) {
-            Log::error('Failed to send order confirmation email', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage()
-            ]);
         }
     }
 
@@ -1244,7 +1279,6 @@ class FrontendController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('HubRise callback setup error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error setting up callback: ' . $e->getMessage()
@@ -1257,12 +1291,6 @@ class FrontendController extends Controller
         try {
             $data = $request->json()->all();
 
-            Log::info('HubRise webhook received', [
-                'resource_type' => $data['resource_type'] ?? null,
-                'event_type' => $data['event_type'] ?? null,
-                'order_id' => $data['order_id'] ?? null
-            ]);
-
             $resourceType = $data['resource_type'] ?? null;
             $eventType = $data['event_type'] ?? null;
             $hubRiseOrderId = $data['order_id'] ?? null;
@@ -1270,22 +1298,16 @@ class FrontendController extends Controller
             $orderStatus = $newState['status'] ?? null;
 
             if ($resourceType !== 'order' || $eventType !== 'update') {
-                Log::info('Ignoring non-order or non-update event', [
-                    'resource_type' => $resourceType,
-                    'event_type' => $eventType
-                ]);
                 return response()->json(['success' => true], 200);
             }
 
             if (!$hubRiseOrderId || !$orderStatus) {
-                Log::warning('Missing order_id or status in webhook');
                 return response()->json(['success' => true], 200);
             }
 
             $order = Order::where('hubrise_order_id', $hubRiseOrderId)->first();
 
             if (!$order) {
-                Log::warning('Order not found for HubRise ID: ' . $hubRiseOrderId);
                 return response()->json(['success' => true], 200);
             }
 
@@ -1368,43 +1390,16 @@ class FrontendController extends Controller
                 ]);
             }
 
-            Log::info('Order status updated from HubRise', [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'hubrise_order_id' => $hubRiseOrderId,
-                'hubrise_status' => $orderStatus,
-                'old_status' => $oldStatus,
-                'new_status' => $newLocalStatus
-            ]);
-
             if ($orderStatus === 'accepted') {
-                Log::info('Order ACCEPTED by EPOS', [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'customer_email' => $order->email,
-                    'customer_name' => $order->first_name . ' ' . $order->last_name
-                ]);
             }
 
             if ($orderStatus === 'cancelled' || $orderStatus === 'rejected') {
                 $cancellationReason = $newState['cancellation_reason'] ?? 'Not specified';
-                
-                Log::info('Order REJECTED/CANCELLED by EPOS', [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'customer_email' => $order->email,
-                    'customer_name' => $order->first_name . ' ' . $order->last_name,
-                    'reason' => $cancellationReason
-                ]);
             }
 
             return response()->json(['success' => true], 200);
 
         } catch (\Exception $e) {
-            Log::error('HubRise callback error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             
             return response()->json(['success' => false], 200);
         }
