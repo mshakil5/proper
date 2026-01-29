@@ -46,7 +46,7 @@
                         'sections.index',
                         'master.index',
                         'contactemail.index',
-                        'delivery-zone.index',
+                        'credentials.index',
                     );
                 @endphp
 
@@ -229,6 +229,10 @@
                             <li class="nav-item">
                                 <a href="{{ route('contactemail.index') }}" 
                                   class="nav-link {{ Route::is('contactemail.index') ? 'active' : '' }}">Contact Email</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('credentials.index') }}" 
+                                  class="nav-link {{ Route::is('credentials.index') ? 'active' : '' }}">Payment Credentials</a>
                             </li>
                         </ul>
                     </div>

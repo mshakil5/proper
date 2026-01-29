@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\GiftcardPackageController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\CredentialController;
 
 Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], function(){
 
@@ -152,4 +153,8 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.details');
+
+    Route::get('/credentials', [CredentialController::class, 'index'])->name('credentials.index');
+    Route::get('/credentials/{id}/edit', [CredentialController::class, 'edit'])->name('credentials.edit');
+    Route::put('/credentials/{id}', [CredentialController::class, 'update'])->name('credentials.update');
 });
