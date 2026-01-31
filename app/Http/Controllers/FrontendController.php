@@ -683,7 +683,6 @@ class FrontendController extends Controller
             'localOrder.delivery' => 'required|array',
             'localOrder.delivery.type' => 'required|in:delivery,collection',
             'localOrder.delivery.time' => 'required|string',
-            'localOrder.delivery.postcode' => 'required|string',
             'localOrder.delivery.charge' => 'required|numeric',
 
             'localOrder.cart' => 'required|array|min:1',
@@ -716,7 +715,6 @@ class FrontendController extends Controller
             'localOrder.delivery.required' => 'Delivery information is required',
             'localOrder.delivery.type.required' => 'Delivery type is required',
             'localOrder.delivery.time.required' => 'Delivery time is required',
-            'localOrder.delivery.postcode.required' => 'Delivery postcode is required',
             'localOrder.delivery.charge.required' => 'Delivery charge is required',
 
             'localOrder.cart.required' => 'Cart items are required',
@@ -743,7 +741,7 @@ class FrontendController extends Controller
         }
 
         $serviceType = $hubRiseOrder['service_type'] ?? 'delivery';
-        $paymentRefMap = ['cash' => '22', 'stripe' => '23', 'paypal' => '24'];
+        $paymentRefMap = ['cash' => 'CASH', 'stripe' => 'STRIPE', 'paypal' => 'PAYPAL'];
         $orderNumber = 'ORD-' . time() . '-' . rand(1000, 9999);
 
         $order = Order::create([
@@ -958,6 +956,7 @@ class FrontendController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Stripe payment error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create payment session'
@@ -967,22 +966,19 @@ class FrontendController extends Controller
 
     private function sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
     {
-        // Prepare HubRise payload
-        \Log::info('HubRiseOrder payload', $hubRiseOrder);
-
         $hubRisePayload = [
             'status' => 'new',
             'channel' => 'Website',
             'service_type' => $hubRiseOrder['service_type'],
             'service_type_ref' => $hubRiseOrder['service_type'] === 'delivery' ? '9' : '10',
             'items' => [],
-            'payments' => [
+            'payments' => !empty($hubRiseOrder['payments']) ? [
                 [
-                    'name' => $hubRiseOrder['payments'][0]['name'] ?? 'Online Payment',
-                    'ref' => $paymentRefMap[$localOrder['paymentMethod']] ?? '22',
+                    'name' => $hubRiseOrder['payments'][0]['name'] ?? 'Cash on Delivery',
+                    'ref' => $paymentRefMap[$localOrder['paymentMethod']] ?? 'ONLINE PAYMENT',
                     'amount' => $hubRiseOrder['payments'][0]['amount']
                 ]
-            ],
+            ] : [],
             'customer' => [
                 'first_name' => $hubRiseOrder['customer']['first_name'],
                 'last_name' => $hubRiseOrder['customer']['last_name'] ?? '',

@@ -863,7 +863,7 @@
                     channel: 'Website',
                     service_type: checkoutData.delivery.type === 'delivery' ? 'delivery' : 'collection',
                     items: hubRiseItems,
-                    payments: [{
+                    payments: selectedPaymentMethod === 'cash' ? [] : [{
                         type: selectedPaymentMethod,
                         name: $(`input[name="paymentMethod"][value="${selectedPaymentMethod}"]`).next().find('strong').text(),
                         amount: totalPrice.toFixed(2) + ' GBP'
