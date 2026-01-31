@@ -57,7 +57,7 @@ Route::get('/payment/cancel', [FrontendController::class, 'paymentCancel'])->nam
 Route::get('/order-confirmation/{orderNumber}', [FrontendController::class, 'orderConfirmation'])->name('order.confirmation');
 
 // For later
-Route::post('/stripe-webhook', [FrontendController::class, 'stripeWebhook'])->name('stripe.webhook');
+// Route::post('/stripe-webhook', [FrontendController::class, 'stripeWebhook'])->name('stripe.webhook');
 
 Route::get('/setup-hubrise-callback', [FrontendController::class, 'setupHubRiseCallback']);
 
