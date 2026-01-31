@@ -213,7 +213,7 @@
 <script>
     const ShopStatus = {
         isOpen() {
-            return true;
+            // return true;
             const now = new Date();
             const day = now.getDay();
             const hour = now.getHours();
