@@ -89,8 +89,8 @@ class FrontendController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $centerLatitude = 52.0406;
-        $centerLongitude = -0.7594;
+        $centerLatitude = 53.223912;
+        $centerLongitude = -0.532985;
         $deliveryRadius = 7.5;
 
         $user = auth()->user();
@@ -143,8 +143,8 @@ class FrontendController extends Controller
 
         $postcode = strtoupper(trim($request->postcode));
 
-        $centerLatitude  = 52.0406;
-        $centerLongitude = -0.7594;
+        $centerLatitude  = 53.223912;
+        $centerLongitude = -0.532985;
         $deliveryRadius  = 7.5;
 
         $user = auth()->user();
@@ -909,7 +909,6 @@ class FrontendController extends Controller
                     'message' => 'Stripe credentials not configured'
                 ], 400);
             }
-
             session([
                 'checkout_data' => [
                     'order_id' => $order->id,
@@ -1151,6 +1150,21 @@ class FrontendController extends Controller
 
     public function paymentCancel()
     {
+        $checkoutData = session('checkout_data');
+        
+        if ($checkoutData && isset($checkoutData['order_id'])) {
+            $orderId = $checkoutData['order_id'];
+            
+            $orderItemIds = OrderItem::where('order_id', $orderId)->pluck('id');
+            
+            if ($orderItemIds->isNotEmpty()) {
+                OrderItemOption::whereIn('order_item_id', $orderItemIds)->delete();
+            }
+            
+            OrderItem::where('order_id', $orderId)->delete();
+            Order::where('id', $orderId)->delete();
+        }
+        
         session()->forget('checkout_data');
         return view('frontend.payment-cancelled');
     }

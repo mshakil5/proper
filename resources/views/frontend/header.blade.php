@@ -214,7 +214,9 @@
     const ShopStatus = {
         isOpen() {
             // return true;
-            const now = new Date();
+            const now = new Date(
+                new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
+            );
             const day = now.getDay();
             const hour = now.getHours();
             const minute = now.getMinutes();

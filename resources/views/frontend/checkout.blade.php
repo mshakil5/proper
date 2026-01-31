@@ -27,9 +27,9 @@
                             <div class="tab-pane fade {{ !$errors->any() ? 'show active' : '' }}" id="guestPanel" role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Guest Details</h5>
-                                    <div class="alert alert-info mb-3">
-                                        <i class="fas fa-info-circle"></i> Checkout as guest - you may lose loyalty points
-                                        and exclusive features.
+                                    <div class="alert mb-3 text-white" style="background:#ff8a00;">
+                                        <i class="fas fa-info-circle"></i>
+                                        Checkout as guest – you may lose loyalty points and exclusive features.
                                     </div>
                                     <form id="guestForm">
                                         <div class="row g-3">
