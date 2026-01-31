@@ -658,247 +658,179 @@ class FrontendController extends Controller
 
     public function placeOrder(Request $request)
     {
-        try {
-
+        if (($request->input('hubRiseOrder.service_type') ?? '') === 'delivery') {
             $request->validate([
-                'hubRiseOrder' => 'required|array',
-                'hubRiseOrder.service_type' => 'required|in:delivery,collection',
-
-                'localOrder' => 'required|array',
-                'localOrder.customer.firstName' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
-                'localOrder.customer.lastName' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
-                'localOrder.customer.email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
-                'localOrder.customer.phone' => ['required', 'string', 'regex:/^(?:\+44\s?|0)[0-9\s]{9,11}$/'],
-
-                'localOrder.cart' => 'required|array|min:1',
-                'localOrder.cart.*.title' => ['required', 'string', 'max:255'],
-                'localOrder.cart.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
-                'localOrder.cart.*.price' => ['required', 'numeric', 'min:0', 'max:99999.99'],
-
-                'localOrder.subtotal' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-                'localOrder.deliveryCharge' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-                'localOrder.total' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-
-                'localOrder.paymentMethod' => 'required|in:cash,stripe,paypal',
-                'localOrder.points_used' => ['nullable', 'integer', 'min:0', 'max:999999'],
-                'localOrder.promo_type' => 'nullable|in:coupon,gift_card',
-                'localOrder.promo_id' => ['nullable', 'integer', 'min:1', 'exists:coupons,id'],
-                'localOrder.promo_discount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+                'localOrder.address' => 'required|string|max:255',
+                'localOrder.city' => 'required|string|max:100',
+                'localOrder.postalCode' => 'required|string|max:20',
             ], [
-                'hubRiseOrder.required' => 'HubRise order data is required',
-                'hubRiseOrder.array' => 'HubRise order must be an array',
-                'hubRiseOrder.service_type.required' => 'Service type is required',
-                'hubRiseOrder.service_type.in' => 'Service type must be either delivery or collection',
+                'localOrder.address.required' => 'Address is required',
+                'localOrder.city.required' => 'City is required',
+                'localOrder.postalCode.required' => 'Postcode is required',
+            ]);
+        }
 
-                'localOrder.required' => 'Local order data is required',
-                'localOrder.array' => 'Local order must be an array',
+        $validated = $request->validate([
+            'hubRiseOrder' => 'required|array',
+            'hubRiseOrder.service_type' => 'required|in:delivery,collection',
 
-                'localOrder.customer.firstName.required' => 'Customer first name is required',
-                'localOrder.customer.firstName.string' => 'First name must be text',
-                'localOrder.customer.firstName.max' => 'First name cannot exceed 100 characters',
-                'localOrder.customer.firstName.regex' => 'First name can only contain letters, spaces, hyphens and apostrophes',
+            'localOrder' => 'required|array',
+            'localOrder.customer.firstName' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
+            'localOrder.customer.lastName' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
+            'localOrder.customer.email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
+            'localOrder.customer.phone' => ['required', 'string', 'regex:/^(?:\+44\s?|0)[0-9\s]{9,11}$/'],
 
-                'localOrder.customer.lastName.string' => 'Last name must be text',
-                'localOrder.customer.lastName.max' => 'Last name cannot exceed 100 characters',
-                'localOrder.customer.lastName.regex' => 'Last name can only contain letters, spaces, hyphens and apostrophes',
+            'localOrder.delivery' => 'required|array',
+            'localOrder.delivery.type' => 'required|in:delivery,collection',
+            'localOrder.delivery.time' => 'required|string',
+            'localOrder.delivery.postcode' => 'required|string',
+            'localOrder.delivery.charge' => 'required|numeric',
 
-                'localOrder.customer.email.required' => 'Customer email is required',
-                'localOrder.customer.email.email' => 'Please enter a valid email address',
-                'localOrder.customer.email.max' => 'Email cannot exceed 255 characters',
+            'localOrder.cart' => 'required|array|min:1',
+            'localOrder.cart.*.title' => ['required', 'string', 'max:255'],
+            'localOrder.cart.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'localOrder.cart.*.price' => ['required', 'numeric', 'min:0', 'max:99999.99'],
 
-                'localOrder.customer.phone.required' => 'Customer phone number is required',
-                'localOrder.customer.phone.regex' => 'Please enter a valid UK phone number',
+            'localOrder.subtotal' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'localOrder.deliveryCharge' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'localOrder.total' => ['required', 'numeric', 'min:0', 'max:999999.99'],
 
-                'localOrder.cart.required' => 'Cart items are required',
-                'localOrder.cart.array' => 'Cart must be an array',
-                'localOrder.cart.min' => 'Cart must contain at least one item',
+            'localOrder.paymentMethod' => 'required|in:cash,stripe,paypal',
+            'localOrder.points_used' => ['nullable', 'integer', 'min:0', 'max:999999'],
+            'localOrder.promo_type' => 'nullable|in:coupon,gift_card',
+            'localOrder.promo_id' => ['nullable', 'integer', 'min:1'],
+            'localOrder.promo_discount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+        ], [
+            'localOrder.customer.firstName.required' => 'Customer first name is required',
+            'localOrder.customer.firstName.regex' => 'First name can only contain letters, spaces, hyphens and apostrophes',
 
-                'localOrder.cart.*.title.required' => 'Product title is required',
-                'localOrder.cart.*.title.string' => 'Product title must be text',
-                'localOrder.cart.*.title.max' => 'Product title cannot exceed 255 characters',
+            'localOrder.customer.lastName.required' => 'Customer last name is required',
+            'localOrder.customer.lastName.regex' => 'Last name can only contain letters, spaces, hyphens and apostrophes',
 
-                'localOrder.cart.*.quantity.required' => 'Product quantity is required',
-                'localOrder.cart.*.quantity.integer' => 'Quantity must be a whole number',
-                'localOrder.cart.*.quantity.min' => 'Quantity must be at least 1',
-                'localOrder.cart.*.quantity.max' => 'Quantity cannot exceed 999',
+            'localOrder.customer.email.required' => 'Customer email is required',
+            'localOrder.customer.email.email' => 'Please enter a valid email address',
 
-                'localOrder.cart.*.price.required' => 'Product price is required',
-                'localOrder.cart.*.price.numeric' => 'Price must be a valid number',
-                'localOrder.cart.*.price.min' => 'Price cannot be negative',
-                'localOrder.cart.*.price.max' => 'Price is too high',
+            'localOrder.customer.phone.required' => 'Customer phone number is required',
+            'localOrder.customer.phone.regex' => 'Please enter a valid UK phone number',
 
-                'localOrder.subtotal.required' => 'Subtotal is required',
-                'localOrder.subtotal.numeric' => 'Subtotal must be a valid number',
-                'localOrder.subtotal.min' => 'Subtotal cannot be negative',
-                'localOrder.subtotal.max' => 'Subtotal amount is too high',
+            'localOrder.delivery.required' => 'Delivery information is required',
+            'localOrder.delivery.type.required' => 'Delivery type is required',
+            'localOrder.delivery.time.required' => 'Delivery time is required',
+            'localOrder.delivery.postcode.required' => 'Delivery postcode is required',
+            'localOrder.delivery.charge.required' => 'Delivery charge is required',
 
-                'localOrder.deliveryCharge.required' => 'Delivery charge is required',
-                'localOrder.deliveryCharge.numeric' => 'Delivery charge must be a valid number',
-                'localOrder.deliveryCharge.min' => 'Delivery charge cannot be negative',
-                'localOrder.deliveryCharge.max' => 'Delivery charge is too high',
+            'localOrder.cart.required' => 'Cart items are required',
+            'localOrder.cart.min' => 'Cart must contain at least one item',
 
-                'localOrder.total.required' => 'Total amount is required',
-                'localOrder.total.numeric' => 'Total must be a valid number',
-                'localOrder.total.min' => 'Total cannot be negative',
-                'localOrder.total.max' => 'Total amount is too high',
+            'localOrder.subtotal.required' => 'Subtotal is required',
+            'localOrder.deliveryCharge.required' => 'Delivery charge is required',
+            'localOrder.total.required' => 'Total amount is required',
 
-                'localOrder.paymentMethod.required' => 'Payment method is required',
-                'localOrder.paymentMethod.in' => 'Payment method must be cash, stripe, or paypal',
+            'localOrder.paymentMethod.required' => 'Payment method is required',
+        ]);
 
-                'localOrder.points_used.integer' => 'Points used must be a whole number',
-                'localOrder.points_used.min' => 'Points used cannot be negative',
-                'localOrder.points_used.max' => 'Points used amount is too high',
+        $hubRiseOrder = $request->input('hubRiseOrder');
+        $localOrder = $validated['localOrder'];
 
-                'localOrder.promo_type.in' => 'Promo type must be coupon or gift_card',
+        $accessToken = env('HUBRISE_ACCESS_TOKEN');
+        $locationId = env('HUBRISE_LOCATION_ID');
 
-                'localOrder.promo_id.integer' => 'Promo ID must be a number',
-                'localOrder.promo_id.min' => 'Invalid promo ID',
-                'localOrder.promo_id.exists' => 'Promo code not found or invalid',
+        if (!$accessToken || !$locationId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'HubRise credentials not configured'
+            ], 500);
+        }
 
-                'localOrder.promo_discount.numeric' => 'Promo discount must be a valid number',
-                'localOrder.promo_discount.min' => 'Promo discount cannot be negative',
-                'localOrder.promo_discount.max' => 'Promo discount amount is too high',
+        $serviceType = $hubRiseOrder['service_type'] ?? 'delivery';
+        $paymentRefMap = ['cash' => '22', 'stripe' => '23', 'paypal' => '24'];
+        $orderNumber = 'ORD-' . time() . '-' . rand(1000, 9999);
+
+        $order = Order::create([
+            'user_id' => auth()->id(),
+            'order_number' => $orderNumber,
+            'customer_type' => auth()->check() ? 'authenticated' : 'guest',
+            'first_name' => $localOrder['customer']['firstName'],
+            'last_name' => $localOrder['customer']['lastName'],
+            'email' => $localOrder['customer']['email'],
+            'phone' => $localOrder['customer']['phone'],
+            'address_1' => $localOrder['address'] ?? null,
+            'address_2' => $localOrder['address2'] ?? null,
+            'street' => $localOrder['address'] ?? null,
+            'city' => $localOrder['city'] ?? null,
+            'postcode' => $localOrder['postalCode'] ?? null,
+            'delivery_type' => $localOrder['delivery']['type'],
+            'time' => $localOrder['delivery']['time'],
+            'subtotal' => $localOrder['subtotal'],
+            'delivery_charge' => $localOrder['deliveryCharge'],
+            'coupon_discount' => ($localOrder['promo_type'] ?? null) === 'coupon' ? ($localOrder['promo_discount'] ?? 0) : 0,
+            'coupon_id' => ($localOrder['promo_type'] ?? null) === 'coupon' ? ($localOrder['promo_id'] ?? null) : null,
+            'gift_card_discount' => ($localOrder['promo_type'] ?? null) === 'gift_card' ? ($localOrder['promo_discount'] ?? 0) : 0,
+            'gift_card_id' => ($localOrder['promo_type'] ?? null) === 'gift_card' ? ($localOrder['promo_id'] ?? null) : null,
+            'points_used' => intval($localOrder['points_used'] ?? 0) / 100,
+            'total' => $localOrder['total'],
+            'payment_method' => $localOrder['paymentMethod'],
+            'payment_status' => 'pending',
+            'status' => 'pending',
+            'notes' => $localOrder['orderNotes'] ?? null,
+            'hubrise_order_id' => null,
+            'payment_transaction_id' => null
+        ]);
+
+        foreach ($localOrder['cart'] as $item) {
+            $orderItem = OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item['productId'] ?? null,
+                'product_name' => $item['title'],
+                'sku_ref' => $item['skuRef'] ?? null,
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+                'total' => $item['price'] * $item['quantity']
             ]);
 
-            if (($request->hubRiseOrder['service_type'] ?? '') === 'delivery') {
-                $request->validate([
-                    'localOrder.address' => 'required|string|max:255',
-                    'localOrder.city' => 'required|string|max:100',
-                    'localOrder.postalCode' => 'required|string|max:20',
-                ]);
-            }
-
-            $hubRiseOrder = $request->input('hubRiseOrder');
-            $localOrder = $request->input('localOrder');
-
-            $accessToken = env('HUBRISE_ACCESS_TOKEN');
-            $locationId = env('HUBRISE_LOCATION_ID');
-
-            if (!$accessToken || !$locationId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'HubRise credentials not configured'
-                ], 500);
-            }
-
-            $serviceType = $hubRiseOrder['service_type'] ?? 'delivery';
-            if (!in_array($serviceType, ['delivery', 'collection'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid service type'
-                ], 400);
-            }
-
-            if ($serviceType === 'delivery') {
-                $customer = $hubRiseOrder['customer'] ?? [];
-                if (empty($customer['address_1']) || empty($customer['city']) || empty($customer['postal_code'])) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Address required for delivery orders'
-                    ], 400);
-                }
-            }
-
-            $paymentRefMap = [
-                'cash' => '22',
-                'stripe' => '23',
-                'paypal' => '24'
-            ];
-
-            $orderNumber = 'ORD-' . time() . '-' . rand(1000, 9999);
-
-            $order = Order::create([
-                'user_id' => auth()->id(),
-                'order_number' => $orderNumber,
-                'customer_type' => $localOrder['customer']['type'],
-                'first_name' => $localOrder['customer']['firstName'],
-                'last_name' => $localOrder['customer']['lastName'],
-                'email' => $localOrder['customer']['email'],
-                'phone' => $localOrder['customer']['phone'],
-                'address_1' => $localOrder['address'] ?? null,
-                'address_2' => $localOrder['address2'] ?? null,
-                'street' => $localOrder['address'] ?? null,
-                'city' => $localOrder['city'] ?? null,
-                'postcode' => $localOrder['postalCode'] ?? null,
-                'delivery_type' => $localOrder['delivery']['type'],
-                'time' => $localOrder['delivery']['time'],
-                'subtotal' => $localOrder['subtotal'],
-                'delivery_charge' => $localOrder['deliveryCharge'],
-                'coupon_discount' => $localOrder['promo_type'] === 'coupon' ? $localOrder['promo_discount'] : 0,
-                'coupon_id' => $localOrder['promo_type'] === 'coupon' ? $localOrder['promo_id'] : null,
-                'gift_card_discount' => $localOrder['promo_type'] === 'gift_card' ? $localOrder['promo_discount'] : 0,
-                'gift_card_id' => $localOrder['promo_type'] === 'gift_card' ? $localOrder['promo_id'] : null,
-                'points_used' => intval($localOrder['points_used'] ?? 0) / 100,
-                'total' => $localOrder['total'],
-                'payment_method' => $localOrder['paymentMethod'],
-                'payment_status' => 'pending',
-                'status' => 'pending',
-                'notes' => $localOrder['orderNotes'] ?? null,
-                'hubrise_order_id' => null,
-                'payment_transaction_id' => null
-            ]);
-
-            foreach ($localOrder['cart'] as $item) {
-                $orderItem = OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['productId'] ?? null,
-                    'product_name' => $item['title'],
-                    'sku_ref' => $item['skuRef'] ?? null,
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'total' => $item['price'] * $item['quantity']
-                ]);
-
-                if ($item['type'] === 'custom' && !empty($item['options'])) {
-                    foreach ($item['options'] as $optionName => $optionValues) {
-                        foreach ($optionValues as $opt) {
-                            OrderItemOption::create([
-                                'order_item_id' => $orderItem->id,
-                                'option_list_name' => $optionName,
-                                'option_name' => $opt['title'],
-                                'option_ref' => $opt['hubriseOptionRef'] ?? null,
-                                'price' => $opt['price'] ?? 0
-                            ]);
-                        }
+            if (($item['type'] ?? null) === 'custom' && !empty($item['options'])) {
+                foreach ($item['options'] as $optionName => $optionValues) {
+                    foreach ($optionValues as $opt) {
+                        OrderItemOption::create([
+                            'order_item_id' => $orderItem->id,
+                            'option_list_name' => $optionName,
+                            'option_name' => $opt['title'],
+                            'option_ref' => $opt['hubriseOptionRef'] ?? null,
+                            'price' => $opt['price'] ?? 0
+                        ]);
                     }
                 }
             }
+        }
 
-            if ($localOrder['promo_type'] === 'gift_card' && $localOrder['promo_id']) {
-                $giftCard = GiftCard::find($localOrder['promo_id']);
-                if ($giftCard) {
-                    $newBalance = $giftCard->balance - $localOrder['promo_discount'];
-                    
-                    $giftCard->update([
-                        'balance' => $newBalance,
-                        'status' => $newBalance <= 0 ? 'used' : 'new',
-                        'order_id' => $order->id,
-                        'redeemed_by' => auth()->id(),
-                        'redeemed_at' => now()
-                    ]);
-                }
-            }
-
-            if ($localOrder['paymentMethod'] === 'stripe') {
-                return $this->initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
-            } elseif ($localOrder['paymentMethod'] === 'paypal') {
-                return $this->initiatePayPalPayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
-            } else {
-                $this->sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
-
-                return response()->json([
-                    'success' => true,
-                    'confirmUrl' => route('order.confirmation', ['orderNumber' => $order->order_number]),
-                    'orderId' => $order->id,
-                    'orderNumber' => $order->order_number
+        if (($localOrder['promo_type'] ?? null) === 'gift_card' && ($localOrder['promo_id'] ?? null)) {
+            $giftCard = GiftCard::find($localOrder['promo_id']);
+            if ($giftCard) {
+                $newBalance = $giftCard->balance - ($localOrder['promo_discount'] ?? 0);
+                
+                $giftCard->update([
+                    'balance' => $newBalance,
+                    'status' => $newBalance <= 0 ? 'used' : 'new',
+                    'order_id' => $order->id,
+                    'redeemed_by' => auth()->id(),
+                    'redeemed_at' => now()
                 ]);
             }
+        }
 
-        } catch (\Exception $e) {
+        if (($localOrder['paymentMethod'] ?? null) === 'stripe') {
+            return $this->initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
+        } elseif (($localOrder['paymentMethod'] ?? null) === 'paypal') {
+            return $this->initiatePayPalPayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
+        } else {
+            $this->sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
+
             return response()->json([
-                'success' => false,
-                'message' => 'Error placing order: ' . $e->getMessage()
-            ], 500);
+                'success' => true,
+                'confirmUrl' => route('order.confirmation', ['orderNumber' => $order->order_number]),
+                'orderId' => $order->id,
+                'orderNumber' => $order->order_number
+            ]);
         }
     }
 
@@ -1036,6 +968,8 @@ class FrontendController extends Controller
     private function sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
     {
         // Prepare HubRise payload
+        \Log::info('HubRiseOrder payload', $hubRiseOrder);
+
         $hubRisePayload = [
             'status' => 'new',
             'channel' => 'Website',
