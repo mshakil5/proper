@@ -213,7 +213,7 @@
 <script>
     const ShopStatus = {
         isOpen() {
-            // return true;
+            return true;
             const now = new Date();
             const day = now.getDay();
             const hour = now.getHours();
@@ -239,6 +239,7 @@
         updateDisplay() {
             const element = document.getElementById('shopStatus');
             const orderBtn = document.getElementById('orderBtnInside');
+            const cartBtn = document.getElementById('cartFloatBtn');
             
             if (element) {
                 element.querySelector('.status-text').textContent = this.getStatus();
@@ -251,6 +252,14 @@
                     orderBtn.classList.add('show');
                 } else {
                     orderBtn.classList.remove('show');
+                }
+            }
+
+            if (cartBtn) {
+                if (this.isOpen()) {
+                    cartBtn.classList.remove('d-none');
+                } else {
+                    cartBtn.classList.add('d-none');
                 }
             }
         }

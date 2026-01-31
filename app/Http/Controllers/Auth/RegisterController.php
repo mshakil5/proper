@@ -50,7 +50,7 @@ class RegisterController extends Controller
             'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\'-]+$/'],
             'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:users'],
             'phone' => ['required', 'string', 'regex:/^(?:\+44\s?|0)[0-9\s]{9,11}$/'],
-            'password' => ['required', 'string', 'min:8', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'],
+            'password' => ['required', 'string', 'min:6', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'],
             'terms' => ['required', 'accepted']
         ], [
             'first_name.required' => 'First name is required',
@@ -73,7 +73,7 @@ class RegisterController extends Controller
             'phone.string' => 'Phone number must be valid',
             
             'password.required' => 'Password is required',
-            'password.min' => 'Password must be at least 8 characters long',
+            'password.min' => 'Password must be at least 6 characters long',
             'password.confirmed' => 'Passwords do not match',
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)',
             

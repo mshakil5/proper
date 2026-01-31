@@ -692,23 +692,15 @@ $(function () {
             });
             
             if (!hasFriesOrDrinks) {
-                Swal.fire({
-                    title: 'Have you forgotten to add Fries or Drinks?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No',
-                    reverseButtons: true,
-                    customClass: {
-                        popup: 'swal-confirm-popup',
-                        confirmButton: 'swal-confirm-btn',
-                        cancelButton: 'swal-cancel-btn'
+                showAlertModal(
+                    'Have you forgotten to add Fries or Drinks?',
+                    'Complete your meal with delicious sides and beverages',
+                    () => {
+                        $('#cartOffcanvas').removeClass('open');
+                        $('#cartOverlay').removeClass('open');
+                        $('#categoryPills .pill[data-filter="fries"]').click();
                     }
-                }).then((result) => {
-                    if (!result.isConfirmed) {
-                        continueCheckout();
-                    }
-                });
+                );
                 return;
             }
         } else {
@@ -718,29 +710,63 @@ $(function () {
             });
             
             if (!hasPetFood) {
-                Swal.fire({
-                    title: 'Have you forgotten about your Dog/Cat or Pet Food?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No',
-                    reverseButtons: true,
-                    customClass: {
-                        popup: 'swal-confirm-popup',
-                        confirmButton: 'swal-confirm-btn',
-                        cancelButton: 'swal-cancel-btn'
-                    }
-                }).then((result) => {
-                    if (!result.isConfirmed) {
-                        continueCheckout();
-                    }
-                });
+                showAlertModal(
+                    'Have you forgotten about your Dog/Cat or Pet Food?',
+                    'Add pet items to complete your order'
+                );
                 return;
             }
         }
         
         continueCheckout();
     });
+
+    function showAlertModal(title, message, backCallback) {
+        const modalHtml = `
+            <div class="cart-overlay open" id="alertOverlay"></div>
+            <div class="alert-modal" id="alertModal">
+                <div class="subscription-alert alert-warning" style="margin: 0; border-left: 4px solid #ff9800;">
+                    <div class="alert-content">
+                        <div class="alert-icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="alert-text">
+                            <div class="alert-title">${title}</div>
+                            <div class="alert-message">${message}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert-modal-actions">
+                    <button class="btn-alert-action" id="goBack" style="background: #1a1a1a; flex: 1;">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </button>
+                    <button class="btn-alert-action" id="confirmContinue" style="background: linear-gradient(135deg, #ff8a00, #ff5a00); flex: 1;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const container = document.createElement('div');
+        container.innerHTML = modalHtml;
+        document.body.appendChild(container);
+
+        const overlay = document.getElementById('alertOverlay');
+
+        document.getElementById('confirmContinue').addEventListener('click', () => {
+            container.remove();
+            continueCheckout();
+        });
+
+        document.getElementById('goBack').addEventListener('click', () => {
+            container.remove();
+            if (backCallback) backCallback();
+        });
+
+        overlay.addEventListener('click', () => {
+            container.remove();
+        });
+    }
 
     function continueCheckout() {
         if (selectedDelivery.type === 'delivery') {
