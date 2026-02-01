@@ -210,7 +210,7 @@
 }
 </style>
 
-{{-- <script>
+<script>
     const ShopStatus = {
         getUKTime() {
             const parts = new Intl.DateTimeFormat('en-GB', {
@@ -278,4 +278,4 @@
         ShopStatus.updateDisplay();
         setInterval(() => ShopStatus.updateDisplay(), 60000);
     });
-</script> --}}
+</script>
