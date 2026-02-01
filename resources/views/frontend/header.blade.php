@@ -5,7 +5,7 @@
                 <img 
                     id="company_logo_preview"
                     src="{{ asset('uploads/company/' . $company->company_logo) }}"
-                    alt="Company Logo"
+                    alt="{{ $company->company_name ?? '' }}"
                     class="me-2"
                     style="width:180px; height:40px; object-fit:contain;"
                 >

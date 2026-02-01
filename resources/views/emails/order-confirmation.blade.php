@@ -25,8 +25,8 @@
                 
                 <!-- Header -->
                 <tr>
-                    <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding:40px 24px; text-align:center;">
-                        <h1 style="margin:0; color:#ffffff; font-size:28px;">✓ Order Confirmed!</h1>
+                    <td style="background: linear-gradient(135deg, #F4A340 0%, #E8932A 100%); padding:40px 24px; text-align:center;">
+                        <h1 style="margin:0; color:#ffffff; font-size:28px;">✓ Order Received!</h1>
                         <p style="margin:8px 0 0 0; color:#ffffff; font-size:16px;">Thank you for your order</p>
                     </td>
                 </tr>
@@ -114,10 +114,6 @@
                                 </td>
                             </tr>
                         </table>
-
-                        <p style="margin:24px 0 0 0; font-size:13px; color:#666; border-top:1px solid #e8e8e8; padding-top:16px;">
-                            We'll notify you when your order is on the way. If you have any questions, please don't hesitate to contact us.
-                        </p>
                     </td>
                 </tr>
 

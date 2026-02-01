@@ -216,7 +216,7 @@
                             <div class="col-md-8">
                                 <label class="form-label">Postcode <span class="required">*</span></label>
                                 <input type="text" class="form-control" id="postcodeInput" name="postcode"
-                                    placeholder="e.g. MK44NP">
+                                    placeholder="e.g. LN5 8LQ">
                             </div>
                             <div class="col-md-4 d-flex align-items-end">
                                 <button type="button" class="btn btn-outline-dark w-100" id="findAddressBtn" style="height: 45px;">
@@ -332,6 +332,9 @@
                                         </div>
                                     </div>
                                 </form>
+                                <div id="paymentErrorMsg" class="invalid-feedback mt-2 d-none">
+                                    Please choose a payment method
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -469,7 +472,7 @@
             };
 
             function clearAllErrors() {
-                $('.invalid-feedback').remove();
+                $('.invalid-feedback:not(#paymentErrorMsg)').remove();
                 $('input, select, textarea').removeClass('is-invalid');
                 $('.checkout-card').removeClass('is-invalid');
                 $('.payment-option').removeClass('is-invalid').css({
@@ -479,6 +482,7 @@
                     'background-color': ''
                 });
                 $('.payment-option label').css('color', '');
+                $('#paymentErrorMsg').addClass('d-none');
             }
 
             function showFieldError(field, message) {
@@ -506,6 +510,7 @@
                         'background-color': '#fff5f5'
                     });
                     $('.payment-option label').css('color', '#dc3545');
+                    $('#paymentErrorMsg').removeClass('d-none').addClass('d-block');
                 } else {
                     $field.next('.invalid-feedback').remove();
                     $field.after(`<div class="invalid-feedback d-block">${message}</div>`);
@@ -677,6 +682,13 @@
                     return;
                 }
 
+                let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - pointsUsedDiscount;
+                
+                if (totalPrice <= 0) {
+                    showError('Cannot apply coupon when total is zero or negative');
+                    return;
+                }
+
                 $.ajax({
                     url: '/validate-promo-code',
                     type: 'POST',
@@ -686,6 +698,13 @@
                     },
                     data: JSON.stringify({ code: promoCode, subtotal: checkoutData.subtotal }),
                     success: function(res) {
+                        let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - res.discount_amount - pointsUsedDiscount;
+                        
+                        if (finalTotal < 0) {
+                            showError('Discount cannot exceed total amount');
+                            return;
+                        }
+
                         appliedPromoCode = {
                             type: res.type,
                             id: res.code_data.id,
@@ -964,7 +983,6 @@
                             if (firstField && firstField.length) {
                                 $('html, body').animate({ scrollTop: firstField.offset().top - 100 }, 500);
                             }
-                            showError('Please fix the errors and try again');
                         } else {
                             showError(err.responseJSON?.message || 'Error placing order. Please try again.');
                         }

@@ -57,7 +57,7 @@
                             </a>
                         </label>
                         <div class="postcode-input-group">
-                            <input type="text" class="postcode-input" id="deliveryPostcode" placeholder="MK44NP">
+                            <input type="text" class="postcode-input" id="deliveryPostcode" placeholder="LN5 8LQ">
                             <button type="button" class="postcode-check-btn">CHECK</button>
                         </div>
                     </div>

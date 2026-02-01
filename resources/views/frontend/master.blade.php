@@ -115,7 +115,8 @@
         </script>
     @endif
 
-    <link href="{{ asset('uploads/company/' . $company->fav_icon) }}" rel="icon">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="{{ asset('uploads/company/' . $company->fav_icon) }}" sizes="48x48">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <link href="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet"
