@@ -41,6 +41,7 @@ use App\Models\GiftCard;
 use App\Mail\OrderConfirmationMail;
 use App\Models\Credential;
 use App\Helpers\PayPalHelper;
+use App\Models\CouponUsage;
 
 class FrontendController extends Controller
 {
@@ -727,6 +728,23 @@ class FrontendController extends Controller
             'localOrder.paymentMethod.required' => 'Payment method is required',
         ]);
 
+        $subtotal = round((float)$validated['localOrder']['subtotal'], 2);
+        $delivery = round((float)$validated['localOrder']['deliveryCharge'], 2);
+        $discount = round((float)($validated['localOrder']['promo_discount'] ?? 0), 2);
+        $points = round((float)($validated['localOrder']['points_used'] ?? 0) / 100, 2);
+
+        $calculatedTotal = round($subtotal + $delivery - $discount - $points, 2);
+        $submittedTotal = round((float)$validated['localOrder']['total'], 2);
+
+        if ($calculatedTotal != $submittedTotal) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Total mismatch: expected £' . number_format($calculatedTotal, 2) . ' but got £' . number_format($submittedTotal, 2)
+            ], 400);
+        }
+
+        $validated['localOrder']['total'] = $calculatedTotal;
+
         $hubRiseOrder = $request->input('hubRiseOrder');
         $localOrder = $validated['localOrder'];
 
@@ -798,21 +816,6 @@ class FrontendController extends Controller
                         ]);
                     }
                 }
-            }
-        }
-
-        if (($localOrder['promo_type'] ?? null) === 'gift_card' && ($localOrder['promo_id'] ?? null)) {
-            $giftCard = GiftCard::find($localOrder['promo_id']);
-            if ($giftCard) {
-                $newBalance = $giftCard->balance - ($localOrder['promo_discount'] ?? 0);
-                
-                $giftCard->update([
-                    'balance' => $newBalance,
-                    'status' => $newBalance <= 0 ? 'used' : 'new',
-                    'order_id' => $order->id,
-                    'redeemed_by' => auth()->id(),
-                    'redeemed_at' => now()
-                ]);
             }
         }
 

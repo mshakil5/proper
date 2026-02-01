@@ -15,6 +15,7 @@ use App\Models\DeliverySubscription;
 use App\Mail\SubscriptionReminderMail;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderItemOption;
 
 class HomeController extends Controller
 {
@@ -57,6 +58,7 @@ class HomeController extends Controller
 
         $this->sendBirthdayVouchers();
         $this->sendSubscriptionReminderEmails();
+        $this->deleteAbandonedOrders();
 
         // Key Metrics - ALL filtered by date range
         $totalOrders = Order::whereBetween('created_at', [$startDate, $endDate])->count();
@@ -214,6 +216,25 @@ class HomeController extends Controller
 
                 Mail::to($user->email)->send(new BirthdayVoucherMail($user, $birthdayVoucher));
             }
+        }
+    }
+
+    private function deleteAbandonedOrders()
+    {
+        $abandonedOrders = Order::where('payment_status', 'pending')
+            ->whereIn('payment_method', ['stripe', 'paypal'])
+            ->whereNotNull('payment_transaction_id')
+            ->where('created_at', '<', now()->subMinutes(5))
+            ->get();
+
+        foreach ($abandonedOrders as $order) {
+            $orderItemIds = OrderItem::where('order_id', $order->id)->pluck('id');
+            if ($orderItemIds->isNotEmpty()) {
+                OrderItemOption::whereIn('order_item_id', $orderItemIds)->delete();
+            }
+            
+            OrderItem::where('order_id', $order->id)->delete();
+            $order->delete();
         }
     }
 

@@ -846,6 +846,7 @@
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Please wait...');
 
                 let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode.discount - pointsUsedDiscount;
+                totalPrice = Math.round(totalPrice * 100) / 100;
 
                 let hubRiseItems = [];
                 checkoutData.cart.forEach(item => {
