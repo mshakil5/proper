@@ -1061,10 +1061,10 @@ class FrontendController extends Controller
         // Update order with HubRise ID
         $order->update([
             'hubrise_order_id' => $hubRiseOrderId,
-            // 'hubrise_order_id' => str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT),
             'status' => 'pending'
         ]);
 
+        $this->allocateOrderResources($order, $localOrder);
         $this->sendOrderConfirmationEmail($order);
     }
     
@@ -1180,6 +1180,118 @@ class FrontendController extends Controller
         return view('frontend.order-confirmation', compact('order'));
     }
 
+    private function allocateOrderResources($order, $localOrder)
+    {
+        // Handle gift card
+        if (($localOrder['promo_type'] ?? null) === 'gift_card' && ($localOrder['promo_id'] ?? null)) {
+            $giftCard = GiftCard::find($localOrder['promo_id']);
+            if ($giftCard) {
+                $newBalance = $giftCard->balance - ($localOrder['promo_discount'] ?? 0);
+                
+                $giftCard->update([
+                    'balance' => $newBalance,
+                    'status' => $newBalance <= 0 ? 'used' : 'new',
+                    'order_id' => $order->id,
+                    'redeemed_by' => auth()->id(),
+                    'redeemed_at' => now()
+                ]);
+            }
+        }
+
+        // Handle coupon
+        if ($order->coupon_id) {
+            $coupon = Coupon::find($order->coupon_id);
+            if ($coupon) {
+                $coupon->increment('used_count');
+                
+                if ($coupon->is_birthday_voucher) {
+                    $coupon->users()->updateExistingPivot($order->user_id, [
+                        'used_count' => 1
+                    ]);
+                } else {
+                    CouponUsage::updateOrCreate(
+                        [
+                            'coupon_id' => $coupon->id,
+                            'user_id' => $order->user_id
+                        ],
+                        [
+                            'usage_count' => \DB::raw('usage_count + 1')
+                        ]
+                    );
+                }
+            }
+        }
+
+        // Handle points
+        if ($order->user_id) {
+            if ($order->points_used > 0) {
+                UserPoint::create([
+                    'user_id' => $order->user_id,
+                    'order_id' => $order->id,
+                    'point' => -($order->points_used * 100)
+                ]);
+            }
+
+            $pointsEarned = floor($order->total);
+            UserPoint::create([
+                'user_id' => $order->user_id,
+                'order_id' => $order->id,
+                'point' => $pointsEarned
+            ]);
+        }
+    }
+
+    private function reverseOrderResources($order)
+    {
+        // Refund gift card
+        if ($order->gift_card_id) {
+            $giftCard = GiftCard::find($order->gift_card_id);
+            if ($giftCard) {
+                $giftCard->update([
+                    'balance' => $giftCard->balance + $order->gift_card_discount,
+                    'status' => 'new',
+                    'redeemed_by' => null,
+                    'redeemed_at' => null,
+                    'order_id' => null
+                ]);
+            }
+        }
+
+        // Reverse coupon usage
+        if ($order->coupon_id && $order->user_id) {
+            $coupon = Coupon::find($order->coupon_id);
+            if ($coupon) {
+                $coupon->decrement('used_count');
+                
+                if ($coupon->is_birthday_voucher) {
+                    $coupon->users()->updateExistingPivot($order->user_id, [
+                        'used_count' => 0
+                    ]);
+                } else {
+                    CouponUsage::where([
+                        'coupon_id' => $coupon->id,
+                        'user_id' => $order->user_id
+                    ])->decrement('usage_count');
+                }
+            }
+        }
+
+        // Reverse points
+        if ($order->user_id) {
+            // Remove deducted points (if any were used)
+            if ($order->points_used > 0) {
+                UserPoint::where('order_id', $order->id)
+                    ->where('point', -($order->points_used * 100))
+                    ->delete();
+            }
+
+            // Remove earned points
+            UserPoint::where('order_id', $order->id)
+                ->where('point', '>', 0)
+                ->delete();
+        }
+    }
+
     private function sendOrderConfirmationEmail($order)
     {
         try {
@@ -1287,57 +1399,8 @@ class FrontendController extends Controller
                 }
             }
 
-            // Handle points when order is delivered
-            if ($newLocalStatus === 'delivered' && $order->user_id) {
-
-                if ($order->coupon_id) {
-                    $coupon = Coupon::find($order->coupon_id);
-                    if ($coupon) {
-                        // Increment global usage
-                        $coupon->increment('used_count');
-                        
-                        // Handle birthday voucher
-                        if ($coupon->is_birthday_voucher) {
-                            $coupon->users()->updateExistingPivot($order->user_id, [
-                                'used_count' => 1
-                            ]);
-                        } else {
-                            // Handle regular coupon - increment per-user usage
-                            CouponUsage::updateOrCreate(
-                                [
-                                    'coupon_id' => $coupon->id,
-                                    'user_id' => $order->user_id
-                                ],
-                                [
-                                    'usage_count' => \DB::raw('usage_count + 1')
-                                ]
-                            );
-                        }
-                    }
-                }
-
-                // Deduct the points that were used for this order (if any)
-                if ($order->points_used > 0) {
-                    UserPoint::create([
-                        'user_id' => $order->user_id,
-                        'order_id' => $order->id,
-                        'point' => -($order->points_used * 100)
-                    ]);
-                }
-
-                // Add new points earned from total (after all discounts)
-                $pointsEarned = floor($order->total);
-                UserPoint::create([
-                    'user_id' => $order->user_id,
-                    'order_id' => $order->id,
-                    'point' => $pointsEarned
-                ]);
-            }
-
-            if ($orderStatus === 'accepted') {
-            }
-
             if ($orderStatus === 'cancelled' || $orderStatus === 'rejected') {
+                $this->reverseOrderResources($order);
                 $cancellationReason = $newState['cancellation_reason'] ?? 'Not specified';
             }
 

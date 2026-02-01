@@ -81,6 +81,21 @@ body {
 .btn-gradient:hover {
     background: linear-gradient(90deg, #ff5a00, #ff3a00) !important;
 }
+.btn-order {
+    background: #ff8a00 !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    padding: 12px 20px !important;
+    border-radius: 35px !important;
+    transition: background 0.3s ease !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+}
+
+.btn-order:hover {
+    background: #ff5a00 !important;
+}
 
 .rating-badge {
     font-weight: 700;

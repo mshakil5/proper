@@ -212,70 +212,70 @@
 
 <script>
     const ShopStatus = {
-        isOpen() {
-            // return true;
-            const now = new Date(
-                new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
-            );
-            const day = now.getDay();
-            const hour = now.getHours();
-            const minute = now.getMinutes();
-            const currentMinutes = hour * 60 + minute;
+        getUKTime() {
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Europe/London',
+                weekday: 'long',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).formatToParts(new Date());
 
-            if (day === 0) {
-                const openTime = 16 * 60 + 30;
-                const closeTime = 22 * 60;
-                return currentMinutes >= openTime && currentMinutes < closeTime;
-            } else if (day >= 1 && day <= 6) {
-                const openTime = 16 * 60 + 30;
-                const closeTime = 23 * 60 + 30;
-                return currentMinutes >= openTime && currentMinutes < closeTime;
-            }
-            return false;
+            return {
+                day: parts.find(p => p.type === 'weekday').value,
+                hour: +parts.find(p => p.type === 'hour').value,
+                minute: +parts.find(p => p.type === 'minute').value
+            };
         },
 
-        getStatus() {
-            return this.isOpen() ? 'OPEN' : 'CLOSED';
+        getState() {
+            const { day, hour, minute } = this.getUKTime();
+            const nowMin = hour * 60 + minute;
+
+            const openAt = 16 * 60 + 30;
+            const closeAt = (day === 'Sunday') ? 22 * 60 : 23 * 60 + 30;
+
+            const isOpen = nowMin >= openAt && nowMin < closeAt;
+
+            console.log(
+                `[ShopStatus] ${day} ${hour}:${String(minute).padStart(2,'0')}`,
+                `| Open: ${isOpen}`
+            );
+
+            return { isOpen, day, hour, minute };
         },
 
         updateDisplay() {
-            const element = document.getElementById('shopStatus');
-            const orderBtn = document.getElementById('orderBtnInside');
-            const cartBtn = document.getElementById('cartFloatBtn');
-            
+            const state = this.getState();
+
+            const element  = document.getElementById('shopStatus');
+            const orderBtns = document.querySelectorAll('.addToOrderBtn');
+            const cartBtn  = document.getElementById('cartFloatBtn');
+
             if (element) {
-                element.querySelector('.status-text').textContent = this.getStatus();
-                element.classList.remove('open', 'closed');
-                element.classList.add(this.isOpen() ? 'open' : 'closed');
+                element.querySelector('.status-text').textContent =
+                    state.isOpen ? 'OPEN' : 'CLOSED';
+
+                element.classList.toggle('open', state.isOpen);
+                element.classList.toggle('closed', !state.isOpen);
             }
 
-            if (orderBtn) {
-                if (this.isOpen()) {
-                    orderBtn.classList.add('show');
-                } else {
-                    orderBtn.classList.remove('show');
-                }
+            if (orderBtns.length > 0) {
+                orderBtns.forEach(btn => {
+                    btn.classList.toggle('d-none', !state.isOpen);
+                    btn.style.pointerEvents = state.isOpen ? 'auto' : 'none';
+                });
             }
 
             if (cartBtn) {
-                if (this.isOpen()) {
-                    cartBtn.classList.remove('d-none');
-                } else {
-                    cartBtn.classList.add('d-none');
-                }
+                cartBtn.classList.toggle('d-none', !state.isOpen);
+                cartBtn.style.pointerEvents = state.isOpen ? 'auto' : 'none';
             }
         }
     };
 
-    window.ShopStatus = ShopStatus;
-
     document.addEventListener('DOMContentLoaded', () => {
-        const update = () => {
-            ShopStatus.updateDisplay();
-            if (!ShopStatus.isOpen())
-                document.querySelectorAll('.open-product').forEach(b => b.remove());
-        };
-        update();
-        setInterval(update, 60000);
+        ShopStatus.updateDisplay();
+        setInterval(() => ShopStatus.updateDisplay(), 60000);
     });
 </script>
