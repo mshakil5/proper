@@ -43,7 +43,7 @@
                                     <input type="text" class="form-control" id="title" name="title">
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <label class="form-label">Category <span class="text-danger">*</span></label>
                                     <select class="form-control select2" id="category_id" name="category_id">
                                         <option value="">Select Category</option>
@@ -53,7 +53,7 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-6 d-none">
                                     <label class="form-label">Tag </label>
                                     <select class="form-control select2" id="tag_id" name="tag_id">
                                         <option value="">Select Tag</option>

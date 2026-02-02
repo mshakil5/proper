@@ -28,7 +28,7 @@
                             <input type="number" class="form-control" id="amount" name="amount" step="0.01">
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-3 d-none">
                             <label class="form-label">Image</label>
                             <input type="file" class="form-control" id="image" name="image" accept="image/*" onchange="previewImage(event, '#preview-image')">
                             <img id="preview-image" src="#" alt="" class="img-thumbnail rounded mt-3" style="max-width: 300px; display: none;">
@@ -61,7 +61,7 @@
                         <th>#</th>
                         <th>Name</th>
                         <th>Amount</th>
-                        <th>Image</th>
+                        {{-- <th>Image</th> --}}
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -85,7 +85,7 @@ $(document).ready(function() {
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'name', name: 'name' },
             { data: 'amount', name: 'amount', orderable: false, searchable: false },
-            { data: 'image', name: 'image', orderable: false, searchable: false },
+            //{ data: 'image', name: 'image', orderable: false, searchable: false },
             { data: 'status', name: 'status', orderable: false, searchable: false },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ]

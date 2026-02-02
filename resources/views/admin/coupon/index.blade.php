@@ -114,7 +114,7 @@
                                     <small class="text-muted d-block mt-2">Enable this if you want this voucher to be sent automatically to customers on their birthdays</small>
                                 </div>
 
-                                <div class="col-md-12">
+                                <div class="col-md-12 d-none">
                                     <label class="form-label">Image (Optional)</label>
                                     <input type="file" class="form-control" id="image" accept="image/*"
                                         onchange="previewImage(event, '#preview-image')">
@@ -160,7 +160,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Code</th>
-                                    <th>Image</th>
+                                    {{-- <th>Image</th> --}}
                                     <th>Discount</th>
                                     <th>Usage</th>
                                     <th>Validity</th>
@@ -177,7 +177,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Code</th>
-                                    <th>Image</th>
+                                    {{-- <th>Image</th> --}}
                                     <th>Discount</th>
                                     <th>Usage</th>
                                     <th>Validity</th>
@@ -218,7 +218,7 @@
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                 { data: 'code', name: 'code' },
-                { data: 'image', name: 'image', orderable: false, searchable: false },
+                // { data: 'image', name: 'image', orderable: false, searchable: false },
                 { data: 'discount_info', name: 'discount_info', orderable: false, searchable: false },
                 { data: 'usage', name: 'usage', orderable: false, searchable: false },
                 { data: 'dates', name: 'dates', orderable: false, searchable: false },

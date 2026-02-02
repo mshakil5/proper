@@ -42,6 +42,7 @@ use App\Mail\OrderConfirmationMail;
 use App\Models\Credential;
 use App\Helpers\PayPalHelper;
 use App\Models\CouponUsage;
+use Carbon\Carbon;
 
 class FrontendController extends Controller
 {
@@ -1512,22 +1513,33 @@ class FrontendController extends Controller
 
     public function sitemap()
     {
-        $staticPages = [
-            ['loc' => url('/'), 'lastmod' => now()->toDateString(), 'changefreq' => 'daily', 'priority' => '1.0'],
-            ['loc' => url('/menu'), 'lastmod' => now()->toDateString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
-            ['loc' => url('/our-story'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.8'],
-            ['loc' => url('/find-us'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
-            ['loc' => url('/contact'), 'lastmod' => now()->toDateString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
-            ['loc' => url('/privacy-policy'), 'lastmod' => now()->toDateString(), 'changefreq' => 'yearly', 'priority' => '0.5'],
-            ['loc' => url('/terms-and-conditions'), 'lastmod' => now()->toDateString(), 'changefreq' => 'yearly', 'priority' => '0.5']
+        $urls = [];
+
+        $staticRoutes = [
+            '/' => 1.0,
+            '/menu' => 0.9,
+            '/gift-cards' => 0.8,
+            '/our-story' => 0.6,
+            '/find-us' => 0.6,
+            '/contact' => 0.5,
+            '/privacy-policy' => 0.3,
+            '/terms-and-conditions' => 0.3,
+            '/login' => 0.2,
+            '/register' => 0.2,
         ];
 
-        $urls = $staticPages;
+        foreach ($staticRoutes as $path => $priority) {
+            $urls[] = [
+                'loc' => url($path),
+                'lastmod' => Carbon::now()->toDateString(),
+                'changefreq' => 'weekly',
+                'priority' => $priority,
+            ];
+        }
 
-        $content = view('frontend.sitemap', compact('urls'))->render();
-        return Response::make($content, 200)
-            ->header('Content-Type', 'application/xml')
-            ->header('Cache-Control', 'public, max-age=3600');
+        return response()
+            ->view('frontend.sitemap', compact('urls'))
+            ->header('Content-Type', 'application/xml');
     }
 
 }
