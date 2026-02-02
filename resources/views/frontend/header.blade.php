@@ -50,7 +50,7 @@
                 @endauth
             </li>
             </ul>
-            <a href="https://www.propertakeaways.com/menu" class="btn btn-gradient ms-3 fw-semibold" target="_blank">
+            <a href="https://www.propertakeaways.co.uk/menu" class="btn btn-gradient ms-3 fw-semibold" target="_blank">
                 <i class="fa-solid fa-bag-shopping me-1"></i> Order Now
             </a>
         </div>
