@@ -26,7 +26,7 @@
                 <div class="cart-delivery-header">
                     <div class="delivery-type-group">
                         <label class="delivery-type-option">
-                            <input type="radio" name="deliveryType" value="delivery" checked>
+                            <input type="radio" name="deliveryType" value="delivery">
                             <span class="delivery-type-icon">
                                 <i class="fas fa-truck"></i>
                             </span>

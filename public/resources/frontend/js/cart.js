@@ -1,7 +1,7 @@
 $(function () {
 
     let selectedDelivery = {
-        type: 'delivery',
+        type: '',
         postcode: '',
         charge: 0,
         time: '',
@@ -769,6 +769,12 @@ $(function () {
     }
 
     function continueCheckout() {
+
+        if (!selectedDelivery.type) {
+            showError('Please select Delivery or Collection');
+            return;
+        }
+
         if (selectedDelivery.type === 'delivery') {
             if (!selectedDelivery.isValid) {
                 showError('Please verify your postcode for delivery');

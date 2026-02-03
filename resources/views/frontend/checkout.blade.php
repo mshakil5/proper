@@ -208,9 +208,11 @@
                     <div class="checkout-card" id="addressCard">
                         <h5 class="checkout-title">
                             Delivery Address
+                            @auth
                             <small style="font-size:11px; color:#999;">
                                 (may be different from your profile address)
                             </small>
+                            @endauth
                         </h5>
                         <div class="row g-3 mb-3">
                             <div class="col-md-8">
@@ -350,9 +352,13 @@
 
                         <div class="promo-section-compact">
                             <label class="form-label">Promo Code / Gift Card</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="promoCode" placeholder="Enter code">
-                                <button class="btn btn-outline-dark" type="button" id="applyPromoBtn">Apply</button>
+                            <div class="row g-2">
+                                <div class="col-8">
+                                    <input type="text" class="form-control promo-input" id="promoCode" placeholder="Enter code">
+                                </div>
+                                <div class="col-4">
+                                    <button class="btn btn-promo w-100" type="button" id="applyPromoBtn">Apply</button>
+                                </div>
                             </div>
                             <div id="promoMessageContainer" style="display: none; margin-top: 8px;">
                                 <div class="alert alert-info mb-0" id="promoMessage"></div>

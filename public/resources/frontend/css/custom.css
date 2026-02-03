@@ -3243,8 +3243,6 @@ footer a:hover {
     }
 }
 
-/* ===== PROMO SECTION IN SIDEBAR ===== */
-
 .promo-section-compact {
     padding: 12px 0;
     animation: slideDown 0.3s cubic-bezier(0.2, 0.9, 0.2, 1);
@@ -3257,35 +3255,49 @@ footer a:hover {
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    display: block;
 }
 
-.promo-section-compact .input-group {
-    display: flex;
-    gap: 6px;
+.promo-section-compact .row {
+    margin: 0 !important;
 }
 
-.promo-section-compact .input-group .form-control {
-    flex: 1;
+.promo-section-compact .col-8,
+.promo-section-compact .col-4 {
+    padding: 0 !important;
+}
+
+.promo-section-compact .col-8:first-child {
+    padding-right: 3px !important;
+}
+
+.promo-section-compact .col-4:last-child {
+    padding-left: 3px !important;
+}
+
+.promo-section-compact .promo-input {
     font-size: 12px;
     padding: 9px 10px;
     border: 1px solid #E8E8E8;
     border-radius: 6px;
     background: #fff;
     transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.promo-section-compact .input-group .form-control:focus {
+.promo-section-compact .promo-input:focus {
     border-color: #ff8a00;
     box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.1);
     outline: none;
 }
 
-.promo-section-compact .input-group .form-control::placeholder {
+.promo-section-compact .promo-input::placeholder {
     color: #999;
 }
 
-.promo-section-compact .input-group .btn {
-    padding: 9px 12px;
+.promo-section-compact .btn-promo {
+    padding: 9px 12px !important;
     font-size: 10px;
     font-weight: 700;
     white-space: nowrap;
@@ -3297,16 +3309,20 @@ footer a:hover {
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.promo-section-compact .input-group .btn:hover {
+.promo-section-compact .btn-promo:hover {
     background: #1a1a1a;
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
-.promo-section-compact .input-group .btn:active {
+.promo-section-compact .btn-promo:active {
     transform: translateY(0);
 }
 
