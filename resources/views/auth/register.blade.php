@@ -146,17 +146,6 @@
                             </label>
                         </div>
 
-                        <!-- Error Alert -->
-                        @if($errors->any())
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <div>
-                                    <strong>Registration Failed</strong>
-                                    <p>Please check the errors above</p>
-                                </div>
-                            </div>
-                        @endif
-
                         <!-- Submit Button -->
                         <button type="submit" class="btn-auth-primary">
                             <span>Create Account</span>

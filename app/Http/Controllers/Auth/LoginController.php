@@ -46,6 +46,8 @@ class LoginController extends Controller
         if (Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']], $request->remember)) {
             $request->session()->regenerate();
 
+            $user->update(['last_login' => now()]);
+
             if ($request->redirect_to_checkout) {
                 return redirect('/checkout');
             }

@@ -794,6 +794,11 @@ class FrontendController extends Controller
             'payment_transaction_id' => null
         ]);
 
+        if (auth()->check()) {
+            auth()->user()->increment('total_orders');
+            auth()->user()->update(['last_order_date' => now()]);
+        }
+
         foreach ($localOrder['cart'] as $item) {
             $orderItem = OrderItem::create([
                 'order_id' => $order->id,

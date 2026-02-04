@@ -38,7 +38,7 @@
                         Mon - Sat: 4:30pm - 11:30pm<br>
                         Sunday: 4:30pm - 10:00pm
                     </p>
-                    <small style="font-size:12px;">
+                    <small style="font-size:12px;" class="d-none">
                         <span style="color:red">*</span> Our online ordering website will stop taking orders ten minutes before we close.
                     </small>
                 </div>

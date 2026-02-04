@@ -57,7 +57,7 @@
     </div>
 </nav>
 
-<div class="marquee-bar">
+<div class="marquee-bar d-none">
     <div class="marquee-wrapper overflow-hidden position-relative">
         <div class="marquee-content">
             <span>Fast Delivery •</span>
@@ -84,7 +84,7 @@
 
 <div class="floating-shop-status swing @if (request()->routeIs('checkout')) d-none @endif" id="shopStatus">
     <div class="status-text">OPEN</div>
-    <a href="{{ route('menu') }}" class="order-btn-inside" id="orderBtnInside" target="_blank">
+    <a href="{{ route('menu') }}" class="order-btn-inside" id="orderBtnInside">
         <i class="fa-solid fa-bag-shopping me-1"></i> Order
     </a>
 </div>
@@ -254,12 +254,13 @@
 
             if (element) {
                 element.querySelector('.status-text').textContent =
-                    state.isOpen ? 'OPEN' : 'CLOSED';
+                    state.isOpen ? 'OPEN' : 'OPEN At 4:30PM';
 
                 element.classList.toggle('open', state.isOpen);
                 element.classList.toggle('closed', !state.isOpen);
             }
 
+            /*
             if (orderBtns.length > 0) {
                 orderBtns.forEach(btn => {
                     btn.classList.toggle('d-none', !state.isOpen);
@@ -271,6 +272,7 @@
                 cartBtn.classList.toggle('d-none', !state.isOpen);
                 cartBtn.style.pointerEvents = state.isOpen ? 'auto' : 'none';
             }
+            */
         }
     };
 

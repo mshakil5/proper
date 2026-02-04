@@ -30,6 +30,25 @@ class RegisterController extends Controller
     {
         $validated = $this->validator($request->all())->validate();
 
+        $existingUser = User::where('email', strtolower($validated['email']))->first();
+
+        if ($existingUser) {
+            if (Hash::check($validated['password'], $existingUser->password)) {
+                Auth::login($existingUser);
+                $request->session()->regenerate();
+                $existingUser->update(['last_login' => now()]);
+
+                if ($request->redirect_to_checkout) {
+                    return redirect('/checkout');
+                }
+
+                return redirect($this->redirectTo);
+            } else {
+                return back()->withInput($request->only('email'))
+                    ->withErrors(['password' => 'Password is incorrect']);
+            }
+        }
+
         $user = $this->create($validated);
 
         Auth::login($user);
@@ -48,9 +67,9 @@ class RegisterController extends Controller
         return Validator::make($data, [
             'first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\'-]+$/'],
             'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\'-]+$/'],
-            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^(?:\+44\s?|0)[0-9\s]{9,11}$/'],
-            'password' => ['required', 'string', 'min:6', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
             'terms' => ['required', 'accepted']
         ], [
             'first_name.required' => 'First name is required',
@@ -65,7 +84,6 @@ class RegisterController extends Controller
             
             'email.required' => 'Email address is required',
             'email.email' => 'Please enter a valid email address',
-            'email.unique' => 'This email address is already registered',
             'email.max' => 'Email address cannot exceed 255 characters',
             
             'phone.required' => 'UK phone number is required',
@@ -97,7 +115,52 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
             'user_type' => '2',
             'status' => 1,
-            'image' => '/placeholder.webp'
+            'image' => '/placeholder.webp',
+            'last_login' => now()
         ]);
+    }
+
+    public function login(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+        ], [
+            'email.required' => 'Email is required',
+            'email.email' => 'Please enter a valid email',
+            'password.required' => 'Password is required',
+            'password.min' => 'Password must be at least 6 characters'
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+
+        if (!$user) {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'Email not found']);
+        }
+
+        if ($user->status != 1) {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'Your account is inactive']);
+        }
+
+        if (Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']], $request->remember)) {
+            $request->session()->regenerate();
+
+            $user->update(['last_login' => now()]);
+
+            if ($request->redirect_to_checkout) {
+                return redirect('/checkout');
+            }
+
+            if (auth()->user()->user_type == '1') {
+                return redirect()->route('admin.dashboard');
+            } else {
+                return redirect()->route('user.dashboard');
+            }
+        }
+
+        return back()->withInput($request->only('email'))
+            ->withErrors(['password' => 'Password is incorrect']);
     }
 }

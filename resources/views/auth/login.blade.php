@@ -77,17 +77,6 @@
                             <a href="{{ route('password.request') }}" class="forgot-link">Forgot password?</a>
                         </div>
 
-                        <!-- Error Alert -->
-                        @if(session('error'))
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <div>
-                                    <strong>Login Failed</strong>
-                                    <p>{{ session('error') }}</p>
-                                </div>
-                            </div>
-                        @endif
-
                         <!-- Submit Button -->
                         <button type="submit" class="btn-auth-primary">
                             <span>Sign In</span>
