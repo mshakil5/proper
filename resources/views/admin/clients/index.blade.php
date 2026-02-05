@@ -294,6 +294,7 @@
                     $('#addBtn').val('Update').text('Update');
                     $('#addThisFormContainer').show(300);
                     $('#newBtn').hide();
+                    pageTop();
                 });
             });
 
