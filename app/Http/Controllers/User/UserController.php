@@ -105,6 +105,7 @@ class UserController extends Controller
             ->where('is_birthday_voucher', true)
             ->where('is_active', true)
             ->wherePivot('sent_year', now()->year)
+            ->wherePivot('used_count', 0)
             ->get()
             : collect();
         

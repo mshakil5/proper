@@ -11,6 +11,8 @@ class Coupon extends Model
         'end_date'   => 'date',
     ];
 
+    protected $guarded = [];
+
     public function calculateDiscount($amount)
     {
         if ($this->discount_type === 'percent') {

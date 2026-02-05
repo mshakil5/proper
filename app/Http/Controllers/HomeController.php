@@ -58,7 +58,7 @@ class HomeController extends Controller
 
         $this->sendBirthdayVouchers();
         $this->sendSubscriptionReminderEmails();
-        $this->deleteAbandonedOrders();
+        // $this->deleteAbandonedOrders();
 
         // Key Metrics - ALL filtered by date range
         $totalOrders = Order::whereBetween('created_at', [$startDate, $endDate])->count();

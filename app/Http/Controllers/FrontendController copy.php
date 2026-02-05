@@ -45,7 +45,6 @@ use App\Models\CouponUsage;
 use Carbon\Carbon;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
-use App\Models\ProductOptionItem;
 
 class FrontendController extends Controller
 {
@@ -680,202 +679,264 @@ class FrontendController extends Controller
 
     public function placeOrder(Request $request)
     {
-        if ($request->input('delivery.type') === 'delivery') {
+        if (($request->input('hubRiseOrder.service_type') ?? '') === 'delivery') {
             $request->validate([
-                'address' => 'required|string|max:255',
-                'city' => 'required|string|max:100',
-                'delivery.postcode' => 'required|string|max:20',
+                'localOrder.address' => 'required|string|max:255',
+                'localOrder.city' => 'required|string|max:100',
+                'localOrder.postalCode' => 'required|string|max:20',
+            ], [
+                'localOrder.address.required' => 'Address is required',
+                'localOrder.city.required' => 'City is required',
+                'localOrder.postalCode.required' => 'Postcode is required',
             ]);
         }
 
-        $request->validate([
-            'customer.firstName' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
-            'customer.lastName' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
-            'customer.email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
-            'customer.phone' => ['required', 'string', 'regex:/^(?:\+44\s?|0)[0-9\s]{9,11}$/'],
-            'delivery.type' => 'required|in:delivery,collection',
-            'delivery.time' => 'required|string',
-            'cart' => 'required|array|min:1',
-            'cart.*.productId' => 'required|integer|exists:products,id',
-            'cart.*.quantity' => 'required|integer|min:1|max:999',
-            'cart.*.type' => 'nullable|string',
-            'cart.*.options' => 'nullable|array',
-            'paymentMethod' => 'required|in:cash,stripe,paypal',
-            'pointsToUse' => 'nullable|integer|min:0',
-            'promoCode' => 'nullable|string|max:100',
-            'notes' => 'nullable|string|max:1000',
+        $validated = $request->validate([
+            'hubRiseOrder' => 'required|array',
+            'hubRiseOrder.service_type' => 'required|in:delivery,collection',
+
+            'localOrder' => 'required|array',
+            'localOrder.customer.firstName' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
+            'localOrder.customer.lastName' => ['required', 'string', 'max:100', 'regex:/^[a-zA-Z\s\'-]+$/'],
+            'localOrder.customer.email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
+            'localOrder.customer.phone' => ['required', 'string', 'regex:/^(?:\+44\s?|0)[0-9\s]{9,11}$/'],
+
+            'localOrder.delivery' => 'required|array',
+            'localOrder.delivery.type' => 'required|in:delivery,collection',
+            'localOrder.delivery.time' => 'required|string',
+            'localOrder.delivery.charge' => 'required|numeric',
+
+            'localOrder.cart' => 'required|array|min:1',
+            'localOrder.cart.*.title' => ['required', 'string', 'max:255'],
+            'localOrder.cart.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'localOrder.cart.*.price' => ['required', 'numeric', 'min:0', 'max:99999.99'],
+
+            'localOrder.cart.*.type' => 'nullable',
+            'localOrder.cart.*.options' => 'nullable',
+            'localOrder.cart.*.options.*' => 'nullable',
+            'localOrder.cart.*.options.*.*' => 'nullable',
+            'localOrder.cart.*.options.*.*.title' => 'nullable',
+            'localOrder.cart.*.options.*.*.hubriseOptionRef' => 'nullable',
+            'localOrder.cart.*.options.*.*.price' => 'nullable',
+
+            'localOrder.subtotal' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'localOrder.deliveryCharge' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'localOrder.total' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+
+            'localOrder.paymentMethod' => 'required|in:cash,stripe,paypal',
+            'localOrder.points_used' => ['nullable', 'integer', 'min:0', 'max:999999'],
+            'localOrder.promo_type' => 'nullable|in:coupon,gift_card',
+            'localOrder.promo_id' => ['nullable', 'integer', 'min:1'],
+            'localOrder.promo_discount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+        ], [
+            'localOrder.customer.firstName.required' => 'Customer first name is required',
+            'localOrder.customer.firstName.regex' => 'First name can only contain letters, spaces, hyphens and apostrophes',
+
+            'localOrder.customer.lastName.required' => 'Customer last name is required',
+            'localOrder.customer.lastName.regex' => 'Last name can only contain letters, spaces, hyphens and apostrophes',
+
+            'localOrder.customer.email.required' => 'Customer email is required',
+            'localOrder.customer.email.email' => 'Please enter a valid email address',
+
+            'localOrder.customer.phone.required' => 'Customer phone number is required',
+            'localOrder.customer.phone.regex' => 'Please enter a valid UK phone number',
+
+            'localOrder.delivery.required' => 'Delivery information is required',
+            'localOrder.delivery.type.required' => 'Delivery type is required',
+            'localOrder.delivery.time.required' => 'Delivery time is required',
+            'localOrder.delivery.charge.required' => 'Delivery charge is required',
+
+            'localOrder.cart.required' => 'Cart items are required',
+            'localOrder.cart.min' => 'Cart must contain at least one item',
+
+            'localOrder.subtotal.required' => 'Subtotal is required',
+            'localOrder.deliveryCharge.required' => 'Delivery charge is required',
+            'localOrder.total.required' => 'Total amount is required',
+
+            'localOrder.paymentMethod.required' => 'Payment method is required',
         ]);
 
-        $customer = $request->input('customer');
-        $delivery = $request->input('delivery');
-        $cart = $request->input('cart');
-        $paymentMethod = $request->input('paymentMethod');
-        $pointsToUse = (int)($request->input('pointsToUse') ?? 0);
-        $promoCode = $request->input('promoCode');
-        $address = $request->input('address');
-        $address2 = $request->input('address2');
-        $city = $request->input('city');
-        $notes = $request->input('notes');
+        $subtotal = round((float)$validated['localOrder']['subtotal'], 2);
+        $delivery = round((float)$validated['localOrder']['deliveryCharge'], 2);
+        $discount = round((float)($validated['localOrder']['promo_discount'] ?? 0), 2);
+        $points = round((float)($validated['localOrder']['points_used'] ?? 0) / 100, 2);
 
-        $subtotal = 0;
-        $cartItems = [];
+        $calculatedTotal = round($subtotal + $delivery - $discount - $points, 2);
+        $submittedTotal = round((float)$validated['localOrder']['total'], 2);
 
-        foreach ($cart as $item) {
-            $product = Product::find($item['productId']);
-            
-            if (!$product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not found'
-                ], 400);
-            }
+        if ($calculatedTotal != $submittedTotal) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Total mismatch: expected £' . number_format($calculatedTotal, 2) . ' but got £' . number_format($submittedTotal, 2)
+            ], 400);
+        }
 
-            $itemPrice = $product->price;
-            $optionPrice = 0;
-            $attributePrice = 0;
+        $validated['localOrder']['total'] = $calculatedTotal;
 
-            if (($item['attribute'] ?? false) && $product->has_attribute) {
-                $attributePrice = (float)$product->attribute_price;
-            }
+        $hubRiseOrder = $request->input('hubRiseOrder');
+        $localOrder = $validated['localOrder'];
+        // return response()->json([
+        //     $localOrder
+        // ]);
 
-            if ($item['type'] === 'custom' && !empty($item['options'])) {
+        $accessToken = env('HUBRISE_ACCESS_TOKEN');
+        $locationId = env('HUBRISE_LOCATION_ID');
+
+        if (!$accessToken || !$locationId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'HubRise credentials not configured'
+            ], 500);
+        }
+
+        $serviceType = $hubRiseOrder['service_type'] ?? 'delivery';
+        $paymentRefMap = ['cash' => 'CASH', 'stripe' => 'STRIPE', 'paypal' => 'PAYPAL'];
+        $orderNumber = 'ORD-' . time() . '-' . rand(1000, 9999);
+
+        $order = Order::create([
+            'user_id' => auth()->id(),
+            'order_number' => $orderNumber,
+            'customer_type' => auth()->check() ? 'authenticated' : 'guest',
+            'first_name' => $localOrder['customer']['firstName'],
+            'last_name' => $localOrder['customer']['lastName'],
+            'email' => $localOrder['customer']['email'],
+            'phone' => $localOrder['customer']['phone'],
+            'address_1'    => $request->input('localOrder.address'),
+            'address_2' => $request->input('localOrder.address2'),
+            'city'      => $request->input('localOrder.city'),
+            'postcode'  => $request->input('localOrder.postalCode'),
+            'delivery_type' => $localOrder['delivery']['type'],
+            'time' => $localOrder['delivery']['time'],
+            'subtotal' => $localOrder['subtotal'],
+            'delivery_charge' => $localOrder['deliveryCharge'],
+            'coupon_discount' => ($localOrder['promo_type'] ?? null) === 'coupon' ? ($localOrder['promo_discount'] ?? 0) : 0,
+            'coupon_id' => ($localOrder['promo_type'] ?? null) === 'coupon' ? ($localOrder['promo_id'] ?? null) : null,
+            'gift_card_discount' => ($localOrder['promo_type'] ?? null) === 'gift_card' ? ($localOrder['promo_discount'] ?? 0) : 0,
+            'gift_card_id' => ($localOrder['promo_type'] ?? null) === 'gift_card' ? ($localOrder['promo_id'] ?? null) : null,
+            'points_used' => intval($localOrder['points_used'] ?? 0) / 100,
+            'total' => $localOrder['total'],
+            'payment_method' => $localOrder['paymentMethod'],
+            'payment_status' => 'pending',
+            'status' => 'pending',
+            'notes' => $localOrder['orderNotes'] ?? null,
+            'hubrise_order_id' => null,
+            'payment_transaction_id' => null
+        ]);
+
+        if (auth()->check()) {
+            auth()->user()->increment('total_orders');
+            auth()->user()->update(['last_order_date' => now()]);
+        }
+
+        foreach ($localOrder['cart'] as $item) {
+            $orderItem = OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item['productId'] ?? null,
+                'product_name' => $item['title'],
+                'sku_ref' => $item['skuRef'] ?? null,
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+                'total' => $item['price'] * $item['quantity']
+            ]);
+
+            if (!empty($item['options'])) {
                 foreach ($item['options'] as $optionName => $optionValues) {
                     foreach ($optionValues as $opt) {
-                        $optionItem = ProductOptionItem::where('hubrise_option_ref', $opt['hubriseOptionRef'])
-                            ->first();
-                        
-                        if ($optionItem) {
-                            $optionPrice += $optionItem->override_price;
-                        }
+                        OrderItemOption::create([
+                            'order_item_id' => $orderItem->id,
+                            'option_list_name' => $optionName,
+                            'option_name' => $opt['title'],
+                            'option_ref' => $opt['hubriseOptionRef'] ?? null,
+                            'price' => $opt['price'] ?? 0
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if (($localOrder['paymentMethod'] ?? null) === 'stripe') {
+            return $this->initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
+        } elseif (($localOrder['paymentMethod'] ?? null) === 'paypal') {
+            return $this->initiatePayPalPayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
+        } else {
+            $this->sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap);
+
+            return response()->json([
+                'success' => true,
+                'confirmUrl' => route('order.confirmation', ['orderNumber' => $order->order_number]),
+                'orderId' => $order->id,
+                'orderNumber' => $order->order_number
+            ]);
+        }
+    }
+
+    private function initiatePayPalPayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
+    {
+        try {
+            session([
+                'checkout_data' => [
+                    'order_id' => $order->id,
+                    'hubRiseOrder' => $hubRiseOrder,
+                    'localOrder' => $localOrder,
+                    'accessToken' => $accessToken,
+                    'locationId' => $locationId,
+                    'paymentRefMap' => $paymentRefMap
+                ]
+            ]);
+
+            $this->setPayPalConfig();
+
+            $provider = new \Srmklive\PayPal\Services\PayPal;
+            $provider->setApiCredentials(config('paypal'));
+            $paypalToken = $provider->getAccessToken();
+
+            $response = $provider->createOrder([
+                "intent" => "CAPTURE",
+                "application_context" => [
+                    "return_url" => route('payment.success', ['order_id' => $order->id]),
+                    "cancel_url" => route('payment.cancel'),
+                ],
+                "purchase_units" => [
+                    [
+                        "amount" => [
+                            "currency_code" => "GBP",
+                            "value" => number_format((float)$localOrder['total'], 2, '.', '')
+                        ]
+                    ]
+                ]
+            ]);
+
+            if (isset($response['id']) && $response['id'] != null) {
+                foreach ($response['links'] as $links) {
+                    if ($links['rel'] == 'approve') {
+                        $order->update([
+                            'payment_transaction_id' => $response['id']
+                        ]);
+
+                        return response()->json([
+                            'success' => true,
+                            'redirectUrl' => $links['href'],
+                            'orderId' => $order->id,
+                            'orderNumber' => $order->order_number
+                        ]);
                     }
                 }
             }
 
-            $unitPrice = $itemPrice + $optionPrice + $attributePrice;
-            $totalItemPrice = $unitPrice * (int)$item['quantity'];
-            $subtotal += $totalItemPrice;
+            return response()->json([
+                'success' => false,
+                'message' => $response['message'] ?? 'Failed to create PayPal order'
+            ], 500);
 
-            $cartItems[] = [
-                'productId' => $item['productId'],
-                'product' => $product,
-                'quantity' => $item['quantity'],
-                'basePrice' => $itemPrice,
-                'optionPrice' => $optionPrice,
-                'unitPrice' => $itemPrice + $optionPrice + $attributePrice,
-                'totalPrice' => $totalItemPrice,
-                'options' => $item['options'] ?? []
-            ];
-        }
-
-        $subtotal = round($subtotal, 2);
-
-        $deliveryCharge = 0;
-        if ($delivery['type'] === 'delivery') {
-            $user = auth()->user();
-            
-            if ($user && $user->hasActiveDeliverySubscription()) {
-                $deliveryCharge = 0.00;
-            } else {
-                $postcode = $delivery['postcode'];
-                $deliveryData = $this->getDeliveryCharge($postcode);
-                
-                if (!$deliveryData['available']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Delivery not available for this postcode'
-                    ], 400);
-                }
-
-                $deliveryCharge = $deliveryData['charge'];
-            }
-        }
-
-        $deliveryCharge = round($deliveryCharge, 2);
-
-        $promoDiscount = 0;
-        $promoType = null;
-        $promoId = null;
-
-        if ($promoCode) {
-            $promoValidation = $this->validatePromoCodeBackend($promoCode, $subtotal);
-            
-            if (!$promoValidation['valid']) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $promoValidation['message']
-                ], 400);
-            }
-
-            $promoDiscount = $promoValidation['discount_amount'];
-            $promoType = $promoValidation['type'];
-            $promoId = $promoValidation['code_data']['id'];
-        }
-
-        $promoDiscount = round($promoDiscount, 2);
-
-        $pointsDiscount = 0;
-        if ($pointsToUse > 0) {
-            if (!auth()->check()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Must be logged in to use points'
-                ], 400);
-            }
-
-            $userPoints = auth()->user()->available_points ?? 0;
-            
-            if ($pointsToUse > $userPoints) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Insufficient points'
-                ], 400);
-            }
-
-            $pointsDiscount = round($pointsToUse / 100, 2);
-            
-            $remainingTotal = $subtotal + $deliveryCharge - $promoDiscount;
-            if ($pointsDiscount > $remainingTotal) {
-                $pointsDiscount = $remainingTotal;
-            }
-        }
-
-        $pointsDiscount = round($pointsDiscount, 2);
-
-        $total = round($subtotal + $deliveryCharge - $promoDiscount - $pointsDiscount, 2);
-
-        if ($total < 0) {
-            $total = 0;
-        }
-
-        $calculationData = [
-            'subtotal' => $subtotal,
-            'deliveryCharge' => $deliveryCharge,
-            'promoDiscount' => $promoDiscount,
-            'promoType' => $promoType,
-            'promoId' => $promoId,
-            'pointsToUse' => $pointsToUse,
-            'pointsDiscount' => $pointsDiscount,
-            'total' => $total,
-            'cartItems' => $cartItems,
-            'customer' => $customer,
-            'delivery' => $delivery,
-            'address' => $address,
-            'address2' => $address2,
-            'city' => $city,
-            'paymentMethod' => $paymentMethod,
-            'notes' => $notes
-        ];
-
-        if ($paymentMethod === 'cash') {
-            return $this->processCashOnDelivery($calculationData);
-        } elseif ($paymentMethod === 'stripe') {
-            return $this->processStripePayment($calculationData);
-        } elseif ($paymentMethod === 'paypal') {
-            return $this->processPayPalPayment($calculationData);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PayPal error: ' . $e->getMessage()
+            ], 500);
         }
     }
 
-    private function processStripePayment($calculationData)
+    private function initiateStripePayment($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
     {
         try {
             $stripeCredential = Credential::where('gateway', 'Stripe')->first();
@@ -886,432 +947,140 @@ class FrontendController extends Controller
                     'message' => 'Stripe credentials not configured'
                 ], 400);
             }
-
-            $payment = Payment::create([
-                'user_id' => auth()->id(),
-                'payment_type' => 'order',
-                'reference_id' => 0,
-                'amount' => $calculationData['total'],
-                'currency' => 'GBP',
-                'payment_method' => 'stripe',
-                'status' => 'pending',
-                'metadata' => json_encode($calculationData)
-            ]);
-
             session([
-                'active_payment_id' => $payment->id,
-                'checkout_data' => $calculationData
+                'checkout_data' => [
+                    'order_id' => $order->id,
+                    'hubRiseOrder' => $hubRiseOrder,
+                    'localOrder' => $localOrder,
+                    'accessToken' => $accessToken,
+                    'locationId' => $locationId,
+                    'paymentRefMap' => $paymentRefMap
+                ]
             ]);
 
             Stripe::setApiKey($stripeCredential->client_secret);
 
+            // Create Stripe Checkout Session
             $session = Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
                     'price_data' => [
                         'currency' => 'GBP',
                         'product_data' => [
-                            'name' => 'Food Order',
+                            'name' => 'Order #' . $order->order_number,
                             'description' => 'Restaurant Order'
                         ],
-                        'unit_amount' => intval($calculationData['total'] * 100),
+                        'unit_amount' => intval($localOrder['total'] * 100),
                     ],
                     'quantity' => 1,
                 ]],
                 'mode' => 'payment',
-                'success_url' => route('order.payment.success') . '?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => route('order.payment.cancel'),
-                'customer_email' => $calculationData['customer']['email'],
-                'metadata' => ['payment_id' => $payment->id]
+                'success_url' => route('payment.success', ['order_id' => $order->id]),
+                'cancel_url' => route('payment.cancel'),
+                'customer_email' => $order->email,
             ]);
 
-            $payment->update([
-                'transaction_id' => $session->id
+            // Update order with Stripe session ID
+            $order->update([
+                'payment_transaction_id' => $session->id
             ]);
 
             return response()->json([
                 'success' => true,
-                'redirectUrl' => $session->url
+                'redirectUrl' => $session->url,
+                'orderId' => $order->id,
+                'orderNumber' => $order->order_number
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Stripe Payment Error: ' . $e->getMessage());
-            
+            \Log::error('Stripe payment error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create payment session'
-            ], 400);
+            ], 500);
         }
     }
 
-    private function processPayPalPayment($calculationData)
+    private function sendToHubRise($order, $hubRiseOrder, $localOrder, $accessToken, $locationId, $paymentRefMap)
     {
-        try {
-            $payment = Payment::create([
-                'user_id' => auth()->id(),
-                'payment_type' => 'order',
-                'reference_id' => 0,
-                'amount' => $calculationData['total'],
-                'currency' => 'GBP',
-                'payment_method' => 'paypal',
-                'status' => 'pending',
-                'metadata' => json_encode($calculationData)
-            ]);
-
-            session([
-                'active_payment_id' => $payment->id,
-                'checkout_data' => $calculationData
-            ]);
-
-            $this->setPayPalConfig();
-
-            $provider = new \Srmklive\PayPal\Services\PayPal;
-            $provider->setApiCredentials(config('paypal'));
-            $provider->getAccessToken();
-
-            $response = $provider->createOrder([
-                "intent" => "CAPTURE",
-                "application_context" => [
-                    "return_url" => route('order.payment.success'),
-                    "cancel_url" => route('order.payment.cancel'),
-                ],
-                "purchase_units" => [
-                    [
-                        "amount" => [
-                            "currency_code" => "GBP",
-                            "value" => number_format($calculationData['total'], 2, '.', '')
-                        ]
-                    ]
+        $hubRisePayload = [
+            'status' => 'new',
+            'channel' => 'Website',
+            'service_type' => $hubRiseOrder['service_type'],
+            'service_type_ref' => $hubRiseOrder['service_type'] === 'delivery' ? '9' : '10',
+            'items' => [],
+            'payments' => !empty($hubRiseOrder['payments']) ? [
+                [
+                    'name' => $hubRiseOrder['payments'][0]['name'] ?? 'Cash on Delivery',
+                    'ref' => $paymentRefMap[$localOrder['paymentMethod']] ?? 'ONLINE PAYMENT',
+                    'amount' => $hubRiseOrder['payments'][0]['amount']
                 ]
-            ]);
+            ] : [],
+            'customer' => [
+                'first_name' => $hubRiseOrder['customer']['first_name'],
+                'last_name' => $hubRiseOrder['customer']['last_name'] ?? '',
+                'email' => $hubRiseOrder['customer']['email'] ?? null,
+                'phone' => $hubRiseOrder['customer']['phone'] ?? null,
+                'address_1' => $hubRiseOrder['customer']['address_1'] ?? null,
+                'address_2' => $hubRiseOrder['customer']['address_2'] ?? null,
+                'city' => $hubRiseOrder['customer']['city'] ?? null,
+                'postal_code' => $hubRiseOrder['customer']['postal_code'] ?? null
+            ]
+        ];
 
-            if (!isset($response['id']) || $response['id'] == null) {
-                throw new \Exception($response['message'] ?? 'Failed to create PayPal order');
-            }
-
-            $payment->update([
-                'transaction_id' => $response['id']
-            ]);
-
-            foreach ($response['links'] as $link) {
-                if ($link['rel'] == 'approve') {
-                    return response()->json([
-                        'success' => true,
-                        'redirectUrl' => $link['href']
-                    ]);
-                }
-            }
-
-            throw new \Exception('PayPal approval link not found');
-
-        } catch (\Exception $e) {
-            \Log::error('PayPal Payment Error: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'PayPal error: ' . $e->getMessage()
-            ], 400);
-        }
-    }
-
-    public function orderPaymentSuccess(Request $request)
-    {
-        $paymentId = session('active_payment_id');
-        $calculationData = session('checkout_data');
-
-        if (!$paymentId || !$calculationData) {
-            return view('frontend.payment-error', ['message' => 'Invalid payment session']);
+        // Add customer notes
+        if (!empty($hubRiseOrder['notes'])) {
+            $hubRisePayload['customer_notes'] = $hubRiseOrder['notes'];
         }
 
-        $payment = Payment::find($paymentId);
-        
-        if (!$payment) {
-            return view('frontend.payment-error', ['message' => 'Payment not found']);
-        }
-
-        try {
-            if ($payment->payment_method === 'stripe') {
-                $sessionId = $request->input('session_id');
-                if (!$sessionId) {
-                    throw new \Exception('Session ID missing');
-                }
-                $this->handleStripeOrderPayment($payment, $sessionId);
-            } elseif ($payment->payment_method === 'paypal') {
-                $token = $request->input('token');
-                $this->handlePayPalOrderPayment($payment, $token);
-            }
-
-            $payment->update(['status' => 'completed']);
-            $order = $this->createOrder($calculationData);
-            $this->sendToHubRise($order, $calculationData);
-            $payment->update(['reference_id' => $order->id]);
-            session()->forget(['active_payment_id', 'checkout_data']);
-
-            return view('frontend.payment-success', [
-                'order' => $order,
-                'orderNumber' => $order->order_number,
-                'orderId' => $order->id
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error('Order Payment Success Error: ' . $e->getMessage());
-            return view('frontend.payment-error', ['message' => $e->getMessage()]);
-        }
-    }
-
-    public function orderPaymentCancel()
-    {
-        $paymentId = session('active_payment_id');
-        
-        if ($paymentId) {
-            Payment::where('id', $paymentId)->update(['status' => 'failed']);
-        }
-
-        session()->forget(['active_payment_id', 'checkout_data']);
-        
-        return view('frontend.payment-cancelled');
-    }
-
-    private function handleStripeOrderPayment($payment, $sessionId)
-    {
-        $stripeCredential = Credential::where('gateway', 'Stripe')->first();
-
-        if (!$stripeCredential || !$stripeCredential->client_secret) {
-            throw new \Exception('Stripe credentials not configured');
-        }
-
-        Stripe::setApiKey($stripeCredential->client_secret);
-        
-        $session = Session::retrieve($sessionId);
-        
-        if ($session->payment_status !== 'paid') {
-            throw new \Exception('Stripe payment not confirmed');
-        }
-    }
-
-    private function handlePayPalOrderPayment($payment, $token)
-    {
-        if (!$token) {
-            throw new \Exception('PayPal token missing');
-        }
-
-        $this->setPayPalConfig();
-
-        $provider = new \Srmklive\PayPal\Services\PayPal;
-        $provider->setApiCredentials(config('paypal'));
-        $provider->getAccessToken();
-        
-        $response = $provider->capturePaymentOrder($token);
-
-        if (!isset($response['status']) || $response['status'] !== 'COMPLETED') {
-            throw new \Exception($response['message'] ?? 'PayPal payment capture failed');
-        }
-    }
-
-    private function processCashOnDelivery($calculationData)
-    {
-        try {
-            $order = $this->createOrder($calculationData);
-
-            $this->sendToHubRise($order, $calculationData);
-
-            return response()->json([
-                'success' => true,
-                'orderNumber' => $order->order_number,
-                'orderId' => $order->id
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error('Cash Order Error: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error placing order: ' . $e->getMessage()
-            ], 400);
-        }
-    }
-
-    private function createOrder($calculationData)
-    {
-        return DB::transaction(function () use ($calculationData) {
-            $orderNumber = 'ORD-' . time() . '-' . rand(1000, 9999);
-            $user = auth()->user();
-
-            $order = Order::create([
-                'user_id' => $user ? $user->id : null,
-                'order_number' => $orderNumber,
-                'customer_type' => $user ? 'authenticated' : 'guest',
-                'first_name' => $calculationData['customer']['firstName'],
-                'last_name' => $calculationData['customer']['lastName'],
-                'email' => $calculationData['customer']['email'],
-                'phone' => $calculationData['customer']['phone'],
-                'address_1' => $calculationData['address'],
-                'address_2' => $calculationData['address2'],
-                'city' => $calculationData['city'],
-                'postcode' => $calculationData['delivery']['postcode'] ?? null,
-                'delivery_type' => $calculationData['delivery']['type'],
-                'time' => $calculationData['delivery']['time'],
-                'subtotal' => $calculationData['subtotal'],
-                'delivery_charge' => $calculationData['deliveryCharge'],
-                'coupon_discount' => $calculationData['promoType'] === 'coupon' ? $calculationData['promoDiscount'] : 0,
-                'coupon_id' => $calculationData['promoType'] === 'coupon' ? $calculationData['promoId'] : null,
-                'gift_card_discount' => $calculationData['promoType'] === 'gift_card' ? $calculationData['promoDiscount'] : 0,
-                'gift_card_id' => $calculationData['promoType'] === 'gift_card' ? $calculationData['promoId'] : null,
-                'points_used' => $calculationData['pointsToUse'] / 100,
-                'total' => $calculationData['total'],
-                'payment_method' => $calculationData['paymentMethod'],
-                'payment_status' => 'pending',
-                'status' => 'pending',
-                'notes' => $calculationData['notes'],
-                'hubrise_order_id' => null,
-                'payment_transaction_id' => null
-            ]);
-
-            if ($user) {
-                $user->increment('total_orders');
-                $user->update(['last_order_date' => now()]);
-            }
-
-            foreach ($calculationData['cartItems'] as $item) {
-                $orderItem = OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['productId'],
-                    'product_name' => $item['product']->title,
-                    'sku_ref' => $item['product']->sku_ref,
-                    'quantity' => $item['quantity'],
-                    'price' => $item['unitPrice'],
-                    'total' => $item['totalPrice']
-                ]);
-
-                if (!empty($item['options'])) {
-                    foreach ($item['options'] as $optionName => $optionValues) {
-                        foreach ($optionValues as $opt) {
-                            OrderItemOption::create([
-                                'order_item_id' => $orderItem->id,
-                                'option_list_name' => $optionName,
-                                'option_name' => $opt['title'],
-                                'option_ref' => $opt['hubriseOptionRef'] ?? null,
-                                'price' => $opt['price'] ?? 0
-                            ]);
-                        }
-                    }
-                }
-            }
-
-            return $order;
-        });
-    }
-
-    private function sendToHubRise($order, $calculationData)
-    {
-        $accessToken = env('HUBRISE_ACCESS_TOKEN');
-        $locationId = env('HUBRISE_LOCATION_ID');
-
-        if (!$accessToken || !$locationId) {
-            throw new \Exception('HubRise credentials not configured');
-        }
-
-        $items = [];
-        foreach ($calculationData['cartItems'] as $item) {
+        // Add items
+        foreach ($hubRiseOrder['items'] as $item) {
             $itemData = [
-                'product_name' => $item['product']->title,
-                'sku_ref' => $item['product']->sku_ref,
-                'price' => number_format($item['unitPrice'] + ($item['attributePrice'] ?? 0), 2, '.', '') . ' GBP',
+                'product_name' => $item['product_name'],
+                'sku_ref' => $item['sku_ref'] ?? null,
+                'price' => $item['price'],
                 'quantity' => $item['quantity'],
                 'options' => []
             ];
 
             if (!empty($item['options'])) {
-                foreach ($item['options'] as $optionName => $optionValues) {
-                    foreach ($optionValues as $opt) {
-                        $itemData['options'][] = [
-                            'option_list_name' => 'Option',
-                            'name' => $opt['title'],
-                            'ref' => (string)($opt['hubriseOptionRef'] ?? ''),
-                            'price' => '0.00 GBP'
-                        ];
-                    }
+                foreach ($item['options'] as $option) {
+                    $itemData['options'][] = [
+                        'option_list_name' => 'Option',
+                        'name' => $option['name'],
+                        'ref' => (string)($option['ref'] ?? null),
+                        'price' => '0.00 GBP'
+                    ];
                 }
             }
 
-            $items[] = $itemData;
+            $hubRisePayload['items'][] = $itemData;
         }
 
-        $paymentRef = 'CASH';
-        $paymentName = 'Cash on Delivery';
-        
-        if ($calculationData['paymentMethod'] === 'stripe') {
-            $paymentRef = 'STRIPE';
-            $paymentName = 'Stripe';
-        } elseif ($calculationData['paymentMethod'] === 'paypal') {
-            $paymentRef = 'PAYPAL';
-            $paymentName = 'PayPal';
-        }
-
-        $hubRisePayload = [
-            'status' => 'new',
-            'channel' => 'Website',
-            'service_type' => $calculationData['delivery']['type'],
-            'service_type_ref' => $calculationData['delivery']['type'] === 'delivery' ? '9' : '10',
-            'items' => $items,
-            'payments' => [
-                [
-                    'name' => $paymentName,
-                    'ref' => $paymentRef,
-                    'amount' => number_format($calculationData['total'], 2, '.', '') . ' GBP'
-                ]
-            ],
-            'customer' => [
-                'first_name' => $calculationData['customer']['firstName'],
-                'last_name' => $calculationData['customer']['lastName'],
-                'email' => $calculationData['customer']['email'],
-                'phone' => $calculationData['customer']['phone'],
-                'address_1' => $calculationData['address'],
-                'address_2' => $calculationData['address2'],
-                'city' => $calculationData['city'],
-                'postal_code' => $calculationData['delivery']['postcode'] ?? null
-            ]
-        ];
-
-        if ($calculationData['notes']) {
-            $hubRisePayload['customer_notes'] = $calculationData['notes'];
-        }
-
-        if ($calculationData['deliveryCharge'] > 0) {
-            $hubRisePayload['charges'] = [
-                [
-                    'name' => 'Delivery',
-                    'price' => number_format($calculationData['deliveryCharge'], 2, '.', '') . ' GBP'
-                ]
-            ];
-        }
-
-        if ($calculationData['promoType'] === 'coupon' && $calculationData['promoDiscount'] > 0) {
-            $hubRisePayload['discounts'] = [
-                [
-                    'name' => 'Coupon',
-                    'price_off' => number_format($calculationData['promoDiscount'], 2, '.', '') . ' GBP'
-                ]
-            ];
-        } elseif ($calculationData['promoType'] === 'gift_card' && $calculationData['promoDiscount'] > 0) {
-            $hubRisePayload['discounts'] = [
-                [
-                    'name' => 'Gift Card',
-                    'price_off' => number_format($calculationData['promoDiscount'], 2, '.', '') . ' GBP'
-                ]
-            ];
-        }
-
-        if ($calculationData['pointsDiscount'] > 0) {
-            if (!isset($hubRisePayload['discounts'])) {
-                $hubRisePayload['discounts'] = [];
+        // Add discounts
+        if (!empty($hubRiseOrder['discounts'])) {
+            $hubRisePayload['discounts'] = [];
+            foreach ($hubRiseOrder['discounts'] as $discount) {
+                $hubRisePayload['discounts'][] = [
+                    'name' => $discount['name'],
+                    'ref' => $discount['ref'] ?? null,
+                    'price_off' => $discount['price_off']
+                ];
             }
-            $hubRisePayload['discounts'][] = [
-                'name' => 'Points Redeemed',
-                'price_off' => number_format($calculationData['pointsDiscount'], 2, '.', '') . ' GBP'
-            ];
         }
 
+        // Add charges
+        if (!empty($hubRiseOrder['charges'])) {
+            $hubRisePayload['charges'] = [];
+            foreach ($hubRiseOrder['charges'] as $charge) {
+                $hubRisePayload['charges'][] = [
+                    'name' => $charge['name'],
+                    'price' => $charge['price']
+                ];
+            }
+        }
+
+        // Send to HubRise
         $response = Http::withHeaders([
             'X-Access-Token' => $accessToken,
             'Content-Type' => 'application/json'
@@ -1321,28 +1090,141 @@ class FrontendController extends Controller
         );
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to create order in HubRise: ' . $response->body());
+            throw new \Exception('Failed to create order in HubRise');
         }
 
         $hubRiseData = $response->json();
         $hubRiseOrderId = $hubRiseData['id'] ?? null;
 
+        // Update order with HubRise ID
         $order->update([
             'hubrise_order_id' => $hubRiseOrderId,
             'status' => 'pending'
         ]);
 
-        $this->allocateOrderResources($order, $calculationData);
+        $this->allocateOrderResources($order, $localOrder);
+        // $this->sendOrderConfirmationEmail($order);
+    }
+    
+    public function paymentSuccess(Request $request)
+    {
+        $orderId = $request->input('order_id');
+        $token = $request->input('token');
+        $checkoutData = session('checkout_data');
 
-        $this->sendOrderConfirmationEmail($order);
+        if (!$checkoutData || $checkoutData['order_id'] != $orderId) {
+            return view('frontend.payment-error', ['message' => 'Invalid payment session']);
+        }
+
+        $order = Order::find($orderId);
+        if (!$order) {
+            return view('frontend.payment-error', ['message' => 'Order not found']);
+        }
+
+        try {
+            if ($order->payment_method === 'stripe') {
+                $this->handleStripePaymentSuccess($order);
+            } elseif ($order->payment_method === 'paypal') {
+                $this->handlePayPalPaymentSuccess($order, $token);
+            }
+
+            $order->update([
+                'payment_status' => 'paid',
+                'status' => 'pending'
+            ]);
+
+            $this->sendToHubRise(
+                $order,
+                $checkoutData['hubRiseOrder'],
+                $checkoutData['localOrder'],
+                $checkoutData['accessToken'],
+                $checkoutData['locationId'],
+                $checkoutData['paymentRefMap']
+            );
+
+            session()->forget('checkout_data');
+
+            return view('frontend.payment-success', [
+                'order' => $order,
+                'orderNumber' => $order->order_number,
+                'orderId' => $order->id
+            ]);
+
+        } catch (\Exception $e) {
+            return view('frontend.payment-error', ['message' => $e->getMessage()]);
+        }
     }
 
-    private function allocateOrderResources($order, $calculationData)
+    private function handleStripePaymentSuccess($order)
     {
-        if ($calculationData['promoType'] === 'gift_card' && $calculationData['promoId']) {
-            $giftCard = GiftCard::find($calculationData['promoId']);
+        $stripeCredential = Credential::where('gateway', 'Stripe')->first();
+
+        if (!$stripeCredential || !$stripeCredential->client_secret) {
+            throw new \Exception('Stripe credentials not configured');
+        }
+
+        Stripe::setApiKey($stripeCredential->client_secret);
+        $session = Session::retrieve($order->payment_transaction_id);
+        
+        if ($session->payment_status !== 'paid') {
+            throw new \Exception('Stripe payment not confirmed');
+        }
+    }
+
+    private function handlePayPalPaymentSuccess($order, $token)
+    {
+        $this->setPayPalConfig();
+        $provider = new \Srmklive\PayPal\Services\PayPal;
+        $provider->setApiCredentials(config('paypal'));
+        $provider->getAccessToken();
+        $response = $provider->capturePaymentOrder($token);
+
+        if (isset($response['status']) && $response['status'] == 'COMPLETED') {
+            return true;
+        } else {
+            throw new \Exception($response['message'] ?? 'Payment capture failed');
+        }
+    }
+
+    public function paymentCancel()
+    {
+        $checkoutData = session('checkout_data');
+        
+        if ($checkoutData && isset($checkoutData['order_id'])) {
+            $orderId = $checkoutData['order_id'];
+            
+            $orderItemIds = OrderItem::where('order_id', $orderId)->pluck('id');
+            
+            if ($orderItemIds->isNotEmpty()) {
+                OrderItemOption::whereIn('order_item_id', $orderItemIds)->delete();
+            }
+            
+            OrderItem::where('order_id', $orderId)->delete();
+            Order::where('id', $orderId)->delete();
+        }
+        
+        session()->forget('checkout_data');
+        return view('frontend.payment-cancelled');
+    }
+
+    public function orderConfirmation($orderNumber)
+    {
+        $order = Order::with(['items.options'])->where('order_number', $orderNumber)->first();
+
+        if (!$order) {
+            return redirect('/')->with('error', 'Order not found');
+        }
+
+        return view('frontend.order-confirmation', compact('order'));
+    }
+
+    private function allocateOrderResources($order, $localOrder)
+    {
+        // Handle gift card
+        if (($localOrder['promo_type'] ?? null) === 'gift_card' && ($localOrder['promo_id'] ?? null)) {
+            $giftCard = GiftCard::find($localOrder['promo_id']);
             if ($giftCard) {
-                $newBalance = $giftCard->balance - $calculationData['promoDiscount'];
+                $newBalance = $giftCard->balance - ($localOrder['promo_discount'] ?? 0);
                 
                 $giftCard->update([
                     'balance' => $newBalance,
@@ -1354,16 +1236,17 @@ class FrontendController extends Controller
             }
         }
 
+        // Handle coupon
         if ($order->coupon_id) {
             $coupon = Coupon::find($order->coupon_id);
             if ($coupon) {
                 $coupon->increment('used_count');
                 
-                if ($coupon->is_birthday_voucher && $order->user_id) {
+                if ($coupon->is_birthday_voucher) {
                     $coupon->users()->updateExistingPivot($order->user_id, [
                         'used_count' => 1
                     ]);
-                } elseif ($order->user_id) {
+                } else {
                     CouponUsage::updateOrCreate(
                         [
                             'coupon_id' => $coupon->id,
@@ -1377,15 +1260,16 @@ class FrontendController extends Controller
             }
         }
 
-        if ($order->user_id && $calculationData['pointsToUse'] > 0) {
-            UserPoint::create([
-                'user_id' => $order->user_id,
-                'order_id' => $order->id,
-                'point' => -$calculationData['pointsToUse']
-            ]);
-        }
-
+        // Handle points
         if ($order->user_id) {
+            if ($order->points_used > 0) {
+                UserPoint::create([
+                    'user_id' => $order->user_id,
+                    'order_id' => $order->id,
+                    'point' => -($order->points_used * 100)
+                ]);
+            }
+
             $pointsEarned = floor($order->total);
             UserPoint::create([
                 'user_id' => $order->user_id,
@@ -1395,129 +1279,55 @@ class FrontendController extends Controller
         }
     }
 
-    private function getDeliveryCharge($postcode)
+    private function reverseOrderResources($order)
     {
-        $centerLatitude = 53.223912;
-        $centerLongitude = -0.532985;
-        $deliveryRadius = 7.5;
-
-        try {
-            $response = Http::get('https://api.postcodes.io/postcodes/' . $postcode);
-            
-            if (!$response->successful()) {
-                return ['available' => false];
+        // Refund gift card
+        if ($order->gift_card_id) {
+            $giftCard = GiftCard::find($order->gift_card_id);
+            if ($giftCard) {
+                $giftCard->update([
+                    'balance' => $giftCard->balance + $order->gift_card_discount,
+                    'status' => 'new',
+                    'redeemed_by' => null,
+                    'redeemed_at' => null,
+                    'order_id' => null
+                ]);
             }
+        }
 
-            $data = $response->json();
-            $latitude = $data['result']['latitude'];
-            $longitude = $data['result']['longitude'];
-
-            $lat1Rad = deg2rad($centerLatitude);
-            $lon1Rad = deg2rad($centerLongitude);
-            $lat2Rad = deg2rad($latitude);
-            $lon2Rad = deg2rad($longitude);
-
-            $dlat = $lat2Rad - $lat1Rad;
-            $dlon = $lon2Rad - $lon1Rad;
-
-            $a = sin($dlat / 2) ** 2 +
-                cos($lat1Rad) * cos($lat2Rad) *
-                sin($dlon / 2) ** 2;
-
-            $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-            $distance = 3959 * $c;
-
-            if ($distance <= $deliveryRadius) {
-                $charge = 2.00;
-                if ($distance > 4) {
-                    $charge = 3.00;
+        // Reverse coupon usage
+        if ($order->coupon_id && $order->user_id) {
+            $coupon = Coupon::find($order->coupon_id);
+            if ($coupon) {
+                $coupon->decrement('used_count');
+                
+                if ($coupon->is_birthday_voucher) {
+                    $coupon->users()->updateExistingPivot($order->user_id, [
+                        'used_count' => 0
+                    ]);
+                } else {
+                    CouponUsage::where([
+                        'coupon_id' => $coupon->id,
+                        'user_id' => $order->user_id
+                    ])->decrement('usage_count');
                 }
+            }
+        }
 
-                return [
-                    'available' => true,
-                    'charge' => $charge,
-                    'distance' => $distance
-                ];
+        // Reverse points
+        if ($order->user_id) {
+            // Remove deducted points (if any were used)
+            if ($order->points_used > 0) {
+                UserPoint::where('order_id', $order->id)
+                    ->where('point', -($order->points_used * 100))
+                    ->delete();
             }
 
-            return ['available' => false];
-
-        } catch (\Exception $e) {
-            return ['available' => false];
+            // Remove earned points
+            UserPoint::where('order_id', $order->id)
+                ->where('point', '>', 0)
+                ->delete();
         }
-    }
-
-    private function validatePromoCodeBackend($code, $subtotal)
-    {
-        $giftCard = GiftCard::where('code', strtoupper($code))->first();
-        
-        if ($giftCard) {
-            if (!$giftCard->is_active) {
-                return ['valid' => false, 'message' => 'This gift card is inactive'];
-            }
-            if ($giftCard->status === 'used') {
-                return ['valid' => false, 'message' => 'This gift card has already been used'];
-            }
-            if ($giftCard->expires_at && $giftCard->expires_at < now()) {
-                return ['valid' => false, 'message' => 'This gift card has expired'];
-            }
-
-            $discount = min($giftCard->balance, $subtotal);
-
-            return [
-                'valid' => true,
-                'type' => 'gift_card',
-                'discount_amount' => $discount,
-                'code_data' => ['id' => $giftCard->id, 'code' => $giftCard->code]
-            ];
-        }
-
-        $coupon = Coupon::where('code', strtoupper($code))->first();
-
-        if (!$coupon) {
-            return ['valid' => false, 'message' => 'Invalid coupon or gift card code'];
-        }
-
-        if (!$coupon->is_active) {
-            return ['valid' => false, 'message' => 'This coupon is inactive'];
-        }
-
-        if ($coupon->end_date && $coupon->end_date < now()) {
-            return ['valid' => false, 'message' => 'This coupon has expired'];
-        }
-
-        if ($coupon->max_uses && $coupon->used_count >= $coupon->max_uses) {
-            return ['valid' => false, 'message' => 'This coupon has reached its maximum usage limit'];
-        }
-
-        if ($coupon->min_order_amount > 0 && $subtotal < $coupon->min_order_amount) {
-            return ['valid' => false, 'message' => 'Minimum order amount of £' . number_format($coupon->min_order_amount, 2) . ' required'];
-        }
-
-        $discount = 0;
-        if ($coupon->discount_type === 'percent') {
-            $discount = ($subtotal * $coupon->discount_value) / 100;
-        } else {
-            $discount = $coupon->discount_value;
-        }
-
-        return [
-            'valid' => true,
-            'type' => 'coupon',
-            'discount_amount' => $discount,
-            'code_data' => ['id' => $coupon->id, 'code' => $coupon->code, 'discount_type' => $coupon->discount_type, 'discount_value' => $coupon->discount_value]
-        ];
-    }
-
-    public function orderConfirmation($orderNumber)
-    {
-        $order = Order::with(['items.options'])->where('order_number', $orderNumber)->first();
-
-        if (!$order) {
-            return redirect('/')->with('error', 'Order not found');
-        }
-
-        return view('frontend.order-confirmation', compact('order'));
     }
 
     private function sendOrderConfirmationEmail($order)
@@ -1595,79 +1405,48 @@ class FrontendController extends Controller
                 return response()->json(['success' => true], 200);
             }
 
+            $oldStatus = $order->status;
+
             $statusMap = [
                 'new' => 'pending',
                 'accepted' => 'confirmed',
                 'in_preparation' => 'preparing',
                 'ready' => 'ready',
-                'in_delivery' => 'confirmed',
+                'in_delivery' => 'out_for_delivery',
                 'delivered' => 'delivered',
                 'completed' => 'delivered',
                 'cancelled' => 'cancelled',
-                'rejected' => 'cancelled',
-                'delivery_failed' => 'cancelled',
+                'rejected' => 'cancelled'
             ];
 
             $newLocalStatus = $statusMap[$orderStatus] ?? $orderStatus;
+
             $order->update(['status' => $newLocalStatus]);
 
-            if (in_array($orderStatus, ['cancelled', 'rejected'])) {
+            // Handle gift card when order is cancelled/rejected
+            if (($orderStatus === 'cancelled' || $orderStatus === 'rejected') && $order->gift_card_id) {
+                $giftCard = GiftCard::find($order->gift_card_id);
+                if ($giftCard) {
+                    $giftCard->update([
+                        'balance' => $giftCard->balance + $order->gift_card_discount,
+                        'status' => 'new',
+                        'redeemed_by' => null,
+                        'redeemed_at' => null,
+                        'order_id' => null
+                    ]);
+                }
+            }
+
+            if ($orderStatus === 'cancelled' || $orderStatus === 'rejected') {
                 $this->reverseOrderResources($order);
+                $cancellationReason = $newState['cancellation_reason'] ?? 'Not specified';
             }
 
             return response()->json(['success' => true], 200);
 
         } catch (\Exception $e) {
-            \Log::error('HubRise callback error: ' . $e->getMessage(), $request->all());
+            
             return response()->json(['success' => false], 200);
-        }
-    }
-
-    private function reverseOrderResources($order)
-    {
-        if ($order->gift_card_id) {
-            $giftCard = GiftCard::find($order->gift_card_id);
-            if ($giftCard) {
-                $giftCard->update([
-                    'balance' => $giftCard->balance + $order->gift_card_discount,
-                    'status' => 'new',
-                    'redeemed_by' => null,
-                    'redeemed_at' => null,
-                    'order_id' => null
-                ]);
-            }
-        }
-
-        if ($order->coupon_id && $order->user_id) {
-            $coupon = Coupon::find($order->coupon_id);
-            if ($coupon) {
-                $coupon->update([
-                    'used_count' => max(0, $coupon->used_count - 1)
-                ]);
-
-                if ($coupon->is_birthday_voucher) {
-                    $coupon->users()->updateExistingPivot($order->user_id, [
-                        'used_count' => 0
-                    ]);
-                } else {
-                    CouponUsage::where([
-                        'coupon_id' => $coupon->id,
-                        'user_id' => $order->user_id
-                    ])->decrement('usage_count');
-                }
-            }
-        }
-
-        if ($order->user_id) {
-            if ($order->points_used > 0) {
-                UserPoint::where('order_id', $order->id)
-                    ->where('point', -$order->points_used)
-                    ->delete();
-            }
-
-            UserPoint::where('order_id', $order->id)
-                ->where('point', '>', 0)
-                ->delete();
         }
     }
 

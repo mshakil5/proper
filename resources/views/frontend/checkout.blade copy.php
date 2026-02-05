@@ -468,14 +468,14 @@
             }
 
             const fieldMap = {
-                'customer.firstName': isAuthenticated ? '#authFirstName' : '#guestFirstName',
-                'customer.lastName': isAuthenticated ? '#authLastName' : '#guestLastName',
-                'customer.email': isAuthenticated ? '#authEmail' : '#guestEmail',
-                'customer.phone': isAuthenticated ? '#authPhone' : '#guestPhone',
-                'address': '#address',
-                'city': '#city',
-                'delivery.postcode': '#postcodeInput',
-                'paymentMethod': 'input[name="paymentMethod"]'
+                'localOrder.customer.firstName': isAuthenticated ? '#authFirstName' : '#guestFirstName',
+                'localOrder.customer.lastName': isAuthenticated ? '#authLastName' : '#guestLastName',
+                'localOrder.customer.email': isAuthenticated ? '#authEmail' : '#guestEmail',
+                'localOrder.customer.phone': isAuthenticated ? '#authPhone' : '#guestPhone',
+                'localOrder.address': '#address',
+                'localOrder.city': '#city',
+                'localOrder.postalCode': '#postcodeInput',
+                'localOrder.paymentMethod': 'input[name="paymentMethod"]'
             };
 
             function clearAllErrors() {
@@ -509,7 +509,7 @@
                 
                 $field.addClass('is-invalid');
                 
-                if (field === 'paymentMethod') {
+                if (field === 'localOrder.paymentMethod') {
                     $('.payment-option').addClass('is-invalid').css({
                         'border': '2px solid #dc3545',
                         'border-radius': '8px',
@@ -648,13 +648,8 @@
             $('#pointsToUse').on('blur input', function() {
                 let val = parseInt($(this).val()) || 0;
                 const subtotal = checkoutData.subtotal;
-                const deliveryCharge = checkoutData.deliveryCharge;
-                const promoDiscount = appliedPromoCode.discount || 0;
-
-                const remainingTotal = subtotal + deliveryCharge - promoDiscount;
-                
-                const maxPointsValue = Math.floor(remainingTotal * 100);
-                const maxPoints = Math.min(userAvailablePoints, maxPointsValue);
+                const maxDiscount = Math.floor(subtotal * 100);
+                const maxPoints = Math.min(userAvailablePoints, maxDiscount);
                 
                 if (val > maxPoints) val = maxPoints;
                 if (val < 0) val = 0;
@@ -710,24 +705,11 @@
                     },
                     data: JSON.stringify({ code: promoCode, subtotal: checkoutData.subtotal }),
                     success: function(res) {
-                        // Calculate remaining total after existing discounts
-                        let currentDiscount = appliedPromoCode.discount || 0;
-                        let remainingTotal = checkoutData.subtotal + checkoutData.deliveryCharge - currentDiscount - pointsUsedDiscount;
+                        let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - res.discount_amount - pointsUsedDiscount;
                         
-                        // For gift cards, allow using up to remaining total
-                        // For coupons, don't allow to exceed remaining total
-                        if (res.type === 'gift_card') {
-                            // Cap gift card discount to remaining total but allow it
-                            let actualDiscount = Math.min(res.discount_amount, remainingTotal);
-                            res.discount_amount = actualDiscount;
-                        } else {
-                            // For coupons, check if it would make total negative
-                            let finalTotal = remainingTotal - res.discount_amount;
-                            
-                            if (finalTotal < 0) {
-                                showError('Discount cannot exceed remaining total amount of £' + remainingTotal.toFixed(2));
-                                return;
-                            }
+                        if (finalTotal < 0) {
+                            showError('Discount cannot exceed total amount');
+                            return;
                         }
 
                         appliedPromoCode = {
@@ -859,54 +841,112 @@
             $('#confirmOrderBtn').on('click', function() {
                 clearAllErrors();
 
-                let customerData = getCustomerData();
                 let address = $('#address').val().trim();
                 let address2 = $('#address2').val().trim();
                 let city = $('#city').val().trim();
                 let postalCode = $('#postcodeInput').val().trim();
                 let orderNotes = $('#orderNotes').val().trim();
-                let paymentMethod = selectedPaymentMethod;
-                let promoCode = $('#promoCode').val().trim().toUpperCase() || null;
-                let pointsToUse = parseInt($('#pointsToUse').val()) || 0;
-                let deliveryType = checkoutData.delivery.type;
-
-                let cartItems = checkoutData.cart.map(item => ({
-                    productId: item.productId,
-                    quantity: item.quantity,
-                    type: item.type,
-                    options: item.options || null,
-                    attribute: item.attribute || false,
-                    attributePrice: item.attributePrice || 0
-                }));
+                let customerData = getCustomerData();
 
                 let $btn = $('#confirmOrderBtn');
                 let originalText = $btn.text();
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Please wait...');
 
-                let orderData = {
+                let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode.discount - pointsUsedDiscount;
+                totalPrice = Math.round(totalPrice * 100) / 100;
+
+                let hubRiseItems = [];
+                checkoutData.cart.forEach(item => {
+                    let itemPrice = Number(item.price);
+                    let itemQuantity = Number(item.quantity);
+                    let priceValue = itemPrice.toFixed(2);
+
+                    let hubRiseItem = {
+                        product_name: item.title,
+                        sku_ref: item.skuRef || '',
+                        quantity: itemQuantity,
+                        price: priceValue + ' GBP'
+                    };
+
+                    if (item.type === 'custom' && item.options && Object.keys(item.options).length > 0) {
+                        hubRiseItem.options = [];
+                        Object.entries(item.options).forEach(([optionName, optionValues]) => {
+                            optionValues.forEach(opt => {
+                                hubRiseItem.options.push({
+                                    option_list_name: 'Option',
+                                    name: opt.title,
+                                    ref: opt.hubriseOptionRef || '',
+                                    price: (0).toFixed(2) + ' GBP'
+                                });
+                            });
+                        });
+                    }
+
+                    hubRiseItems.push(hubRiseItem);
+                });
+
+                let hubRiseOrder = {
+                    status: 'new',
+                    channel: 'Website',
+                    service_type: checkoutData.delivery.type === 'delivery' ? 'delivery' : 'collection',
+                    items: hubRiseItems,
+                    payments: selectedPaymentMethod === 'cash' ? [] : [{
+                        type: selectedPaymentMethod,
+                        name: $(`input[name="paymentMethod"][value="${selectedPaymentMethod}"]`).next().find('strong').text(),
+                        amount: totalPrice.toFixed(2) + ' GBP'
+                    }],
                     customer: {
-                        firstName: customerData.firstName,
-                        lastName: customerData.lastName,
+                        first_name: customerData.firstName || '',
+                        last_name: customerData.lastName || '',
                         email: customerData.email,
-                        phone: customerData.phone
+                        phone: customerData.phone || '',
+                        address_1: address || '',
+                        address_2: address2 || '',
+                        city: city || '',
+                        postal_code: postalCode || ''
                     },
-                    delivery: {
-                        type: deliveryType,
-                        time: checkoutData.delivery.time,
-                        postcode: postalCode
-                    },
-                    address: address,
-                    address2: address2,
-                    city: city,
-                    cart: cartItems,
-                    promoCode: promoCode,
-                    pointsToUse: pointsToUse,
-                    paymentMethod: paymentMethod,
                     notes: orderNotes
                 };
 
-                // console.log(orderData);
-                // return;
+                if (checkoutData.delivery.type === 'delivery') {
+                    hubRiseOrder.charges = [{
+                        name: 'Delivery',
+                        price: checkoutData.deliveryCharge.toFixed(2) + ' GBP'
+                    }];
+                }
+
+                if (appliedPromoCode.type === 'coupon' && appliedPromoCode.discount > 0) {
+                    hubRiseOrder.discounts = [{
+                        name: 'Coupon: ' + $('#promoCode').val().trim().toUpperCase(),
+                        price_off: appliedPromoCode.discount.toFixed(2) + ' GBP'
+                    }];
+                }
+
+                if (appliedPromoCode.type === 'gift_card' && appliedPromoCode.discount > 0) {
+                    hubRiseOrder.discounts = [{
+                        name: 'Gift Card',
+                        price_off: appliedPromoCode.discount.toFixed(2) + ' GBP'
+                    }];
+                }
+
+                let localOrder = {
+                    customer: customerData,
+                    address: address,
+                    address2: address2,
+                    city: city,
+                    postalCode: postalCode,
+                    orderNotes: orderNotes,
+                    cart: checkoutData.cart,
+                    delivery: checkoutData.delivery,
+                    subtotal: checkoutData.subtotal,
+                    deliveryCharge: checkoutData.deliveryCharge,
+                    promo_type: appliedPromoCode.type,
+                    promo_id: appliedPromoCode.id,
+                    promo_discount: appliedPromoCode.discount,
+                    points_used: parseInt($('#pointsToUse').val()) || 0,
+                    paymentMethod: selectedPaymentMethod,
+                    total: totalPrice
+                };
 
                 $.ajax({
                     url: '/place-order',
@@ -915,7 +955,10 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    data: JSON.stringify(orderData),
+                    data: JSON.stringify({
+                        hubRiseOrder: hubRiseOrder,
+                        localOrder: localOrder
+                    }),
                     success: function(response) {
                         // console.log(response);
                         // return;

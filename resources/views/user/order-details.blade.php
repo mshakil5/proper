@@ -15,14 +15,14 @@
             <p><strong>Customer:</strong> {{ $order->first_name }} {{ $order->last_name }}</p>
             <p><strong>Email:</strong> {{ $order->email ?? '-' }}</p>
             <p><strong>Phone:</strong> {{ $order->phone ?? '-' }}</p>
+            @if($order->delivery_type === 'delivery')
             <p><strong>Delivery Address:</strong> 
                 {{ $order->address_1 }} 
                 @if($order->address_2) , {{ $order->address_2 }} @endif
-                , {{ $order->street ?? '' }}
                 , {{ $order->city ?? '' }} 
                 , {{ $order->postcode ?? '' }}
-                , {{ $order->country ?? '' }}
             </p>
+            @endif
             @if($order->notes)
                 <p><strong>Notes:</strong> {{ $order->notes }}</p>
             @endif
