@@ -297,7 +297,7 @@ class FrontendController extends Controller
         return view('frontend.our-story');
     }
 
-   public function giftCards()
+    public function giftCards()
     {
         $menu = Master::firstOrCreate(['name' => 'gift-cards']);
         $this->seo(
@@ -315,16 +315,41 @@ class FrontendController extends Controller
     {
         $request->validate([
             'package_id' => 'required|exists:giftcard_packages,id',
-            'amount' => 'required|numeric',
             'payment_method' => 'required|in:stripe,paypal'
         ]);
 
-        $package = GiftcardPackage::findOrFail($request->package_id);
-        $user = auth()->user();
-        $paymentMethod = $request->payment_method;
+        return DB::transaction(function () use ($request) {
+            $package = GiftcardPackage::where('id', $request->package_id)
+                                    ->where('is_active', true)
+                                    ->firstOrFail();
+            
+            $user = auth()->user();
 
-        try {
-            if ($paymentMethod === 'stripe') {
+            $payment = Payment::create([
+                'user_id'        => $user->id,
+                'payment_type'   => 'giftcard',
+                'reference_id'   => $package->id,
+                'amount'         => $package->amount,
+                'currency'       => 'GBP',
+                'payment_method' => $request->payment_method,
+                'status'         => 'pending',
+                'metadata'       => [
+                    'package_id'   => $package->id,
+                    'package_name' => $package->name,
+                    'ip_address'   => $request->ip()
+                ],
+            ]);
+
+            session([
+                'active_payment_id' => $payment->id,
+                'giftcard_checkout' => [
+                    'package_id'     => $package->id,
+                    'user_id'        => $user->id,
+                    'payment_method' => $request->payment_method
+                ]
+            ]);
+
+            if ($request->payment_method === 'stripe') {
                 return $this->initiateStripeGiftCardPayment($package, $user);
             } elseif ($paymentMethod === 'paypal') {
                 return $this->initiatePayPalGiftCardPayment($package, $user);
@@ -354,14 +379,7 @@ class FrontendController extends Controller
             ], 400);
         }
 
-        session([
-            'giftcard_checkout' => [
-                'package_id' => $package->id,
-                'amount' => $package->amount,
-                'user_id' => $user->id,
-                'payment_method' => 'stripe'
-            ]
-        ]);
+        $paymentId = session('active_payment_id');
 
         Stripe::setApiKey($stripeCredential->client_secret);
 
@@ -372,16 +390,23 @@ class FrontendController extends Controller
                     'currency' => 'GBP',
                     'product_data' => [
                         'name' => $package->name,
-                        'description' => 'Gift Card - £' . number_format($package->amount, 2)
+                        'description' => 'Gift Card Purchase',
+                        'metadata' => [
+                            'payment_record_id' => $paymentId
+                        ]
                     ],
                     'unit_amount' => intval($package->amount * 100),
                 ],
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => route('giftcard.payment.success'),
+            'success_url' => route('giftcard.payment.success') . '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('giftcard.payment.cancel'),
             'customer_email' => $user->email,
+            'metadata' => [
+                'payment_id' => $paymentId,
+                'type' => 'giftcard'
+            ]
         ]);
 
         return response()->json([
@@ -392,98 +417,89 @@ class FrontendController extends Controller
 
     private function initiatePayPalGiftCardPayment($package, $user)
     {
-        try {
-            $this->setPayPalConfig();
+        $this->setPayPalConfig();
 
-            session([
-                'giftcard_checkout' => [
-                    'package_id' => $package->id,
-                    'amount' => $package->amount,
-                    'user_id' => $user->id,
-                    'payment_method' => 'paypal'
-                ]
-            ]);
+        $paymentId = session('active_payment_id');
 
             $provider = new \Srmklive\PayPal\Services\PayPal;
             $provider->setApiCredentials(config('paypal'));
             $paypalToken = $provider->getAccessToken();
 
-            $response = $provider->createOrder([
-                "intent" => "CAPTURE",
-                "application_context" => [
-                    "return_url" => route('giftcard.payment.success'),
-                    "cancel_url" => route('giftcard.payment.cancel'),
-                ],
-                "purchase_units" => [
-                    [
-                        "amount" => [
-                            "currency_code" => "GBP",
-                            "value" => number_format((float)$package->amount, 2, '.', '')
-                        ],
-                        "description" => $package->name . ' - Gift Card'
-                    ]
+        $response = $provider->createOrder([
+            "intent" => "CAPTURE",
+            "application_context" => [
+                "return_url" => route('giftcard.payment.success'),
+                "cancel_url" => route('giftcard.payment.cancel'),
+            ],
+            "purchase_units" => [
+                [
+                    "reference_id" => "PYMT_" . $paymentId,
+                    "amount" => [
+                        "currency_code" => "GBP",
+                        "value" => number_format((float)$package->amount, 2, '.', '')
+                    ],
+                    "description" => $package->name . ' - Gift Card',
+                    "custom_id" => $paymentId
                 ]
-            ]);
+            ]
+        ]);
 
-            if (isset($response['id']) && $response['id'] != null) {
-                foreach ($response['links'] as $links) {
-                    if ($links['rel'] == 'approve') {
-                        return response()->json([
-                            'success' => true,
-                            'redirectUrl' => $links['href']
-                        ]);
-                    }
+        if (isset($response['id']) && $response['id'] != null) {
+            foreach ($response['links'] as $links) {
+                if ($links['rel'] == 'approve') {
+                    return response()->json([
+                        'success' => true,
+                        'redirectUrl' => $links['href']
+                    ]);
                 }
             }
-            
-            return response()->json([
-                'success' => false,
-                'message' => $response['message'] ?? 'Failed to create PayPal order'
-            ], 500);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'PayPal error: ' . $e->getMessage()
-            ], 500);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => $response['message'] ?? 'Failed to create PayPal order'
+        ], 500);
     }
 
     public function giftCardPaymentSuccess(Request $request)
     {
+        $paymentId = session('active_payment_id');
         $checkoutData = session('giftcard_checkout');
 
-        if (!$checkoutData) {
+        if (!$paymentId || !$checkoutData) {
             return redirect()->route('gift-cards')->with('error', 'Invalid payment session');
         }
 
-        try {
-            $paymentMethod = $checkoutData['payment_method'] ?? 'stripe';
-
-            if ($paymentMethod === 'paypal') {
+        return DB::transaction(function () use ($request, $paymentId, $checkoutData) {
+            $payment = Payment::findOrFail($paymentId);
+            
+            if ($payment->payment_method === 'paypal') {
                 $this->handlePayPalGiftCardPayment($request, $checkoutData);
+                $payment->transaction_id = $request->token;
+            } else {
+                $payment->transaction_id = $request->session_id;
             }
 
-            $package = GiftcardPackage::find($checkoutData['package_id']);
+            $payment->status = 'completed';
+            $payment->save();
 
             $giftCard = GiftCard::create([
-                'code' => $this->generateGiftCardCode(),
-                'amount' => $package->amount,
-                'balance' => $package->amount,
-                'status' => 'new',
-                'is_active' => true,
-                'purchased_by' => $checkoutData['user_id'],
+                'code'         => $this->generateGiftCardCode(),
+                'amount'       => $payment->amount,
+                'balance'      => $payment->amount,
+                'status'       => 'new',
+                'is_active'    => true,
+                'purchased_by' => $payment->user_id,
                 'purchased_at' => now(),
-                'expires_at' => now()->addYear()
+                'expires_at' => now()->addYears(10)
             ]);
 
-            session()->forget('giftcard_checkout');
+            $payment->update(['reference_id' => $giftCard->id]);
+
+            session()->forget(['giftcard_checkout', 'active_payment_id']);
 
             return redirect()->route('gift-cards')->with('success', 'Gift card purchased successfully! Code: ' . $giftCard->code);
-
-        } catch (\Exception $e) {
-            return redirect()->route('gift-cards')->with('error', 'Error processing gift card: ' . $e->getMessage());
-        }
+        });
     }
 
     private function handlePayPalGiftCardPayment(Request $request, $checkoutData)
@@ -504,6 +520,8 @@ class FrontendController extends Controller
         if (!isset($response['status']) || $response['status'] !== 'COMPLETED') {
             throw new \Exception($response['message'] ?? 'PayPal payment capture failed');
         }
+
+        return $response; 
     }
 
     public function giftCardPaymentCancel()
@@ -1483,6 +1501,12 @@ class FrontendController extends Controller
         return view('frontend.terms', compact('terms'));
     }
 
+    public function promotions()
+    {
+        $promotions = CompanyDetails::select('promotions_description')->first();
+        return view('frontend.promotions', compact('promotions'));
+    }
+
     private function seo($title = null, $description = null, $keywords = null, $image = null)
     {
         if ($title) {
@@ -1547,4 +1571,34 @@ class FrontendController extends Controller
             ->header('Content-Type', 'application/xml');
     }
 
+    public function facebookCatalog()
+    {
+        $feed = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $feed .= '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">' . "\n";
+        $feed .= '<channel>' . "\n";
+        $feed .= '<title>' . config('app.name') . ' - Product Catalog</title>' . "\n";
+        $feed .= '<link>' . url('/') . '</link>' . "\n";
+        $feed .= '<description>Product Catalog Feed for Facebook</description>' . "\n";
+
+        $products = Product::where('status', 1)->get();
+
+        foreach ($products as $product) {
+            $feed .= '<item>' . "\n";
+            $feed .= '<title>' . htmlspecialchars($product->title) . '</title>' . "\n";
+            $feed .= '<description>' . htmlspecialchars(strip_tags($product->short_description)) . '</description>' . "\n";
+            $feed .= '<g:link>' . htmlspecialchars(route('product.details', $product->slug)) . '</g:link>' . "\n";
+            $feed .= '<g:image_link>' . htmlspecialchars(asset($product->image)) . '</g:image_link>' . "\n";
+            $feed .= '<g:price>' . number_format($product->price, 2) . ' GBP</g:price>' . "\n";
+            $feed .= '<g:availability>' . ($product->stock_status === 'in_stock' ? 'in stock' : 'out of stock') . '</g:availability>' . "\n";
+            $feed .= '</item>' . "\n";
+        }
+
+        $feed .= '</channel>' . "\n";
+        $feed .= '</rss>';
+
+        return response($feed, 200, [
+            'Content-Type' => 'application/xml; charset=utf-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
 }

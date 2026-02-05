@@ -16,6 +16,8 @@ use App\Models\DeliverySubscription;
 use App\Models\DeliverySubscriptionPayment;
 use App\Models\Coupon;
 use App\Models\Credential;
+use Illuminate\Support\Facades\DB;
+use App\Models\Payment;
 
 class UserController extends Controller
 {
@@ -115,6 +117,7 @@ class UserController extends Controller
     public function giftCards()
     {
         $giftCards = auth()->user()->purchasedGiftCards()
+            ->orderBy('balance', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -222,53 +225,49 @@ class UserController extends Controller
     public function subscriptionCheckout(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:5',
             'payment_method' => 'required|in:stripe,paypal'
         ]);
 
         $user = auth()->user();
         $amount = 5.00;
-        $paymentMethod = $request->payment_method;
 
-        try {
-            if ($paymentMethod === 'stripe') {
+        return DB::transaction(function () use ($request, $user, $amount) {
+            $payment = Payment::create([
+                'user_id'        => $user->id,
+                'payment_type'   => 'subscription',
+                'reference_id'   => 0,
+                'amount'         => $amount,
+                'currency'       => 'GBP',
+                'payment_method' => $request->payment_method,
+                'status'         => 'pending',
+                'metadata'       => [
+                    'subscription_type' => 'Free Delivery',
+                    'duration'          => '1 month',
+                    'ip_address'        => $request->ip()
+                ],
+            ]);
+
+            session([
+                'active_payment_id'     => $payment->id,
+                'subscription_checkout' => [
+                    'amount'         => $amount,
+                    'user_id'        => $user->id,
+                    'payment_method' => $request->payment_method
+                ]
+            ]);
+
+            if ($request->payment_method === 'stripe') {
                 return $this->initiateStripeSubscription($user, $amount);
-            } elseif ($paymentMethod === 'paypal') {
-                return $this->initiatePayPalSubscription($user, $amount);
             }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid payment method'
-            ], 400);
-
-        } catch (\Exception $e) {
-            \Log::error('Subscription Checkout Error:', ['error' => $e->getMessage()]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to process subscription: ' . $e->getMessage()
-            ], 500);
-        }
+            
+            return $this->initiatePayPalSubscription($user, $amount);
+        });
     }
 
     private function initiateStripeSubscription($user, $amount)
     {
         $stripeCredential = Credential::where('gateway', 'Stripe')->first();
-
-        if (!$stripeCredential || !$stripeCredential->client_secret) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Stripe credentials not configured'
-            ], 400);
-        }
-
-        session([
-            'subscription_checkout' => [
-                'amount' => $amount,
-                'user_id' => $user->id,
-                'payment_method' => 'stripe'
-            ]
-        ]);
+        $paymentId = session('active_payment_id');
 
         Stripe::setApiKey($stripeCredential->client_secret);
 
@@ -286,15 +285,13 @@ class UserController extends Controller
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => route('user.subscription.success'),
+            'success_url' => route('user.subscription.success') . '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('user.subscription.cancel'),
             'customer_email' => $user->email,
+            'metadata' => ['payment_id' => $paymentId]
         ]);
 
-        return response()->json([
-            'success' => true,
-            'redirectUrl' => $session->url
-        ]);
+        return response()->json(['success' => true, 'redirectUrl' => $session->url]);
     }
 
     private function initiatePayPalSubscription($user, $amount)
@@ -363,68 +360,59 @@ class UserController extends Controller
 
     public function subscriptionSuccess(Request $request)
     {
+        $paymentId = session('active_payment_id');
         $checkoutData = session('subscription_checkout');
 
-        if (!$checkoutData) {
+        if (!$paymentId || !$checkoutData) {
             return redirect()->route('user.subscription')->with('error', 'Invalid payment session');
         }
 
-        try {
-            $paymentMethod = $checkoutData['payment_method'] ?? 'stripe';
-
-            if ($paymentMethod === 'paypal') {
+        return DB::transaction(function () use ($request, $paymentId, $checkoutData) {
+            $payment = Payment::findOrFail($paymentId);
+            
+            if ($payment->payment_method === 'paypal') {
                 $this->handlePayPalSubscription($request, $checkoutData);
+                $payment->transaction_id = $request->token;
+            } else {
+                $payment->transaction_id = $request->session_id;
             }
 
+            $payment->status = 'completed';
+            $payment->save();
+
             $user = auth()->user();
-            $amount = $checkoutData['amount'];
-            $existingSubscription = $user->deliverySubscription()->first();
+            $existing = $user->deliverySubscription()->first();
 
-            if ($existingSubscription && $existingSubscription->isActive()) {
-                $currentEndDate = $existingSubscription->ends_at;
-                $newEndDate = $currentEndDate->copy()->addMonthNoOverflow();
-
-                $existingSubscription->update([
-                    'ends_at' => $newEndDate,
-                    'last_billed_at' => now()
-                ]);
-
-                $subscription = $existingSubscription;
-                $renewalStartMonth = $currentEndDate;
+            if ($existing && $existing->isActive()) {
+                $newEndDate = $existing->ends_at->addMonthNoOverflow();
+                $existing->update(['ends_at' => $newEndDate, 'last_billed_at' => now()]);
+                $subscription = $existing;
             } else {
-                $newEndDate = now()->copy()->addMonthNoOverflow();
-
                 $subscription = DeliverySubscription::create([
                     'user_id' => $user->id,
-                    'amount' => $amount,
+                    'amount' => $payment->amount,
                     'status' => 'active',
                     'started_at' => now(),
-                    'ends_at' => $newEndDate,
+                    'ends_at' => now()->addMonthNoOverflow(),
                     'last_billed_at' => now()
                 ]);
-
-                $renewalStartMonth = now();
             }
 
             DeliverySubscriptionPayment::create([
                 'delivery_subscription_id' => $subscription->id,
-                'amount' => $amount,
+                'amount' => $payment->amount,
                 'status' => 'paid',
-                'billing_month' => $renewalStartMonth->copy()->startOfMonth()->addMonthNoOverflow(),
+                'billing_month' => now()->startOfMonth(),
                 'paid_at' => now(),
-                'payment_ref' => ($paymentMethod === 'paypal' ? 'PAYPAL_' : 'STRIPE_') . uniqid()
+                'payment_ref' => $payment->transaction_id
             ]);
 
-            session()->forget('subscription_checkout');
+            $payment->update(['reference_id' => $subscription->id]);
 
-            return redirect()->route('user.subscription')
-                ->with('success', 'Subscription extended! Valid until ' . $subscription->ends_at->format('M d, Y'));
+            session()->forget(['subscription_checkout', 'active_payment_id']);
 
-        } catch (\Exception $e) {
-            \Log::error('Subscription Success Error:', ['error' => $e->getMessage()]);
-            return redirect()->route('user.subscription')
-                ->with('error', 'Error processing subscription: ' . $e->getMessage());
-        }
+            return redirect()->route('user.subscription')->with('success', 'Subscription activated!');
+        });
     }
 
     private function handlePayPalSubscription(Request $request, $checkoutData)
@@ -468,8 +456,11 @@ class UserController extends Controller
 
     public function subscriptionCancel()
     {
-        session()->forget('subscription_checkout');
-        return redirect()->route('user.subscription')
-            ->with('error', 'Payment cancelled');
+        $paymentId = session('active_payment_id');
+        if ($paymentId) {
+            Payment::where('id', $paymentId)->update(['status' => 'failed']);
+        }
+        session()->forget(['subscription_checkout', 'active_payment_id']);
+        return redirect()->route('user.subscription')->with('error', 'Payment cancelled');
     }
 }
