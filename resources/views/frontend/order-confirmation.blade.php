@@ -64,11 +64,12 @@
                         <div>
                             <label class="form-label">Address</label>
                             <p style="font-size: 13px; font-weight: 600; color: #1a1a1a; margin: 0; line-height: 1.5;">
-                                {{ $order->address_1 }}
+                                {{ $order->address_1 }},
+                                {{ $order->city }},
+                                {{ $order->postcode }}
                                 @if($order->address_2)
-                                    <br>{{ $order->address_2 }}
+                                    , {{ $order->address_2 }}
                                 @endif
-                                <br>{{ $order->city }}, {{ $order->postcode }}
                             </p>
                         </div>
                     </div>

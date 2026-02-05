@@ -35,9 +35,14 @@
                         <p><strong>Type:</strong> {{ ucfirst(str_replace('_', ' ', $order->delivery_type)) }}</p>
                         <p><strong>Time:</strong> {{ $order->time }}</p>
                         @if($order->delivery_type === 'delivery')
-                            <p><strong>Address:</strong> {{ $order->street }}, {{ $order->city }}, {{ $order->postcode }}</p>
+                            <p><strong>Address:</strong>
+                                {{ $order->address_1 }},
+                                {{ $order->city }},
+                                {{ $order->postcode }}
+                            </p>
+
                             @if($order->address_2)
-                            <p><strong>Apt/Suite:</strong> {{ $order->address_2 }}</p>
+                                <p>{{ $order->address_2 }}</p>
                             @endif
                         @endif
                     </div>

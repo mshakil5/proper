@@ -49,7 +49,7 @@
             @forelse($order->items as $item)
                 <div class="col-12 col-md-6 mb-3">
                     <div class="order-item d-flex">
-                        <img src="{{ $item->product->image ?? 'https://via.placeholder.com/70' }}" 
+                        <img src="{{ $item->product->image ? asset($item->product->image) : asset('placeholder.webp') }}" 
                              alt="Product" class="order-item-img me-3">
                         <div class="order-item-content">
                             <h6 class="order-item-name">{{ $item->product_name }}</h6>

@@ -24,7 +24,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse(auth()->user()->orders()->latest()->paginate(1) as $order)
+                @forelse(auth()->user()->orders()->latest()->paginate(10) as $order)
                     <tr>
                         <td><span class="order-id">#{{ $order->order_number }}</span></td>
                         <td>{{ $order->created_at->format('M d, Y') }}</td>

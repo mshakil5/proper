@@ -15,68 +15,53 @@
             <h5 style="color: #ff8a00; margin-bottom: 15px;">
                 <i class="fas fa-birthday-cake"></i> Your Birthday Vouchers
             </h5>
-            <div class="coupons-grid">
-                @foreach($birthdayVouchers as $coupon)
-                    <div class="coupon-card" style="border: 2px solid #ff8a00;">
-                        <div class="coupon-content">
-                            <span class="badge bg-danger" style="display: block; margin-bottom: 8px;">Birthday Gift</span>
-                            <div class="coupon-code">{{ $coupon->code }}</div>
-                            <p class="coupon-description">{{ $coupon->name ?? '' }}</p>
-                        </div>
-                        <div>
-                            <div class="coupon-discount">
-                                @if($coupon->discount_type === 'percent')
-                                    {{ number_format($coupon->discount_value, 0) }}%
-                                @else
-                                    £{{ number_format($coupon->discount_value, 2) }}
-                                @endif
-                            </div>
-                            <button type="button" class="btn-copy-coupon" onclick="copyCoupon('{{ $coupon->code }}')">
-                                Copy Code
-                            </button>
-                        </div>
+            @foreach($birthdayVouchers as $coupon)
+                <div class="referral-code" style="margin-bottom: 15px;">
+                    <div class="referral-text">
+                        <small>{{ $coupon->name ?? 'Birthday Voucher' }}</small>
+                        <strong>{{ $coupon->code }}</strong>
                     </div>
-                @endforeach
-            </div>
+                    <button class="btn-copy-referral birthday-copy-btn" data-code="{{ $coupon->code }}">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+            @endforeach
         </div>
     @endif
 
     <!-- Regular Coupons -->
     <h5 style="margin-bottom: 15px;">Regular Offers</h5>
-    <div class="coupons-grid">
-        @forelse($regularCoupons as $coupon)
-            <div class="coupon-card">
-                <div class="coupon-content">
-                    <div class="coupon-code">{{ $coupon->code }}</div>
-                    <p class="coupon-description">{{ $coupon->name ?? '' }}</p>
-                </div>
-                <div>
-                    <div class="coupon-discount">
-                        @if($coupon->discount_type === 'percent')
-                            {{ number_format($coupon->discount_value, 0) }}%
-                        @else
-                            £{{ number_format($coupon->discount_value, 2) }}
-                        @endif
-                    </div>
-                    <button type="button" class="btn-copy-coupon" onclick="copyCoupon('{{ $coupon->code }}')">
-                        Copy Code
-                    </button>
+    @forelse($regularCoupons as $coupon)
+        <div class="referral-code" style="margin-bottom: 15px;">
+            <div class="referral-text">
+                <small>{{ $coupon->name ?? 'Regular Offer' }}</small>
+                <strong>{{ $coupon->code }}</strong>
+                <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                    @if($coupon->discount_type === 'percent')
+                        {{ number_format($coupon->discount_value, 0) }}% Off
+                    @else
+                        £{{ number_format($coupon->discount_value, 2) }} Off
+                    @endif
                 </div>
             </div>
-        @empty
-            <p class="text-center">No active coupons available at the moment.</p>
-        @endforelse
-    </div>
+            <button class="btn-copy-referral regular-copy-btn" data-code="{{ $coupon->code }}">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+        </div>
+    @empty
+        <p class="text-center">No active coupons available at the moment.</p>
+    @endforelse
 </div>
+@endsection
 
+@section('script')
 <script>
-function copyCoupon(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        showSuccess('Coupon code ' + code + ' copied!');
-    }).catch(() => {
-        showError('Failed to copy coupon code');
+    $(document).ready(function() {
+        $('.birthday-copy-btn, .regular-copy-btn').click(function() {
+            const code = $(this).data('code');
+            navigator.clipboard.writeText(code);
+            showSuccess('Coupon code ' + code + ' copied!');
+        });
     });
-}
 </script>
-
 @endsection

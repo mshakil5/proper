@@ -157,7 +157,6 @@ $(function() {
             data: {
                 _token: '{{ csrf_token() }}',
                 package_id: packageId,
-                amount: amount,
                 payment_method: paymentMethod
             },
             success: function(response) {

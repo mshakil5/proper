@@ -102,7 +102,16 @@
         <meta name="google-site-verification" content="{{ $company->google_site_verification }}">
     @endif
 
-    @if ($company->google_analytics_id)
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17928720054"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'AW-17928720054');
+    </script>
+
+    {{-- @if ($company->google_analytics_id)
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ $company->google_analytics_id }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
@@ -113,7 +122,7 @@
             gtag('js', new Date());
             gtag('config', '{{ $company->google_analytics_id }}');
         </script>
-    @endif
+    @endif --}}
 
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" href="{{ asset('uploads/company/' . $company->fav_icon) }}" sizes="48x48">
