@@ -99,7 +99,8 @@
                     <a href="https://www.mentosoftware.co.uk">Mento Software</a>
                     &nbsp; &nbsp;
                     <a href="{{ route('privacy-policy') }}">Privacy Policy</a> ·
-                    <a href="{{ route('terms-and-conditions') }}">Terms of Service</a>
+                    <a href="{{ route('terms-and-conditions') }}">Terms of Service</a> ·
+                    <a href="{{ route('promotions') }}">Promotion</a>
                 </div>
 
                 <div class="footer-payment">

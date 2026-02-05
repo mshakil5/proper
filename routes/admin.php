@@ -52,6 +52,9 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::get('/terms-and-conditions', [CompanyDetailsController::class, 'termsAndConditions'])->name('admin.terms-and-conditions');
     Route::post('/terms-and-conditions', [CompanyDetailsController::class, 'termsAndConditionsUpdate'])->name('admin.terms-and-conditions');
 
+    Route::get('/promotions', [CompanyDetailsController::class, 'promotions'])->name('admin.promotions');
+    Route::post('/promotions', [CompanyDetailsController::class, 'promotionsUpdate'])->name('admin.promotions');
+
     // FAQ
     Route::get('/faq', [FAQController::class, 'index'])->name('faq.index');
     Route::post('/faq', [FAQController::class, 'store'])->name('faq.store');

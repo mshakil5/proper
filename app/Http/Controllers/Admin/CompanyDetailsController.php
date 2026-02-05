@@ -177,6 +177,27 @@ class CompanyDetailsController extends Controller
         return redirect()->back()->with('success', 'Terms and conditions updated successfully.');
     }
 
+    public function promotions()
+    {
+        $companyDetails = CompanyDetails::select('promotions_description')->first();
+        return view('admin.company.promotions', compact('companyDetails'));
+    }
+
+    public function promotionsUpdate(Request $request)
+    {
+        $request->validate([
+            'promotions_description' => 'required|string',
+        ]);
+
+        $companyDetails = CompanyDetails::first();
+        $companyDetails->promotions_description = $request->promotions_description;
+        $companyDetails->save();
+
+        Cache::forget('company_promotions');
+
+        return redirect()->back()->with('success', 'Promotions updated successfully.');
+    }
+
     public function mailBody()
     {
         $companyDetails = CompanyDetails::select('mail_body')->first();

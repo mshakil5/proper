@@ -237,10 +237,10 @@
 
             const isOpen = nowMin >= openAt && nowMin < closeAt;
 
-            console.log(
-                `[ShopStatus] ${day} ${hour}:${String(minute).padStart(2,'0')}`,
-                `| Open: ${isOpen}`
-            );
+            // console.log(
+            //     `[ShopStatus] ${day} ${hour}:${String(minute).padStart(2,'0')}`,
+            //     `| Open: ${isOpen}`
+            // );
 
             return { isOpen, day, hour, minute };
         },
@@ -254,7 +254,7 @@
 
             if (element) {
                 element.querySelector('.status-text').textContent =
-                    state.isOpen ? 'OPEN' : 'OPEN At 4:30PM';
+                    state.isOpen ? 'OPEN' : 'OPEN AT 4:30PM';
 
                 element.classList.toggle('open', state.isOpen);
                 element.classList.toggle('closed', !state.isOpen);

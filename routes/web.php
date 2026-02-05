@@ -73,7 +73,11 @@ Route::get('/privacy-policy', [FrontendController::class, 'privacyPolicy'])->nam
 
 Route::get('/terms-and-conditions', [FrontendController::class, 'termsAndConditions'])->name('terms-and-conditions');
 
+Route::get('/promotions', [FrontendController::class, 'promotions'])->name('promotions');
+
 Route::get('/sitemap.xml', [FrontendController::class, 'sitemap']);
+
+Route::get('/catalog/facebook', [FrontendController::class, 'facebookCatalog']);
 
 Route::get('/product', [FrontendController::class, 'product']);
 
