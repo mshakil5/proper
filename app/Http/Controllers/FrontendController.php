@@ -43,6 +43,8 @@ use App\Models\Credential;
 use App\Helpers\PayPalHelper;
 use App\Models\CouponUsage;
 use Carbon\Carbon;
+use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 
 class FrontendController extends Controller
 {
@@ -351,21 +353,10 @@ class FrontendController extends Controller
 
             if ($request->payment_method === 'stripe') {
                 return $this->initiateStripeGiftCardPayment($package, $user);
-            } elseif ($paymentMethod === 'paypal') {
-                return $this->initiatePayPalGiftCardPayment($package, $user);
-            }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid payment method'
-            ], 400);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to process payment: ' . $e->getMessage()
-            ], 500);
-        }
+            } 
+            
+            return $this->initiatePayPalGiftCardPayment($package, $user);
+        });
     }
 
     private function initiateStripeGiftCardPayment($package, $user)
@@ -421,9 +412,9 @@ class FrontendController extends Controller
 
         $paymentId = session('active_payment_id');
 
-            $provider = new \Srmklive\PayPal\Services\PayPal;
-            $provider->setApiCredentials(config('paypal'));
-            $paypalToken = $provider->getAccessToken();
+        $provider = new \Srmklive\PayPal\Services\PayPal;
+        $provider->setApiCredentials(config('paypal'));
+        $provider->getAccessToken();
 
         $response = $provider->createOrder([
             "intent" => "CAPTURE",
@@ -526,8 +517,18 @@ class FrontendController extends Controller
 
     public function giftCardPaymentCancel()
     {
-        session()->forget('giftcard_checkout');
-        return redirect()->route('gift-cards')->with('error', 'Payment cancelled');
+        $paymentId = session('active_payment_id');
+
+        if ($paymentId) {
+            // Mark the payment as failed/cancelled in your ledger
+            Payment::where('id', $paymentId)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'failed']);
+        }
+
+        session()->forget(['giftcard_checkout', 'active_payment_id']);
+        
+        return redirect()->route('gift-cards')->with('error', 'Payment was cancelled.');
     }
 
     private function generateGiftCardCode()
