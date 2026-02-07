@@ -29,10 +29,12 @@
                     <tr>
                         <td>{{ $point->created_at->format('M d, Y') }}</td>
                         <td>
-                            @if($point->order_id)
+                            @if($point->order_id && $point->order && $point->order->user_id === auth()->id())
                                 <a href="{{ route('user.orders.details', $point->order_id) }}" style="text-decoration: none; color: inherit;">
                                     Order #{{ $point->order_id }} Completed
                                 </a>
+                            @elseif($point->order_id)
+                                Order #{{ $point->order_id }} Completed
                             @else
                                 Bonus / Adjustment
                             @endif

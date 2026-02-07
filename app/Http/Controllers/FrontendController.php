@@ -1387,6 +1387,24 @@ class FrontendController extends Controller
 
         if ($order->user_id) {
             $pointsEarned = floor($order->total);
+            
+            $orderCount = Order::where('user_id', $order->user_id)->count();
+            if ($orderCount === 1) {
+                $pointsEarned += 500;
+                
+                $user = User::find($order->user_id);
+                if ($user->referred_by) {
+                    $referrer = User::find($user->referred_by);
+                    UserPoint::create([
+                        'user_id' => $referrer->id,
+                        'order_id' => $order->id,
+                        'source' => 'referral_first_order_bonus',
+                        'point' => 100,
+                        'description' => 'First order bonus from referral: ' . $user->name,
+                    ]);
+                }
+            }
+            
             UserPoint::create([
                 'user_id' => $order->user_id,
                 'order_id' => $order->id,
