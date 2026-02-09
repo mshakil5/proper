@@ -451,7 +451,6 @@
     <script>
         $(function() {
             let checkoutData = JSON.parse(localStorage.getItem('checkoutData')) || null;
-            console.log(checkoutData);
             let foundAddresses = [];
             let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
             const userAvailablePoints = {{ auth()->check() ? auth()->user()->available_points ?? 0 : 0 }};
@@ -905,9 +904,6 @@
                     notes: orderNotes
                 };
 
-                // console.log(orderData);
-                // return;
-
                 $.ajax({
                     url: '/place-order',
                     type: 'POST',
@@ -917,8 +913,6 @@
                     },
                     data: JSON.stringify(orderData),
                     success: function(response) {
-                        // console.log(response);
-                        // return;
                         if (response.redirectUrl) {
                             window.location.href = response.redirectUrl;
                         } else {

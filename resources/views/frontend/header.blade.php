@@ -237,11 +237,6 @@
 
             const isOpen = nowMin >= openAt && nowMin < closeAt;
 
-            // console.log(
-            //     `[ShopStatus] ${day} ${hour}:${String(minute).padStart(2,'0')}`,
-            //     `| Open: ${isOpen}`
-            // );
-
             return { isOpen, day, hour, minute };
         },
 

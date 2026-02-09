@@ -212,7 +212,6 @@
                     d.coupon_type = type;
                 },
                 error: function (xhr, status, error) {
-                    console.error(xhr.responseText);
                 }
             },
             columns: [
@@ -281,7 +280,6 @@
                     showSuccess(d.message);
                 },
                 error: function(xhr, status, error) {
-                    console.error(xhr.responseText);
                     showError('Failed to update status');
                 }
             });
@@ -361,7 +359,6 @@
                         } else {
                             showError(xhr.responseJSON?.message ?? "Something went wrong!");
                         }
-                        console.error(xhr.responseText);
                     }
                 });
             }
@@ -414,7 +411,6 @@
                         } else {
                             showError(xhr.responseJSON?.message ?? "Something went wrong!");
                         }
-                        console.error(xhr.responseText);
                     }
                 });
             }

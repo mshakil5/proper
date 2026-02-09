@@ -165,7 +165,6 @@ $(document).ready(function() {
             contentType: 'application/json',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             success: function(data) {
-                console.log(data);
                 if (data.success) {
                     showSuccess(data.message);
                     $('#referralCodeInput').val('');
