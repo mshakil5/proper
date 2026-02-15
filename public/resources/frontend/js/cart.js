@@ -100,52 +100,86 @@ $(function () {
 
     function generateTimeSlots(startHour, startMinute) {
         let slots = [];
+        
+        const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/London',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).formatToParts(new Date());
 
-        let now = new Date();
-        let ukTime = new Date(now.toLocaleString('en-GB', { timeZone: 'Europe/London' }));
+        const year = +parts.find(p => p.type === 'year').value;
+        const month = +parts.find(p => p.type === 'month').value - 1;
+        const date = +parts.find(p => p.type === 'day').value;
+        const hour = +parts.find(p => p.type === 'hour').value;
+        const minute = +parts.find(p => p.type === 'minute').value;
+        
+        let ukTime = new Date(year, month, date, hour, minute, 0);
+        let current = new Date(year, month, date, startHour, startMinute, 0);
+        let targetDate = date;
+        let targetMonth = month;
+        let targetYear = year;
 
-        let current = new Date(ukTime);
-        current.setHours(startHour, startMinute, 0, 0);
+        let dayOfWeek = current.getDay();
+
+        let closeHour = (dayOfWeek === 0) ? 22 : 23;
+        let closeMinute = (dayOfWeek === 0) ? 0 : 30;
 
         if (current < ukTime) {
             let mins = ukTime.getMinutes();
             let rounded = Math.ceil(mins / 20) * 20;
-
             if (rounded === 60) {
-                current.setHours(ukTime.getHours() + 1, 0, 0, 0);
+                current = new Date(year, month, date, ukTime.getHours() + 1, 0, 0);
             } else {
-                current.setHours(ukTime.getHours(), rounded, 0, 0);
+                current = new Date(year, month, date, ukTime.getHours(), rounded, 0);
             }
         }
 
-        let endTime = new Date(ukTime);
-        endTime.setHours(23, 40, 0, 0);
+        let currentTimeInMinutes = current.getHours() * 60 + current.getMinutes();
+        let closeTimeInMinutes = closeHour * 60 + closeMinute;
 
-        while (current < endTime) {
-            let start = current.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        if (currentTimeInMinutes >= closeTimeInMinutes) {
+            let nextDate = new Date(year, month, date + 1, startHour, startMinute, 0);
+            current = nextDate;
+            targetDate = nextDate.getDate();
+            targetMonth = nextDate.getMonth();
+            targetYear = nextDate.getFullYear();
             
+            dayOfWeek = nextDate.getDay();
+            closeHour = (dayOfWeek === 0) ? 22 : 23;
+            closeMinute = (dayOfWeek === 0) ? 0 : 30;
+        }
+
+        let endTime = new Date(targetYear, targetMonth, targetDate, closeHour, closeMinute, 0);
+
+        while (current <= endTime) {
+            let dayName = current.toLocaleDateString('en-GB', { weekday: 'long' });
+            let start = current.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
             let end = new Date(current);
             end.setMinutes(end.getMinutes() + 20);
-            let endSlot = end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            
+            let endSlot = end.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
+
             slots.push({
                 value: start + '-' + endSlot,
-                label: start + ' - ' + endSlot
+                label: start + ' - ' + endSlot + ' (' + dayName + ')'
             });
-            
+
             current.setMinutes(current.getMinutes() + 20);
         }
-        
+
         return slots;
     }
 
     function populateTimeSlots(selector, startHour, startMinute) {
         let slots = generateTimeSlots(startHour, startMinute);
-        let today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
         
         let html = '<option value="">Select Time</option>';
         slots.forEach(slot => {
-            html += `<option value="${slot.value}">${slot.label} (${today})</option>`;
+            html += `<option value="${slot.value}">${slot.label}</option>`;
         });
         
         $(selector).html(html);
