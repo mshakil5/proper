@@ -212,15 +212,7 @@
 
 <script>
 
-    const SHOP_HOURS = {
-        Monday:    { open: '16:00', close: '22:30' },
-        Tuesday:   { open: '16:00', close: '22:30' },
-        Wednesday: { open: '16:00', close: '22:30' },
-        Thursday:  { open: '16:00', close: '22:30' },
-        Friday:    { open: '16:00', close: '22:30' },
-        Saturday:  { open: '16:00', close: '22:30' },
-        Sunday:    { open: '16:00', close: '22:30' },
-    };
+
 
     const ShopStatus = {
         getUKTime() {
@@ -239,17 +231,12 @@
             };
         },
 
-        toMinutes(timeStr) {
-            const [h, m] = timeStr.split(':').map(Number);
-            return h * 60 + m;
-        },
-
         getState() {
             const { day, hour, minute } = this.getUKTime();
             const nowMin = hour * 60 + minute;
 
-            const openAt  = this.toMinutes(SHOP_HOURS[day].open);
-            const closeAt = this.toMinutes(SHOP_HOURS[day].close);
+            const openAt = 16 * 60 + 30;
+            const closeAt = (day === 'Sunday') ? 22 * 60 : 23 * 60 + 30;
 
             const isOpen = nowMin >= openAt && nowMin < closeAt;
 

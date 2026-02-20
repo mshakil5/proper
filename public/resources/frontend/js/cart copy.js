@@ -135,9 +135,10 @@ $(function () {
         let targetMonth = month;
         let targetYear = year;
 
-        let dayName = current.toLocaleDateString('en-GB', { weekday: 'long' });
-        let closeTime = SHOP_HOURS[dayName].close;
-        let [closeHour, closeMinute] = closeTime.split(':').map(Number);
+        let dayOfWeek = current.getDay();
+
+        let closeHour = (dayOfWeek === 0) ? 22 : 23;
+        let closeMinute = (dayOfWeek === 0) ? 0 : 30;
 
         if (current < ukTime) {
             let mins = ukTime.getMinutes();
@@ -159,9 +160,9 @@ $(function () {
             targetMonth = nextDate.getMonth();
             targetYear = nextDate.getFullYear();
             
-            let nextDayName = nextDate.toLocaleDateString('en-GB', { weekday: 'long' });
-            let nextCloseTime = SHOP_HOURS[nextDayName].close;
-            [closeHour, closeMinute] = nextCloseTime.split(':').map(Number);
+            dayOfWeek = nextDate.getDay();
+            closeHour = (dayOfWeek === 0) ? 22 : 23;
+            closeMinute = (dayOfWeek === 0) ? 0 : 30;
         }
 
         let endTime = new Date(targetYear, targetMonth, targetDate, closeHour, closeMinute, 0);
@@ -196,8 +197,8 @@ $(function () {
     }
 
     function updateDeliveryStartTimes() {
-        let deliverySlots = generateTimeSlots(16, 15);
-        let collectionSlots = generateTimeSlots(16, 0);
+        let deliverySlots = generateTimeSlots(16, 45);
+        let collectionSlots = generateTimeSlots(16, 15);
         
         if (deliverySlots.length > 0) {
             $('#deliveryStartTime').text(deliverySlots[0].label.split(' - ')[0]);
@@ -915,7 +916,7 @@ $(function () {
         if ($(this).val() === 'delivery') {
             $('#deliveryMode').show();
             $('#collectionMode').hide();
-            populateTimeSlots('#deliveryMode .delivery-time-select', 16, 15);
+            populateTimeSlots('#deliveryMode .delivery-time-select', 16, 45);
             $('#deliveryMode .delivery-time-select').val('');
             selectedDelivery.isValid = false;
             selectedDelivery.charge = 0;
@@ -923,7 +924,7 @@ $(function () {
         } else {
             $('#deliveryMode').hide();
             $('#collectionMode').show();
-            populateTimeSlots('#collectionMode .delivery-time-select', 16, 0);
+            populateTimeSlots('#collectionMode .delivery-time-select', 16, 15);
             $('#collectionMode .delivery-time-select').val('');
             selectedDelivery.isValid = true;
             selectedDelivery.charge = 0;
@@ -1117,7 +1118,7 @@ $(function () {
 
     loadDeliveryData();
     updateDeliveryStartTimes();
-    populateTimeSlots('#deliveryMode .delivery-time-select', 16, 15);
-    populateTimeSlots('#collectionMode .delivery-time-select', 16, 0);
+    populateTimeSlots('#deliveryMode .delivery-time-select', 16, 45);
+    populateTimeSlots('#collectionMode .delivery-time-select', 16, 15);
     updateCartUI();
 });
