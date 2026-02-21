@@ -1552,7 +1552,7 @@ class FrontendController extends Controller
     public function setupHubRiseCallback()
     {
         try {
-            $accessToken = env('HUBRISE_ACCESS_TOKEN');
+            $accessToken = config('services.hubrise.access_token');
 
             if (!$accessToken) {
                 return response()->json([
