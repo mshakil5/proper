@@ -265,7 +265,7 @@
 
             if (element) {
                 element.querySelector('.status-text').textContent =
-                    state.isOpen ? 'OPEN' : 'OPEN AT 4:30PM';
+                    state.isOpen ? 'OPEN' : 'OPEN AT 4:00PM';
 
                 element.classList.toggle('open', state.isOpen);
                 element.classList.toggle('closed', !state.isOpen);
