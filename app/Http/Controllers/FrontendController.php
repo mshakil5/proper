@@ -1719,7 +1719,7 @@ class FrontendController extends Controller
         $url = 'https://manager.hubrise.com/oauth2/v1/authorize?' . http_build_query([
             'redirect_uri' => url('/hubrise/callback'),
             'client_id'    => env('HUBRISE_CLIENT_ID'),
-            'scope'        => 'profile[read] location[read,write] orders[read,write]',
+            'scope'        => 'profile_with_email account location',
         ]);
 
         return redirect($url);
