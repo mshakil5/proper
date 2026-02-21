@@ -1207,6 +1207,9 @@ class FrontendController extends Controller
         $accessToken = config('services.hubrise.access_token');
         $locationId  = config('services.hubrise.location_id');
 
+        \Log::info('HubRise Access Token: ' . $accessToken);
+        \Log::info('HubRise Location ID: ' . $locationId);
+
         if (!$accessToken || !$locationId) {
             throw new \Exception('HubRise credentials not configured');
         }
