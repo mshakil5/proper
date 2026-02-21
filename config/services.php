@@ -22,6 +22,11 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    'hubrise' => [
+        'access_token' => env('HUBRISE_ACCESS_TOKEN'),
+        'location_id'  => env('HUBRISE_LOCATION_ID'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
