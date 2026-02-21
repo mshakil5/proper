@@ -63,6 +63,11 @@ Route::get('/setup-hubrise-callback', [FrontendController::class, 'setupHubRiseC
 
 Route::post('/hubrise-webhook', [FrontendController::class, 'hubRiseOrderCallback']);
 
+
+Route::get('/hubrise/connect', [FrontendController::class, 'hubriseConnect']);
+
+Route::get('/hubrise/callback', [FrontendController::class, 'hubriseCallback']);
+
 Route::get('/find-us', [FrontendController::class, 'findUs'])->name('find-us');
 
 Route::get('/contact', [FrontendController::class, 'contact'])->name('contact');

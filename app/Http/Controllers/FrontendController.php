@@ -1204,10 +1204,10 @@ class FrontendController extends Controller
 
     private function sendToHubRise($order, $calculationData)
     {
-        $accessToken = env('HUBRISE_ACCESS_TOKEN');
+        $accessToken = $this->getHubRiseAccessToken();
         $locationId = env('HUBRISE_LOCATION_ID');
 
-        if (!$accessToken || !$locationId) {
+        if (!$locationId) {
             throw new \Exception('HubRise credentials not configured');
         }
 
@@ -1549,14 +1549,7 @@ class FrontendController extends Controller
     public function setupHubRiseCallback()
     {
         try {
-            $accessToken = env('HUBRISE_ACCESS_TOKEN');
-
-            if (!$accessToken) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'HUBRISE_ACCESS_TOKEN not configured'
-                ], 500);
-            }
+            $accessToken = $this->getHubRiseAccessToken();
 
             $response = Http::withHeaders([
                 'X-Access-Token' => $accessToken,
@@ -1687,6 +1680,76 @@ class FrontendController extends Controller
                 ->where('point', '>', 0)
                 ->delete();
         }
+    }
+
+    private function getHubRiseAccessToken(): string
+    {
+        $token = \App\Models\HubRiseToken::latest()->first();
+
+        if (!$token) {
+            throw new \Exception('HubRise not connected. Visit /hubrise/connect to authorize.');
+        }
+
+        if (now()->gte($token->expires_at->subMinutes(5))) {
+            $response = Http::asForm()->post('https://manager.hubrise.com/oauth2/v1/token', [
+                'grant_type'    => 'refresh_token',
+                'client_id'     => env('HUBRISE_CLIENT_ID'),
+                'client_secret' => env('HUBRISE_CLIENT_SECRET'),
+                'refresh_token' => $token->refresh_token,
+            ]);
+
+            if (!$response->successful()) {
+                throw new \Exception('Failed to refresh HubRise token: ' . $response->body());
+            }
+
+            $data = $response->json();
+            $token->update([
+                'access_token'  => $data['access_token'],
+                'refresh_token' => $data['refresh_token'] ?? $token->refresh_token,
+                'expires_at'    => now()->addSeconds($data['expires_in']),
+            ]);
+            $token = $token->fresh();
+        }
+
+        return $token->access_token;
+    }
+
+    public function hubriseConnect()
+    {
+        $url = 'https://manager.hubrise.com/oauth2/v1/authorize?' . http_build_query([
+            'redirect_uri' => url('/hubrise/callback'),
+            'client_id'    => env('HUBRISE_CLIENT_ID'),
+            'scope'        => 'profile[read] location[read,write] orders[read,write]',
+        ]);
+
+        return redirect($url);
+    }
+
+    public function hubriseCallback(Request $request)
+    {
+        $response = Http::asForm()->post('https://manager.hubrise.com/oauth2/v1/token', [
+            'grant_type'    => 'authorization_code',
+            'client_id'     => env('HUBRISE_CLIENT_ID'),
+            'client_secret' => env('HUBRISE_CLIENT_SECRET'),
+            'redirect_uri'  => url('/hubrise/callback'),
+            'code'          => $request->input('code'),
+        ]);
+
+        $data = $response->json();
+
+        \Log::info('HubRise callback response', $data);
+
+        if (!isset($data['access_token'])) {
+            return 'HubRise connection failed: ' . json_encode($data);
+        }
+
+        \App\Models\HubRiseToken::create([
+            'access_token'  => $data['access_token'],
+            'refresh_token' => $data['refresh_token'],
+            'expires_at'    => now()->addSeconds($data['expires_in']),
+        ]);
+
+        return 'HubRise connected! You can close this page.';
     }
 
     public function findUs()
