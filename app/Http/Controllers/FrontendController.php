@@ -1719,7 +1719,7 @@ class FrontendController extends Controller
         $url = 'https://manager.hubrise.com/oauth2/v1/authorize?' . http_build_query([
             'redirect_uri' => url('/hubrise/callback'),
             'client_id'    => env('HUBRISE_CLIENT_ID'),
-            'scope'        => 'profile_with_email account location',
+            'scope'        => 'location[orders.write,customer_list.write,catalog.read]',
         ]);
 
         return redirect($url);
@@ -1727,12 +1727,11 @@ class FrontendController extends Controller
 
     public function hubriseCallback(Request $request)
     {
-        $response = Http::asForm()->post('https://manager.hubrise.com/oauth2/v1/token', [
-            'grant_type'    => 'authorization_code',
-            'client_id'     => env('HUBRISE_CLIENT_ID'),
-            'client_secret' => env('HUBRISE_CLIENT_SECRET'),
-            'redirect_uri'  => url('/hubrise/callback'),
-            'code'          => $request->input('code'),
+        $response = Http::withHeaders([
+            'Authorization' => 'Basic ' . base64_encode(env('HUBRISE_CLIENT_ID') . ':' . env('HUBRISE_CLIENT_SECRET')),
+            'Content-Type'  => 'application/x-www-form-urlencoded',
+        ])->asForm()->post('https://manager.hubrise.com/oauth2/v1/token', [
+            'code' => $request->input('code'),
         ]);
 
         $data = $response->json();
@@ -1745,8 +1744,8 @@ class FrontendController extends Controller
 
         \App\Models\HubRiseToken::create([
             'access_token'  => $data['access_token'],
-            'refresh_token' => $data['refresh_token'],
-            'expires_at'    => now()->addSeconds($data['expires_in']),
+            'refresh_token' => $data['refresh_token'] ?? null,
+            'expires_at'    => now()->addYears(10),
         ]);
 
         return 'HubRise connected! You can close this page.';
