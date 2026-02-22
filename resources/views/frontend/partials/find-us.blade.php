@@ -35,7 +35,7 @@
                 <div>
                     <h5 class="fw-bold">Opening Hours</h5>
                     <p class="company-info mb-2">
-                        Monday - Sunday: 4:00 PM - 10:00 PM
+                        Monday - Sunday: 4:00 PM - 10:30 PM
                     </p>
                     {{-- <p class="company-info mb-2">
                         Mon - Sat: 4:30pm - 11:30pm<br>
