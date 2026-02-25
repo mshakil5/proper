@@ -39,6 +39,9 @@
                 <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('earn-points') ? 'active' : '' }}" href="{{ route('earn-points') }}">Earn Points</a>
+            </li>
+            <li class="nav-item">
                 @auth
                     <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                         Dashboard

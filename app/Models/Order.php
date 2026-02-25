@@ -31,4 +31,10 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class, 'reference_id', 'id')
+            ->where('payment_type', 'order');
+    }
 }

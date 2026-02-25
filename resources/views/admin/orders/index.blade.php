@@ -85,6 +85,7 @@
                         <th>Order No</th>
                         <th>Customer</th>
                         <th>Amount</th>
+                        <th>Type</th>
                         <th>Order Status</th>
                         <th>Payment Status</th>
                         <th>Date</th>
@@ -130,6 +131,10 @@ $(function() {
             {
                 data: 'amounts',
                 name: 'total'
+            },
+            {
+                data: 'delivery_type',
+                name: 'delivery_type'
             },
             {
                 data: 'order_status',

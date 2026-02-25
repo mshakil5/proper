@@ -12,7 +12,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Order::with(['user'])->latest();
+            $query = Order::with(['user', 'payment'])->latest();
 
             if ($request->has('status') && $request->status) {
                 $query->where('status', $request->status);
@@ -59,23 +59,28 @@ class OrderController extends Controller
                     return '<span class="badge bg-' . $color . '">' . ucfirst(str_replace('_', ' ', $row->status)) . '</span>';
                 })
                 ->addColumn('payment_status', function ($row) {
-                    $statusColors = [
-                        'pending' => 'warning',
-                        'paid' => 'success',
-                        'failed' => 'danger'
+                    $status = $row->payment?->status ?? 'pending';
+                    $badge  = $row->payment?->status_badge ?? 'warning';
+                    return '<span class="badge bg-' . $badge . '">' . ucfirst($status) . '</span>';
+                })
+                ->addColumn('delivery_type', function ($row) {
+                    $colors = [
+                        'delivery'   => 'primary',
+                        'collection' => 'info',
                     ];
-                    $color = $statusColors[$row->payment_status] ?? 'secondary';
-                    return '<span class="badge bg-' . $color . '">' . ucfirst($row->payment_status) . '</span>';
+                    $type  = $row->delivery_type ?? 'N/A';
+                    $color = $colors[$type] ?? 'secondary';
+                    return '<span class="badge bg-' . $color . '">' . ucfirst($type) . '</span>';
                 })
                 ->addColumn('date', function ($row) {
-                    return $row->created_at->format('M d, Y H:i');
+                    return $row->created_at->format('M d, Y g:i A');
                 })
                 ->addColumn('action', function ($row) {
                     return '<a href="' . route('admin.orders.details', $row->id) . '" class="btn btn-sm btn-primary">
                         <i class="ri-eye-line"></i> View
                     </a>';
                 })
-                ->rawColumns(['order_status', 'payment_status', 'action'])
+                ->rawColumns(['order_status', 'payment_status', 'action', 'delivery_type'])
                 ->make(true);
         }
 
@@ -84,7 +89,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['items.options', 'user']);
+        $order->load(['items.options', 'user', 'payment']);
         return view('admin.orders.details', compact('order'));
     }
 }

@@ -38,7 +38,12 @@
             <div class="status-badge">{{ ucfirst($order->status) }}</div>
             <p>Status updated on {{ $order->updated_at->format('M d, Y') }}</p>
             <p><strong>Payment Method:</strong> {{ ucfirst($order->payment_method) }}</p>
-            <p><strong>Payment Status:</strong> {{ ucfirst($order->payment_status) }}</p>
+            <p>
+                <strong>Payment Status:</strong> 
+                <span class="badge bg-{{ $order->payment?->status_badge ?? 'secondary' }}">
+                    {{ ucfirst($order->payment?->status ?? 'pending') }}
+                </span>
+            </p>
         </div>
     </div>
 

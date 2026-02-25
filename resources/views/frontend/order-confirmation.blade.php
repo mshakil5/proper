@@ -176,15 +176,6 @@
                     <div class="payment-badge" style="margin-top: 20px;">
                         <i class="fas fa-check-circle"></i>
                         <div class="payment-info">
-                            <strong>
-                                @if($order->payment_status === 'paid')
-                                    Payment Confirmed
-                                @elseif($order->payment_status === 'pending')
-                                    Payment Pending
-                                @else
-                                    Payment Failed
-                                @endif
-                            </strong>
                             <small>
                                 @if($order->payment_method === 'stripe')
                                     Stripe

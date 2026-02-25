@@ -856,6 +856,14 @@
             }
 
             $('#confirmOrderBtn').on('click', function() {
+                let $btn = $(this);
+
+                if ($btn.prop('disabled')) return;
+
+                $btn.prop('disabled', true);
+                let originalText = $btn.text();
+                $btn.html('<i class="fas fa-spinner fa-spin"></i> Please wait...');
+
                 clearAllErrors();
 
                 let customerData = getCustomerData();
@@ -877,10 +885,6 @@
                     attribute: item.attribute || false,
                     attributePrice: item.attributePrice || 0
                 }));
-
-                let $btn = $('#confirmOrderBtn');
-                let originalText = $btn.text();
-                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Please wait...');
 
                 let orderData = {
                     customer: {
@@ -930,10 +934,10 @@
                     error: function(err) {
                         $btn.prop('disabled', false).text(originalText);
                         clearAllErrors();
-                        
+
                         if (err.responseJSON && err.responseJSON.errors) {
                             let firstField = null;
-                            
+
                             $.each(err.responseJSON.errors, function(field, messages) {
                                 showFieldError(field, messages[0]);
                                 if (!firstField && fieldMap[field]) {

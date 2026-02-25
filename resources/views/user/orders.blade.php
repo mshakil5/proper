@@ -24,7 +24,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse(auth()->user()->orders()->latest()->paginate(10) as $order)
+                @forelse(auth()->user()->orders()->with('payment')->latest()->paginate(10) as $order)
                     <tr>
                         <td><span class="order-id">#{{ $order->order_number }}</span></td>
                         <td>{{ $order->created_at->format('M d, Y') }}</td>
@@ -41,19 +41,13 @@
                             </span>
                         </td>
                         <td>
-                            <span class="order-status 
-                                @if($order->payment_status === 'paid') status-paid
-                                @elseif($order->payment_status === 'pending') status-pending
-                                @elseif($order->payment_status === 'failed') status-failed
-                                @elseif($order->payment_status === 'refunded') status-refunded
-                                @endif">
-                                {{ ucfirst($order->payment_status) }}
+                            <span class="badge bg-{{ $order->payment?->status_badge ?? 'secondary' }}">
+                                {{ ucfirst($order->payment?->status ?? 'pending') }}
                             </span>
                         </td>
                         <td><span class="order-amount">£{{ number_format($order->total, 2) }}</span></td>
                         <td class="order-actions">
                             <a href="{{ route('user.orders.details', $order->id) }}" class="btn-view-order">View</a>
-                            <button class="btn-view-order btn-order-again" data-order='@json($order)'>Order Again</button>
                         </td>
                     </tr>
                 @empty
@@ -64,7 +58,7 @@
             </tbody>
         </table>
 
-        <div class="mt-3">
+        <div class="m-3">
             {{ auth()->user()->orders()->latest()->paginate(10)->withQueryString()->links('pagination::bootstrap-5') }}
         </div>
     </div>

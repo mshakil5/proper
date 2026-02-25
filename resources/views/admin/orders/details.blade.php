@@ -148,12 +148,15 @@
                         <p><strong>Method:</strong> {{ ucfirst(str_replace('_', ' ', $order->payment_method)) }}</p>
                         <p>
                             <strong>Status:</strong> 
-                            <span class="badge bg-{{ $order->payment_status == 'paid' ? 'success' : ($order->payment_status == 'pending' ? 'warning' : 'danger') }}">
-                                {{ ucfirst($order->payment_status) }}
+                            <span class="badge bg-{{ $order->payment?->status_badge }}">
+                                {{ ucfirst($order->payment?->status ?? 'pending') }}
                             </span>
                         </p>
-                        @if($order->payment_transaction_id)
-                        <p><strong>Transaction ID:</strong> {{ $order->payment_transaction_id }}</p>
+                        @if($order->payment && $order->payment->transaction_id)
+                            <p>
+                                <strong>Transaction ID:</strong>
+                                {{ $order->payment->transaction_id }}
+                            </p>
                         @endif
                     </div>
                 </div>
