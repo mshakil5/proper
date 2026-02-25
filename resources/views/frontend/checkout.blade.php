@@ -61,7 +61,7 @@
                             <div class="tab-pane fade {{ $errors->any() && !old('first_name') && !old('last_name') && !old('phone') ? 'show active' : '' }}" id="existingPanel" role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Login to Your Account</h5>
-                                    <form id="loginForm" method="POST" action="{{ route('login') }}">
+                                    <form id="loginForm" method="POST" action="{{ route('login') }}" onsubmit="let b=this.querySelector('[type=submit]');b.disabled=true;b.innerHTML='<span>Please wait...</span><i class=\'fas fa-spinner fa-spin\'></i>';">
                                         @csrf
                                         <input type="hidden" name="redirect_to_checkout" value="1">
                                         <div class="row g-3">
@@ -95,7 +95,7 @@
                             <div class="tab-pane fade {{ (old('first_name') || old('last_name') || old('phone')) && $errors->any() ? 'show active' : '' }}" id="registerPanel" role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Create New Account</h5>
-                                    <form id="registerForm" method="POST" action="{{ route('register') }}">
+                                    <form id="registerForm" method="POST" action="{{ route('register') }}" onsubmit="let b=this.querySelector('[type=submit]');b.disabled=true;b.innerHTML='<span>Please wait...</span><i class=\'fas fa-spinner fa-spin\'></i>';">
                                         @csrf
                                         <input type="hidden" name="redirect_to_checkout" value="1">
                                         <div class="row g-3">

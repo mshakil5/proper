@@ -77,7 +77,7 @@ Route::get('/privacy-policy', [FrontendController::class, 'privacyPolicy'])->nam
 
 Route::get('/terms-and-conditions', [FrontendController::class, 'termsAndConditions'])->name('terms-and-conditions');
 
-Route::get('/promotions', [FrontendController::class, 'promotions'])->name('promotions');
+Route::get('/earn-points', [FrontendController::class, 'earnPoints'])->name('earn-points');
 
 Route::get('/sitemap.xml', [FrontendController::class, 'sitemap']);
 

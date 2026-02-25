@@ -195,7 +195,7 @@ class CompanyDetailsController extends Controller
 
         Cache::forget('company_promotions');
 
-        return redirect()->back()->with('success', 'Promotions updated successfully.');
+        return redirect()->back()->with('success', 'Updated successfully.');
     }
 
     public function mailBody()

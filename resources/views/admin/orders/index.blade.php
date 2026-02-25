@@ -61,8 +61,21 @@
 
 <div class="container-fluid">
     <div class="card">
-        <div class="card-header">
-            <h4 class="card-title mb-0">Order Management</h4>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                @if(request('client_id'))
+                    <a href="{{ url()->previous() }}" class="btn btn-light btn-sm"><i class="ri-arrow-left-line"></i> Back</a>
+                @endif
+                <h4 class="card-title mb-0">
+                    Order Management
+                    @if(request('client_id'))
+                        @php $client = \App\Models\User::find(request('client_id')); @endphp
+                        @if($client)
+                            <span class="text-muted fs-6 fw-normal ms-1">— {{ $client->first_name }} {{ $client->last_name }}</span>
+                        @endif
+                    @endif
+                </h4>
+            </div>
         </div>
         <div class="card-body">
             <table id="ordersTable" class="table table-bordered table-striped">

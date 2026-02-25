@@ -25,22 +25,22 @@ class ClientController extends Controller
                 ->addIndexColumn()
                 ->addColumn('orders', function($row){
                     $ordersCount = $row->orders()->count();
-                    return '<a href="'.route('admin.orders.index', ['client_id' => $row->id]).'" class="badge bg-primary">'.$ordersCount.'</a>';
+                    return '<a href="'.route('admin.orders.index', ['client_id' => $row->id]).'" class="btn btn-soft-primary btn-sm">Orders <span class="badge bg-primary ms-1">'.$ordersCount.'</span></a>';
                 })
                 ->addColumn('gift_cards', function($row){
                     $giftCardsCount = $row->purchasedGiftCards()->count();
-                    return '<a href="'.route('gift-cards.index', ['client_id' => $row->id]).'" class="badge bg-info">'.$giftCardsCount.'</a>';
+                    return '<a href="'.route('gift-cards.index', ['client_id' => $row->id]).'" class="btn btn-soft-info btn-sm">Gift Cards <span class="badge bg-info ms-1">'.$giftCardsCount.'</span></a>';
                 })
                 ->addColumn('points', function($row){
                     $pointsCount = $row->userPoints()->sum('point');
-                    return '<a href="'.route('points.index', ['client_id' => $row->id]).'" class="badge bg-success">'.$pointsCount.'</a>';
+                    return '<a href="'.route('points.index', ['client_id' => $row->id]).'" class="btn btn-soft-success btn-sm">Points <span class="badge bg-success ms-1">'.$pointsCount.'</span></a>';
                 })
                 ->addColumn('subscription', function($row){
                     $subscription = $row->deliverySubscription()->first();
                     $paymentsCount = $row->deliverySubscriptionPayments()->count();
                     
                     if ($subscription && $subscription->isActive()) {
-                        return '<a href="'.route('subscriptions.index', ['client_id' => $row->id]).'" class="badge bg-warning">Active ('.$paymentsCount.')</a>';
+                        return '<a href="'.route('subscriptions.index', ['client_id' => $row->id]).'" class="btn btn-soft-warning btn-sm">Subscription <span class="badge bg-warning ms-1">'.$paymentsCount.'</span></a>';
                     }
                     return '<span class="badge bg-secondary">None</span>';
                 })
@@ -325,6 +325,9 @@ class ClientController extends Controller
                 ->addColumn('client_name', function($row){
                     return $row->user->first_name . ' ' . $row->user->last_name;
                 })
+                ->addColumn('source', function($row){
+                    return ucwords(str_replace('_', ' ', $row->source ?? ''));
+                })
                 ->addColumn('created_at', function($row){
                     return $row->created_at->format('d F Y');
                 })
@@ -333,6 +336,23 @@ class ClientController extends Controller
         }
 
         return view('admin.points.index');
+    }
+
+    public function storePoint(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'point'   => 'required|integer|min:1',
+        ]);
+
+        UserPoint::create([
+            'user_id'     => $request->user_id,
+            'point'       => $request->point,
+            'source'      => $request->source ?? 'manual',
+            'description' => $request->description ?? 'Manually added by admin',
+        ]);
+
+        return response()->json(['message' => 'Points added successfully.'], 200);
     }
 
     public function subscriptions(Request $request)

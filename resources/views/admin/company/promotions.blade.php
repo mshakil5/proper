@@ -21,7 +21,7 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title mb-0 flex-grow-1">Promotions</h3>
+                        <h3 class="card-title mb-0 flex-grow-1">Earn Points</h3>
                     </div>
 
                     <form action="{{ route('admin.promotions') }}" method="POST">
@@ -30,7 +30,7 @@
                             <div class="row g-3">
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                        <label>Promotions Description <span class="text-danger">*</span></label>
+                                        <label>Earn Points Description <span class="text-danger">*</span></label>
                                         <textarea name="promotions_description"
                                             class="form-control summernote @error('promotions_description') is-invalid @enderror" rows="4">{!! $companyDetails->promotions_description !!}</textarea>
                                     </div>

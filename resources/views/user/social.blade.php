@@ -54,6 +54,23 @@
     </div>
     @endif
 
+    <div class="user-dashboard-card" style="margin-top: 32px;background:linear-gradient(135deg,#fff5f0,#fff0e8);border-left:4px solid #ff5a00;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:48px;height:48px;background:linear-gradient(135deg,#ff8a00,#ff5a00);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(255,90,0,0.3);">
+                    <i class="fab fa-google" style="color:#fff;font-size:20px;"></i>
+                </div>
+                <div>
+                    <h5 style="margin:0 0 4px 0;font-size:15px;font-weight:800;color:#111;">Review Us on Google</h5>
+                    <p style="margin:0;font-size:13px;color:#777;">Leave a review & send a screenshot — earn <strong style="color:#ff5a00;">+100 Points</strong></p>
+                </div>
+            </div>
+            <a href="https://maps.app.goo.gl/qeahZVMrucMFAPDZ9" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#ff8a00,#ff5a00);color:#fff;font-size:13px;font-weight:700;padding:10px 20px;border-radius:30px;text-decoration:none;box-shadow:0 4px 12px rgba(255,90,0,0.3);white-space:nowrap;">
+                <i class="fab fa-google"></i> Review Now
+            </a>
+        </div>
+    </div>
+
     <div class="user-dashboard-card" style="margin-top: 32px;">
         <div class="social-sharing-section">
             <h4 class="sharing-title">Share on Social Media</h4>

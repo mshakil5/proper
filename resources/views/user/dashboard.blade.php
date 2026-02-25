@@ -3,9 +3,17 @@
 @section('user-content')
 
 <div class="welcome-section">
-    <div class="welcome-content">
-        <h2>Welcome back, {{ trim(auth()->user()->first_name.' '.auth()->user()->last_name) }}! 👋</h2>
-        <p>Manage your account, orders, and rewards all in one place</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+        <div class="welcome-content">
+            <h2>Welcome back, {{ trim(auth()->user()->first_name.' '.auth()->user()->last_name) }}! 👋</h2>
+            <p>Manage your account, orders, and rewards all in one place</p>
+        </div>
+        <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:16px 20px;text-align:center;flex-shrink:0;">
+            <p style="margin:0 0 4px 0;font-size:13px;color:rgba(255,255,255,0.85);">Earn <strong>+100 Points</strong> for a Google review</p>
+                <a href="https://maps.app.goo.gl/qeahZVMrucMFAPDZ9" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:#fff;color:#ff5a00;font-size:13px;font-weight:700;padding:8px 18px;border-radius:30px;text-decoration:none;margin-top:6px;position:relative;z-index:1;">
+                    <i class="fab fa-google"></i> Review Now
+                </a>
+        </div>
     </div>
 </div>
 

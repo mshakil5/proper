@@ -39,7 +39,7 @@
                             </p>
                         </div>
 
-                        <form method="POST" action="{{ route('verification.resend') }}">
+                        <form method="POST" action="{{ route('verification.resend') }}" onsubmit="let b=this.querySelector('[type=submit]');b.disabled=true;b.innerHTML='<span>Please wait...</span><i class=\'fas fa-spinner fa-spin\'></i>';">
                             @csrf
 
                             <button type="submit" class="btn-auth-primary">

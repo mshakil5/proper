@@ -1754,7 +1754,7 @@ class FrontendController extends Controller
         return view('frontend.terms', compact('terms'));
     }
 
-    public function promotions()
+    public function earnPoints()
     {
         $promotions = CompanyDetails::select('promotions_description')->first();
         return view('frontend.promotions', compact('promotions'));

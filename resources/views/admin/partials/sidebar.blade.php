@@ -219,8 +219,8 @@
                                     & Conditions</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('admin.terms-and-conditions') }}"
-                                    class="nav-link {{ Route::is('admin.terms-and-conditions') ? 'active' : '' }}">Promotion</a>
+                                <a href="{{ route('admin.promotions') }}"
+                                    class="nav-link {{ Route::is('admin.promotions') ? 'active' : '' }}">Earn Points</a>
                             </li>
                             <li class="nav-item d-none">
                                 <a href="{{ route('faq.index') }}"

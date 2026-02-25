@@ -34,6 +34,7 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
 
     Route::get('/gift-cards', [ClientController::class, 'giftCards'])->name('gift-cards.index');
     Route::get('/points', [ClientController::class, 'points'])->name('points.index');
+    Route::post('/points', [ClientController::class, 'storePoint'])->name('points.store');
     Route::get('/subscriptions', [ClientController::class, 'subscriptions'])->name('subscriptions.index');
 
     // Company

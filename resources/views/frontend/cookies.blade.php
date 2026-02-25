@@ -1,64 +1,63 @@
 <div id="cookie-banner">
-    <div class="cookie-container">
-        <div class="cookie-content">
-            <div class="cookie-icon">🍪</div>
-            <div class="cookie-text">
+    <div class="ck-container">
+        <div class="ck-content">
+            <div class="ck-icon">🍪</div>
+            <div class="ck-text">
                 <h3>Cookie Preferences</h3>
                 <p>We use cookies to improve your experience, analyze traffic, and support marketing.</p>
-                <div class="cookie-links">
+                <div class="ck-links">
                     <a onclick="openSettings()">Customize</a>
                 </div>
             </div>
         </div>
-        <div class="cookie-buttons">
-            <button class="btn btn-reject" onclick="rejectAll()">Reject</button>
-            <button class="btn btn-accept" onclick="acceptAll()">Accept All</button>
+        <div class="ck-buttons">
+            <button class="ck-btn ck-btn-reject" onclick="rejectAll()">Reject</button>
+            <button class="ck-btn ck-btn-accept" onclick="acceptAll()">Accept All</button>
         </div>
     </div>
 </div>
 
-<!-- Settings Modal -->
-<div id="settings-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
+<div id="settings-modal" class="ck-modal">
+    <div class="ck-modal-content">
+        <div class="ck-modal-header">
             <h2>Cookie Settings</h2>
-            <button class="close-btn" onclick="closeModal('settings-modal')">&times;</button>
+            <button class="ck-close-btn" onclick="closeModal('settings-modal')">&times;</button>
         </div>
-        <div class="modal-body">
-            <div class="cookie-options">
-                <div class="cookie-option">
-                    <input type="checkbox" id="essential" checked disabled>
-                    <label for="essential">
-                        <span class="option-title">Essential Cookies (Required)</span>
-                        <span class="option-desc">Always enabled - required for functionality</span>
+        <div class="ck-modal-body">
+            <div class="ck-options">
+                <div class="ck-option">
+                    <input type="checkbox" id="ck-essential" checked disabled>
+                    <label for="ck-essential">
+                        <span class="ck-option-title">Essential Cookies <span class="ck-required-badge">Required</span></span>
+                        <span class="ck-option-desc">Always enabled - required for core functionality</span>
                     </label>
                 </div>
-                <div class="cookie-option">
-                    <input type="checkbox" id="analytics">
-                    <label for="analytics">
-                        <span class="option-title">Analytics Cookies</span>
-                        <span class="option-desc">Help us understand how you use our site</span>
+                <div class="ck-option">
+                    <input type="checkbox" id="ck-analytics">
+                    <label for="ck-analytics">
+                        <span class="ck-option-title">Analytics Cookies</span>
+                        <span class="ck-option-desc">Help us understand how you use our site</span>
                     </label>
                 </div>
-                <div class="cookie-option">
-                    <input type="checkbox" id="marketing">
-                    <label for="marketing">
-                        <span class="option-title">Marketing Cookies</span>
-                        <span class="option-desc">Used for targeted advertising</span>
+                <div class="ck-option">
+                    <input type="checkbox" id="ck-marketing">
+                    <label for="ck-marketing">
+                        <span class="ck-option-title">Marketing Cookies</span>
+                        <span class="ck-option-desc">Used for targeted advertising</span>
                     </label>
                 </div>
-                <div class="cookie-option">
-                    <input type="checkbox" id="preferences">
-                    <label for="preferences">
-                        <span class="option-title">Preference Cookies</span>
-                        <span class="option-desc">Remember your settings</span>
+                <div class="ck-option">
+                    <input type="checkbox" id="ck-preferences">
+                    <label for="ck-preferences">
+                        <span class="ck-option-title">Preference Cookies</span>
+                        <span class="ck-option-desc">Remember your settings and choices</span>
                     </label>
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-reject" onclick="rejectAll()">Reject All</button>
-            <button class="btn btn-accept" onclick="saveSettings()">Save Settings</button>
+        <div class="ck-modal-footer">
+            <button class="ck-btn ck-btn-reject" onclick="rejectAll()">Reject All</button>
+            <button class="ck-btn ck-btn-accept" onclick="saveSettings()">Save Settings</button>
         </div>
     </div>
 </div>
@@ -71,18 +70,19 @@
         width: 100%;
         z-index: 9998;
         background: linear-gradient(135deg, #fff8f0, #fff3e7);
-        padding: 25px 20px;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        padding: 20px;
+        box-shadow: 0 -4px 30px rgba(255, 90, 0, 0.1);
         transform: translateY(100%);
         transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
-        border-top: 2px solid rgba(255, 122, 0, 0.1);
+        border-top: 2px solid rgba(255, 122, 0, 0.15);
+        box-sizing: border-box;
     }
 
     #cookie-banner.active {
         transform: translateY(0);
     }
 
-    .cookie-container {
+    .ck-container {
         max-width: 1200px;
         margin: 0 auto;
         display: grid;
@@ -91,13 +91,13 @@
         align-items: center;
     }
 
-    .cookie-content {
+    .ck-content {
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 16px;
     }
 
-    .cookie-icon {
+    .ck-icon {
         width: 50px;
         height: 50px;
         background: linear-gradient(135deg, #ff8a00, #ff5a00);
@@ -105,253 +105,263 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 24px;
+        font-size: 22px;
         flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(255, 90, 0, 0.3);
     }
 
-    .cookie-text h3 {
-        font-size: 18px;
+    .ck-text h3 {
+        font-size: 16px;
         font-weight: 800;
-        margin-bottom: 6px;
         color: #222;
-        margin: 0;
+        margin: 0 0 4px 0;
     }
 
-    .cookie-text p {
-        font-size: 14px;
-        color: #7a7a7a;
-        margin-bottom: 10px;
+    .ck-text p {
+        font-size: 13px;
+        color: #777;
+        margin: 0 0 8px 0;
         line-height: 1.5;
-        margin: 0 0 10px 0;
     }
 
-    .cookie-links a {
+    .ck-links a {
         color: #ff8a00;
         text-decoration: none;
-        margin-right: 20px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         font-size: 13px;
-        transition: color 0.3s ease;
+        transition: color 0.2s ease;
+        border-bottom: 1px dashed rgba(255,138,0,0.4);
+        padding-bottom: 1px;
     }
 
-    .cookie-links a:hover {
+    .ck-links a:hover {
         color: #ff5a00;
+        border-bottom-color: #ff5a00;
     }
 
-    .cookie-buttons {
+    .ck-buttons {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         white-space: nowrap;
+        align-items: center;
     }
 
-    .btn-reject {
-        background: rgba(255, 122, 0, 0.1);
-        color: #ff8a00;
-        border: 1px solid rgba(255, 122, 0, 0.2);
+    .ck-btn {
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+        transition: all 0.25s ease;
+        letter-spacing: 0.2px;
+        outline: none;
     }
 
-    .btn-reject:hover {
-        background: rgba(255, 122, 0, 0.15);
+    .ck-btn-reject {
+        background: #fff;
+        color: #ff5a00;
+        border: 2px solid rgba(255, 90, 0, 0.25);
+    }
+
+    .ck-btn-reject:hover {
+        background: #fff5f0;
+        border-color: #ff5a00;
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 90, 0, 0.12);
     }
 
-    .btn-accept {
-        background: linear-gradient(90deg, #ff8a00, #ff5a00);
-        color: white;
-        box-shadow: 0 6px 20px rgba(255, 122, 0, 0.15);
+    .ck-btn-accept {
+        background: linear-gradient(135deg, #ff8a00, #ff5a00);
+        color: #fff;
+        border: 2px solid transparent;
+        box-shadow: 0 4px 15px rgba(255, 90, 0, 0.35);
     }
 
-    .btn-accept:hover {
+    .ck-btn-accept:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(255, 122, 0, 0.25);
+        box-shadow: 0 8px 20px rgba(255, 90, 0, 0.45);
     }
 
-    .modal {
+    .ck-modal {
         display: none;
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.45);
         z-index: 10000;
         align-items: center;
         justify-content: center;
         padding: 20px;
+        box-sizing: border-box;
+        backdrop-filter: blur(3px);
     }
 
-    .modal.active {
+    .ck-modal.active {
         display: flex;
     }
 
-    .modal-content {
-        background: white;
-        border-radius: 16px;
-        max-width: 650px;
+    .ck-modal-content {
+        background: #fff;
+        border-radius: 18px;
+        max-width: 550px;
         width: 100%;
         max-height: 85vh;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+        overflow-y: auto;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
     }
 
-    .modal-header {
+    .ck-modal-header {
         background: linear-gradient(135deg, #fff8f0, #fff3e7);
-        padding: 25px;
-        border-bottom: 1px solid rgba(255, 122, 0, 0.1);
+        padding: 22px 25px;
+        border-bottom: 1px solid rgba(255, 122, 0, 0.12);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-radius: 16px 16px 0 0;
+        border-radius: 18px 18px 0 0;
     }
 
-    .modal-header h2 {
+    .ck-modal-header h2 {
         margin: 0;
-        font-size: 22px;
+        font-size: 20px;
         color: #222;
         font-weight: 800;
     }
 
-    .close-btn {
-        background: none;
+    .ck-close-btn {
+        background: rgba(255,90,0,0.08);
         border: none;
-        font-size: 24px;
+        font-size: 20px;
         cursor: pointer;
-        color: #7a7a7a;
-        width: 36px;
-        height: 36px;
+        color: #ff5a00;
+        width: 34px;
+        height: 34px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 8px;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         padding: 0;
+        line-height: 1;
     }
 
-    .close-btn:hover {
-        background: rgba(255, 122, 0, 0.1);
-        color: #ff8a00;
+    .ck-close-btn:hover {
+        background: rgba(255, 90, 0, 0.18);
     }
 
-    .modal-body {
-        padding: 25px;
+    .ck-modal-body {
+        padding: 20px 25px;
     }
 
-    .cookie-options {
+    .ck-options {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
     }
 
-    .cookie-option {
+    .ck-option {
         display: flex;
         align-items: center;
-        padding: 14px;
-        background: #fbfbfb;
+        padding: 14px 16px;
+        background: #fafafa;
         border-radius: 12px;
-        gap: 12px;
-        border: 1px solid rgba(255, 122, 0, 0.05);
-        transition: all 0.3s ease;
+        gap: 14px;
+        border: 1.5px solid #f0f0f0;
+        transition: all 0.2s ease;
     }
 
-    .cookie-option:hover {
-        background: rgba(255, 122, 0, 0.05);
-        border-color: rgba(255, 122, 0, 0.1);
+    .ck-option:hover {
+        background: #fff5f0;
+        border-color: rgba(255, 90, 0, 0.2);
     }
 
-    .cookie-option input[type="checkbox"] {
+    .ck-option input[type="checkbox"] {
         width: 18px;
         height: 18px;
         cursor: pointer;
-        accent-color: #ff8a00;
+        accent-color: #ff5a00;
         flex-shrink: 0;
     }
 
-    .cookie-option label {
+    .ck-option label {
         flex: 1;
         cursor: pointer;
         margin: 0;
     }
 
-    .option-title {
-        font-weight: 600;
+    .ck-option-title {
+        font-weight: 700;
         color: #222;
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         font-size: 14px;
     }
 
-    .option-desc {
+    .ck-required-badge {
+        background: rgba(255,90,0,0.1);
+        color: #ff5a00;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,90,0,0.2);
+    }
+
+    .ck-option-desc {
         font-size: 12px;
-        color: #7a7a7a;
+        color: #888;
         display: block;
         margin-top: 3px;
     }
 
-    .modal-footer {
-        padding: 15px 25px;
-        border-top: 1px solid rgba(0, 0, 0, 0.04);
+    .ck-modal-footer {
+        padding: 16px 25px;
+        border-top: 1px solid #f0f0f0;
         display: flex;
-        gap: 12px;
+        gap: 10px;
+        border-radius: 0 0 18px 18px;
     }
 
-    .modal-footer .btn {
+    .ck-modal-footer .ck-btn {
         flex: 1;
+        padding: 12px;
     }
 
     @media (max-width: 768px) {
-        .cookie-container {
+        .ck-container {
             grid-template-columns: 1fr;
-            gap: 15px;
+            gap: 16px;
         }
 
-        .cookie-content {
+        .ck-content {
             flex-direction: column;
             text-align: center;
         }
 
-        .cookie-buttons {
+        .ck-links {
+            justify-content: center;
+            display: flex;
+        }
+
+        .ck-buttons {
             width: 100%;
+        }
+
+        .ck-btn {
+            flex: 1;
+        }
+
+        .ck-modal-footer {
             flex-direction: column;
-        }
-
-        .btn {
-            width: 100%;
-        }
-
-        .cookie-icon {
-            width: 44px;
-            height: 44px;
-            font-size: 20px;
-        }
-
-        .cookie-text h3 {
-            font-size: 16px;
-        }
-
-        .cookie-text p {
-            font-size: 13px;
-        }
-
-        .cookie-links a {
-            display: inline-block;
-            margin-right: 12px;
-            margin-bottom: 8px;
-        }
-
-        .modal-footer {
-            flex-direction: column;
-        }
-
-        #cookie-banner {
-            padding: 20px;
         }
     }
 </style>
 
 <script>
-    /* =======================
-   Cookie helpers
-======================= */
     function setCookie(name, value, days = 365) {
         const date = new Date();
         date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -365,74 +375,31 @@
         const ca = document.cookie.split(';');
         for (let i = 0; i < ca.length; i++) {
             const c = ca[i].trim();
-            if (c.indexOf(nameEQ) === 0) {
-                return decodeURIComponent(c.substring(nameEQ.length));
-            }
+            if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length));
         }
         return null;
     }
 
-    /* =======================
-       Banner / Modal controls
-    ======================= */
-    function showBanner() {
-        document.getElementById('cookie-banner').classList.add('active');
-    }
+    function showBanner() { document.getElementById('cookie-banner').classList.add('active'); }
+    function hideBanner() { document.getElementById('cookie-banner').classList.remove('active'); }
+    function openSettings() { document.getElementById('settings-modal').classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    function hideBanner() {
-        document.getElementById('cookie-banner').classList.remove('active');
-    }
-
-    function openSettings() {
-        document.getElementById('settings-modal').classList.add('active');
-    }
-
-    function closeModal(id) {
-        document.getElementById(id).classList.remove('active');
-    }
-
-    /* =======================
-       Safe browser-only data
-    ======================= */
     function storeSafeData() {
-        // Page views
         let views = parseInt(getCookie('page_views') || 0);
         setCookie('page_views', views + 1);
-
-        // Last visit
         setCookie('last_visit', new Date().toISOString());
-
-        // Language (store once)
-        if (!getCookie('language')) {
-            setCookie('language', navigator.language || 'en');
-        }
+        if (!getCookie('language')) setCookie('language', navigator.language || 'en');
     }
 
-    /* =======================
-       Consent actions
-    ======================= */
     function acceptAll() {
-        const consent = {
-            essential: true,
-            analytics: true,
-            marketing: false,
-            preferences: true
-        };
-
-        setCookie('cookie_consent', JSON.stringify(consent));
+        setCookie('cookie_consent', JSON.stringify({ essential: true, analytics: true, marketing: false, preferences: true }));
         storeSafeData();
         hideBanner();
     }
 
     function rejectAll() {
-        const consent = {
-            essential: true,
-            analytics: false,
-            marketing: false,
-            preferences: false
-        };
-
-        setCookie('cookie_consent', JSON.stringify(consent));
+        setCookie('cookie_consent', JSON.stringify({ essential: true, analytics: false, marketing: false, preferences: false }));
         hideBanner();
         closeModal('settings-modal');
     }
@@ -440,49 +407,25 @@
     function saveSettings() {
         const consent = {
             essential: true,
-            analytics: document.getElementById('analytics').checked,
-            marketing: document.getElementById('marketing').checked,
-            preferences: document.getElementById('preferences').checked
+            analytics: document.getElementById('ck-analytics').checked,
+            marketing: document.getElementById('ck-marketing').checked,
+            preferences: document.getElementById('ck-preferences').checked
         };
-
         setCookie('cookie_consent', JSON.stringify(consent));
-
-        if (consent.preferences) {
-            storeSafeData();
-        }
-
+        if (consent.preferences) storeSafeData();
         hideBanner();
         closeModal('settings-modal');
     }
 
-    /* =======================
-       Init
-    ======================= */
     document.addEventListener('DOMContentLoaded', function () {
         const consent = getCookie('cookie_consent');
-
-        if (!consent) {
-            showBanner();
-            return;
-        }
-
+        if (!consent) { showBanner(); return; }
         let prefs;
-        try {
-            prefs = JSON.parse(consent);
-        } catch (e) {
-            // remove old invalid cookie like "accepted"
-            setCookie('cookie_consent', '', -1);
-            showBanner();
-            return;
-        }
-
-        if (prefs.preferences) {
-            storeSafeData();
-        }
+        try { prefs = JSON.parse(consent); } catch (e) { setCookie('cookie_consent', '', -1); showBanner(); return; }
+        if (prefs.preferences) storeSafeData();
     });
 
-    /* Close modal on backdrop click */
-    document.getElementById('settings-modal').onclick = function(e) {
+    document.getElementById('settings-modal').onclick = function (e) {
         if (e.target === this) closeModal('settings-modal');
     };
 </script>

@@ -4,8 +4,11 @@
 @section('content')
 <div class="container-fluid">
     <div class="card">
-        <div class="card-header">
-            <h4 class="card-title mb-0">Gift Cards Management</h4>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url()->previous() }}" class="btn btn-light btn-sm"><i class="ri-arrow-left-line"></i> Back</a>
+                <h4 class="card-title mb-0">Gift Cards Management</h4>
+            </div>
         </div>
         <div class="card-body">
             <table id="giftCardsTable" class="table table-bordered table-striped">

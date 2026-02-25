@@ -18,7 +18,7 @@
                     </div>
 
                     <!-- Form -->
-                    <form method="POST" action="{{ route('register') }}" class="auth-form">
+                    <form method="POST" action="{{ route('register') }}" class="auth-form" onsubmit="let b=this.querySelector('[type=submit]');b.disabled=true;b.innerHTML='<span>Please wait...</span><i class=\'fas fa-spinner fa-spin\'></i>';">
                         @csrf
 
                         <div class="form-group">
