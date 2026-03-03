@@ -2,50 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use SEOMeta;
-use Twitter;
-use OpenGraph;
-use Stripe\Stripe;
-use App\Models\Tag;
-use App\Models\Plan;
-use App\Models\Banner;
-use App\Models\Master;
-use App\Models\Slider;
-use App\Models\Booking;
-use App\Models\Contact;
-use App\Models\Section;
-use App\Models\Service;
-use App\Models\FaqQuestion;
-use Stripe\Checkout\Session;
-use App\Models\ContentCategory;
-use App\Models\CompanyDetails;
-use Illuminate\Support\Facades\Cache;
-use App\Models\Product;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use App\Models\ContactEmail;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\ContactMail;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Http;
-
-use App\Models\DeliveryZone;
+use App\Mail\OrderConfirmationMail;
+use App\Models\CompanyDetails;
+use App\Models\Contact;
+use App\Models\ContactEmail;
 use App\Models\Coupon;
+use App\Models\CouponUsage;
+use App\Models\Credential;
+use App\Models\GiftCard;
+use App\Models\GiftcardPackage;
+use App\Models\Master;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemOption;
-use Illuminate\Support\Str;
-use App\Models\UserPoint;
-use App\Models\GiftcardPackage;
-use App\Models\GiftCard;
-use App\Mail\OrderConfirmationMail;
-use App\Models\Credential;
-use App\Helpers\PayPalHelper;
-use App\Models\CouponUsage;
-use Carbon\Carbon;
 use App\Models\Payment;
-use Illuminate\Support\Facades\DB;
+use App\Models\Product;
 use App\Models\ProductOptionItem;
+use App\Models\Section;
+use App\Models\Slider;
+use App\Models\User;
+use App\Models\UserPoint;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use OpenGraph;
+use SEOMeta;
+use Stripe\Checkout\Session;
+use Stripe\Stripe;
+use Twitter;
 
 class FrontendController extends Controller
 {
@@ -329,7 +316,7 @@ class FrontendController extends Controller
             $user = auth()->user();
 
             $payment = Payment::create([
-                'user_id'        => $user->id,
+                'user_id'        => $user->id ?? null,
                 'payment_type'   => 'giftcard',
                 'reference_id'   => $package->id,
                 'amount'         => $package->amount,
@@ -401,6 +388,8 @@ class FrontendController extends Controller
             ]
         ]);
 
+        Payment::where('id', $paymentId)->update(['transaction_id' => $session->id]);
+
         return response()->json([
             'success' => true,
             'redirectUrl' => $session->url
@@ -464,16 +453,28 @@ class FrontendController extends Controller
 
         return DB::transaction(function () use ($request, $paymentId, $checkoutData) {
             $payment = Payment::findOrFail($paymentId);
-            
+
+            if ($payment->status === 'completed' && $payment->reference_id) {
+                session()->forget(['giftcard_checkout', 'active_payment_id']);
+                return redirect()->route('gift-cards')->with('success', 'Gift card already issued.');
+            }
+
             if ($payment->payment_method === 'paypal') {
                 $this->handlePayPalGiftCardPayment($request, $checkoutData);
                 $payment->transaction_id = $request->token;
             } else {
-                $payment->transaction_id = $request->session_id;
+                $sessionId = $request->input('session_id');
+                if (!$sessionId) {
+                    throw new \Exception('Session ID missing');
+                }
+                $stripeCredential = Credential::where('gateway', 'Stripe')->first();
+                Stripe::setApiKey($stripeCredential->client_secret);
+                $stripeSession = Session::retrieve($sessionId);
+                if ($stripeSession->payment_status !== 'paid') {
+                    throw new \Exception('Stripe payment not confirmed');
+                }
+                $payment->transaction_id = $sessionId;
             }
-
-            $payment->status = 'completed';
-            $payment->save();
 
             $giftCard = GiftCard::create([
                 'code'         => $this->generateGiftCardCode(),
@@ -483,10 +484,12 @@ class FrontendController extends Controller
                 'is_active'    => true,
                 'purchased_by' => $payment->user_id,
                 'purchased_at' => now(),
-                'expires_at' => now()->addYears(10)
+                'expires_at'   => now()->addYears(10)
             ]);
 
-            $payment->update(['reference_id' => $giftCard->id]);
+            $payment->status = 'completed';
+            $payment->reference_id = $giftCard->id;
+            $payment->save();
 
             session()->forget(['giftcard_checkout', 'active_payment_id']);
 
@@ -888,7 +891,7 @@ class FrontendController extends Controller
             }
 
             $payment = Payment::create([
-                'user_id' => auth()->id(),
+                'user_id' => auth()->id() ?? null,
                 'payment_type' => 'order',
                 'reference_id' => 0,
                 'amount' => $calculationData['total'],
@@ -948,7 +951,7 @@ class FrontendController extends Controller
     {
         try {
             $payment = Payment::create([
-                'user_id' => auth()->id(),
+                'user_id' => auth()->id() ?? null,
                 'payment_type' => 'order',
                 'reference_id' => 0,
                 'amount' => $calculationData['total'],
@@ -1043,15 +1046,22 @@ class FrontendController extends Controller
 
             $payment->update(['status' => 'completed']);
             $order = $this->createOrder($calculationData);
-            $this->sendToHubRise($order, $calculationData);
             $payment->update(['reference_id' => $order->id]);
+            $this->sendToHubRise($order, $calculationData);
             session()->forget(['active_payment_id', 'checkout_data']);
+
+            if ($payment->status === 'completed' && $payment->reference_id) {
+            $order = Order::find($payment->reference_id);
+            if ($order) {
 
             return view('frontend.payment-success', [
                 'order' => $order,
                 'orderNumber' => $order->order_number,
                 'orderId' => $order->id
             ]);
+
+            }
+            }
 
         } catch (\Exception $e) {
             \Log::error('Order Payment Success Error: ' . $e->getMessage());

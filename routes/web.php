@@ -1,8 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\FrontendController;
+use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // cache clear
 Route::get('/clear', function() {
@@ -55,9 +57,6 @@ Route::get('/payment/success', [FrontendController::class, 'orderPaymentSuccess'
 Route::get('/payment/cancel', [FrontendController::class, 'orderPaymentCancel'])->name('order.payment.cancel');
 
 Route::get('/order-confirmation/{orderNumber}', [FrontendController::class, 'orderConfirmation'])->name('order.confirmation');
-
-// For later
-// Route::post('/stripe-webhook', [FrontendController::class, 'stripeWebhook'])->name('stripe.webhook');
 
 Route::get('/setup-hubrise-callback', [FrontendController::class, 'setupHubRiseCallback']);
 
