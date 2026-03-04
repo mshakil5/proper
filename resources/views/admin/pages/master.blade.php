@@ -50,6 +50,8 @@
 
         @include('admin.partials.confirmDelete')
 
+        <div class="vertical-overlay"></div>
+
         <div class="main-content">
             <section class="page-content">
                 @yield('content')

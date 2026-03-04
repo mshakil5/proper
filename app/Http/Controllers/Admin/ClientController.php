@@ -19,26 +19,28 @@ class ClientController extends Controller
         if ($request->ajax()) {
             $clients = User::where('user_type', 2)
                 ->with([
-                    'orders', 
-                    'purchasedGiftCards', 
-                    'userPoints', 
-                    'deliverySubscription', 
+                    'purchasedGiftCards',
+                    'userPoints',
+                    'deliverySubscription',
                     'deliverySubscriptionPayments'
                 ])
-                ->withSum('orders', 'total')
+                ->withCount(['orders as delivered_orders_count' => fn($q) => $q->where('status', 'delivered')])
+                ->withSum(['orders as delivered_orders_sum' => fn($q) => $q->where('status', 'delivered')], 'total')
                 ->latest();
 
             if ($request->has('min_order_sum')) {
-                $clients->having('orders_sum_total', '>=', $request->min_order_sum);
+                $clients->having('delivered_orders_sum', '>=', $request->min_order_sum);
             }
 
             return DataTables::of($clients)
                 ->addIndexColumn()
                 ->addColumn('orders', function($row){
-                    $ordersCount = $row->orders()->count();
-                    $totalAmount = number_format($row->orders_sum_total ?? 0, 2);
+                    $ordersCount = $row->delivered_orders_count ?? 0;
+                    $totalAmount = number_format($row->delivered_orders_sum ?? 0, 2);
                     return '<a href="'.route('admin.orders.index', ['client_id' => $row->id]).'" class="btn btn-soft-primary btn-sm">
-                                Orders <span class="badge bg-primary ms-1">'.$ordersCount.'</span> (£'.$totalAmount.')</a>';
+                                <i class="ri-shopping-bag-line me-1"></i>'.$ordersCount.' Orders
+                                <span class="badge bg-primary ms-1">£'.$totalAmount.'</span>
+                            </a>';
                 })
                 ->addColumn('gift_cards', function($row){
                     $giftCardsCount = $row->purchasedGiftCards()->count();
