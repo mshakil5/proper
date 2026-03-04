@@ -18,29 +18,44 @@ class ClientController extends Controller
     {
         if ($request->ajax()) {
             $clients = User::where('user_type', 2)
-                ->with(['orders', 'purchasedGiftCards', 'userPoints', 'deliverySubscription', 'deliverySubscriptionPayments'])
+                ->with([
+                    'orders', 
+                    'purchasedGiftCards', 
+                    'userPoints', 
+                    'deliverySubscription', 
+                    'deliverySubscriptionPayments'
+                ])
+                ->withSum('orders', 'total')
                 ->latest();
-            
+
+            if ($request->has('min_order_sum')) {
+                $clients->having('orders_sum_total', '>=', $request->min_order_sum);
+            }
+
             return DataTables::of($clients)
                 ->addIndexColumn()
                 ->addColumn('orders', function($row){
                     $ordersCount = $row->orders()->count();
-                    return '<a href="'.route('admin.orders.index', ['client_id' => $row->id]).'" class="btn btn-soft-primary btn-sm">Orders <span class="badge bg-primary ms-1">'.$ordersCount.'</span></a>';
+                    $totalAmount = number_format($row->orders_sum_total ?? 0, 2);
+                    return '<a href="'.route('admin.orders.index', ['client_id' => $row->id]).'" class="btn btn-soft-primary btn-sm">
+                                Orders <span class="badge bg-primary ms-1">'.$ordersCount.'</span> (£'.$totalAmount.')</a>';
                 })
                 ->addColumn('gift_cards', function($row){
                     $giftCardsCount = $row->purchasedGiftCards()->count();
-                    return '<a href="'.route('gift-cards.index', ['client_id' => $row->id]).'" class="btn btn-soft-info btn-sm">Gift Cards <span class="badge bg-info ms-1">'.$giftCardsCount.'</span></a>';
+                    return '<a href="'.route('gift-cards.index', ['client_id' => $row->id]).'" class="btn btn-soft-info btn-sm">
+                                Gift Cards <span class="badge bg-info ms-1">'.$giftCardsCount.'</span></a>';
                 })
                 ->addColumn('points', function($row){
                     $pointsCount = $row->userPoints()->sum('point');
-                    return '<a href="'.route('points.index', ['client_id' => $row->id]).'" class="btn btn-soft-success btn-sm">Points <span class="badge bg-success ms-1">'.$pointsCount.'</span></a>';
+                    return '<a href="'.route('points.index', ['client_id' => $row->id]).'" class="btn btn-soft-success btn-sm">
+                                Points <span class="badge bg-success ms-1">'.$pointsCount.'</span></a>';
                 })
                 ->addColumn('subscription', function($row){
                     $subscription = $row->deliverySubscription()->first();
                     $paymentsCount = $row->deliverySubscriptionPayments()->count();
-                    
                     if ($subscription && $subscription->isActive()) {
-                        return '<a href="'.route('subscriptions.index', ['client_id' => $row->id]).'" class="btn btn-soft-warning btn-sm">Subscription <span class="badge bg-warning ms-1">'.$paymentsCount.'</span></a>';
+                        return '<a href="'.route('subscriptions.index', ['client_id' => $row->id]).'" class="btn btn-soft-warning btn-sm">
+                                    Subscription <span class="badge bg-warning ms-1">'.$paymentsCount.'</span></a>';
                     }
                     return '<span class="badge bg-secondary">None</span>';
                 })

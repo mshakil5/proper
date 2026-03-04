@@ -298,22 +298,6 @@
                 });
             });
 
-            // Delete
-            $(document).on('click', '.deleteBtn', function() {
-                if (!confirm('Sure?')) return;
-                $.ajax({
-                    url: $(this).data('delete-url'),
-                    type: 'DELETE',
-                    success: function(res) {
-                        showSuccess(res.message);
-                        table.ajax.reload(null, false);
-                    },
-                    error: function(xhr) {
-                        showError(xhr.responseJSON?.message ?? 'Failed');
-                    }
-                });
-            });
-
             // Status toggle
             $(document).on('change', '.toggle-status', function() {
                 var id = $(this).data('id');
