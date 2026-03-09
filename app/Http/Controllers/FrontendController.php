@@ -1217,9 +1217,6 @@ class FrontendController extends Controller
         $accessToken = config('services.hubrise.access_token');
         $locationId  = config('services.hubrise.location_id');
 
-        \Log::info('HubRise Access Token: ' . $accessToken);
-        \Log::info('HubRise Location ID: ' . $locationId);
-
         if (!$accessToken || !$locationId) {
             throw new \Exception('HubRise credentials not configured');
         }
@@ -1271,7 +1268,7 @@ class FrontendController extends Controller
                 [
                     'name' => $paymentName,
                     'ref' => $paymentRef,
-                    'amount' => number_format($calculationData['total'], 2, '.', '') . ' GBP'
+                    'amount' => $calculationData['paymentMethod'] === 'cash' ? '0.00 GBP' : number_format($calculationData['total'], 2, '.', '') . ' GBP'
                 ]
             ],
             'customer' => [
