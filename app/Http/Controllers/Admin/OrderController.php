@@ -59,6 +59,13 @@ class OrderController extends Controller
                     return '<span class="badge bg-' . $color . '">' . ucfirst(str_replace('_', ' ', $row->status)) . '</span>';
                 })
                 ->addColumn('payment_status', function ($row) {
+                    if ($row->payment_method == 'cash') {
+                        if ($row->status == 'delivered') {
+                            return '<span class="badge bg-success">Completed</span>';
+                        }
+                        return '<span class="badge bg-warning">Pending (Cash)</span>';
+                    }
+
                     $status = $row->payment?->status ?? 'pending';
                     $badge  = $row->payment?->status_badge ?? 'warning';
                     return '<span class="badge bg-' . $badge . '">' . ucfirst($status) . '</span>';
@@ -72,6 +79,16 @@ class OrderController extends Controller
                     $color = $colors[$type] ?? 'secondary';
                     return '<span class="badge bg-' . $color . '">' . ucfirst($type) . '</span>';
                 })
+                ->addColumn('payment_method', function ($row) {
+                    $colors = [
+                        'cash'   => 'success',
+                        'stripe' => 'info',
+                        'paypal' => 'warning',
+                    ];
+                    $method = $row->payment_method ?? 'N/A';
+                    $color  = $colors[$method] ?? 'secondary';
+                    return '<span class="badge bg-' . $color . '">' . ucfirst($method) . '</span>';
+                })
                 ->addColumn('date', function ($row) {
                     return $row->created_at->format('M d, Y g:i A');
                 })
@@ -80,7 +97,7 @@ class OrderController extends Controller
                         <i class="ri-eye-line"></i> View
                     </a>';
                 })
-                ->rawColumns(['order_status', 'payment_status', 'action', 'delivery_type'])
+                ->rawColumns(['order_status', 'payment_status', 'action', 'delivery_type', 'payment_method'])
                 ->make(true);
         }
 

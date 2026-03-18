@@ -87,6 +87,7 @@
                         <th>Amount</th>
                         <th>Type</th>
                         <th>Order Status</th>
+                        <th>Payment Type</th>
                         <th>Payment Status</th>
                         <th>Date</th>
                         <th>Action</th>
@@ -140,6 +141,7 @@ $(function() {
                 data: 'order_status',
                 name: 'status'
             },
+            { data: 'payment_method', name: 'payment_method' },
             {
                 data: 'payment_status',
                 name: 'payment_status'
