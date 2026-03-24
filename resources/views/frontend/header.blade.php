@@ -216,13 +216,13 @@
 <script>
 
     const SHOP_HOURS = {
-        Monday:    { open: '16:00', close: '22:30' },
-        Tuesday:   { open: '16:00', close: '22:30' },
-        Wednesday: { open: '16:00', close: '22:30' },
-        Thursday:  { open: '16:00', close: '22:30' },
-        Friday:    { open: '16:00', close: '22:30' },
-        Saturday:  { open: '16:00', close: '22:30' },
-        Sunday:    { open: '16:00', close: '22:30' },
+        Monday:    { open: '16:30', close: '23:30' },
+        Tuesday:   { open: '16:30', close: '23:30' },
+        Wednesday: { open: '16:30', close: '23:30' },
+        Thursday:  { open: '16:30', close: '23:30' },
+        Friday:    { open: '16:30', close: '23:30' },
+        Saturday:  { open: '16:30', close: '23:30' },
+        Sunday:    { open: '16:30', close: '22:00' },
     };
 
     const ShopStatus = {
@@ -268,7 +268,7 @@
 
             if (element) {
                 element.querySelector('.status-text').textContent =
-                    state.isOpen ? 'OPEN' : 'OPEN AT 4:00PM';
+                    state.isOpen ? 'OPEN' : 'OPEN AT 4:30PM';
 
                 element.classList.toggle('open', state.isOpen);
                 element.classList.toggle('closed', !state.isOpen);

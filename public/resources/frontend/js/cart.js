@@ -1,13 +1,13 @@
 $(function () {
 
     const SHOP_HOURS = {
-        Monday:    { open: '16:00', close: '22:30' },
-        Tuesday:   { open: '16:00', close: '22:30' },
-        Wednesday: { open: '16:00', close: '22:30' },
-        Thursday:  { open: '16:00', close: '22:30' },
-        Friday:    { open: '16:00', close: '22:30' },
-        Saturday:  { open: '16:00', close: '22:30' },
-        Sunday:    { open: '16:00', close: '22:30' },
+        Monday:    { open: '16:30', close: '23:30' },
+        Tuesday:   { open: '16:30', close: '23:30' },
+        Wednesday: { open: '16:30', close: '23:30' },
+        Thursday:  { open: '16:30', close: '23:30' },
+        Friday:    { open: '16:30', close: '23:30' },
+        Saturday:  { open: '16:30', close: '23:30' },
+        Sunday:    { open: '16:30', close: '22:00' },
     };
 
     let selectedDelivery = {
@@ -197,8 +197,8 @@ $(function () {
     }
 
     function updateDeliveryStartTimes() {
-        let deliverySlots = generateTimeSlots(16, 10);
-        let collectionSlots = generateTimeSlots(16, 10);
+        let deliverySlots = generateTimeSlots(16, 30);
+        let collectionSlots = generateTimeSlots(16, 30);
         
         if (deliverySlots.length > 0) {
             $('#deliveryStartTime').text(deliverySlots[0].label.split(' - ')[0]);
@@ -916,7 +916,7 @@ $(function () {
         if ($(this).val() === 'delivery') {
             $('#deliveryMode').show();
             $('#collectionMode').hide();
-            populateTimeSlots('#deliveryMode .delivery-time-select', 16, 10);
+            populateTimeSlots('#deliveryMode .delivery-time-select', 16, 30);
             $('#deliveryMode .delivery-time-select').val('');
             selectedDelivery.isValid = false;
             selectedDelivery.charge = 0;
@@ -924,7 +924,7 @@ $(function () {
         } else {
             $('#deliveryMode').hide();
             $('#collectionMode').show();
-            populateTimeSlots('#collectionMode .delivery-time-select', 16, 10);
+            populateTimeSlots('#collectionMode .delivery-time-select', 16, 30);
             $('#collectionMode .delivery-time-select').val('');
             selectedDelivery.isValid = true;
             selectedDelivery.charge = 0;
@@ -1118,7 +1118,7 @@ $(function () {
 
     loadDeliveryData();
     updateDeliveryStartTimes();
-    populateTimeSlots('#deliveryMode .delivery-time-select', 16, 10);
-    populateTimeSlots('#collectionMode .delivery-time-select', 16, 10);
+    populateTimeSlots('#deliveryMode .delivery-time-select', 16, 30);
+    populateTimeSlots('#collectionMode .delivery-time-select', 16, 30);
     updateCartUI();
 });
