@@ -1400,7 +1400,8 @@ class FrontendController extends Controller
             
             $orderCount = Order::where('user_id', $order->user_id)->count();
             if ($orderCount === 1) {
-                $pointsEarned += 500;
+                // First order bonus 
+                // $pointsEarned += 500;
                 
                 $user = User::find($order->user_id);
                 if ($user->referred_by) {

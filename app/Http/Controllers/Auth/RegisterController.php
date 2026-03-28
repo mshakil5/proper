@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\WelcomeMail;
 use App\Models\User;
+use App\Models\UserPoint;
 use Exception;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
@@ -57,6 +58,14 @@ class RegisterController extends Controller
         Auth::login($user);
 
         $request->session()->regenerate();
+
+        UserPoint::create([
+            'user_id' => $user->id,
+            'order_id' => null,
+            'source' => 'registration_bonus',
+            'point' => 500,
+            'description' => 'Registration bonus points',
+        ]);
 
         try {
             Mail::to($user->email)->send(new WelcomeMail($user));
