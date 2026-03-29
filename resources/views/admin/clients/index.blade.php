@@ -122,8 +122,7 @@
                     <thead>
                         <tr>
                             <th>Sl</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
+                            <th>Name</th>
                             <th>Email</th>
                             <th>Phone</th>
                             <th>Status</th>
@@ -160,14 +159,7 @@
                         orderable: false,
                         searchable: false
                     },
-                    {
-                        data: 'first_name',
-                        name: 'first_name'
-                    },
-                    {
-                        data: 'last_name',
-                        name: 'last_name'
-                    },
+                    { data: 'name', name: 'name' },
                     {
                         data: 'email',
                         name: 'email'

@@ -34,6 +34,13 @@ class ClientController extends Controller
 
             return DataTables::of($clients)
                 ->addIndexColumn()
+                ->addColumn('name', function($row){
+                    return $row->first_name . ' ' . $row->last_name;
+                })
+                ->filterColumn('name', function($query, $keyword) {
+                    $sql = "CONCAT(first_name, ' ', last_name)  like ?";
+                    $query->whereRaw($sql, ["%{$keyword}%"]);
+                })
                 ->addColumn('orders', function($row){
                     $ordersCount = $row->delivered_orders_count ?? 0;
                     $totalAmount = number_format($row->delivered_orders_sum ?? 0, 2);
