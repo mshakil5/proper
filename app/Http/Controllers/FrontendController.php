@@ -559,7 +559,6 @@ class FrontendController extends Controller
         $paymentId = session('active_payment_id');
 
         if ($paymentId) {
-            // Mark the payment as failed/cancelled in your ledger
             Payment::where('id', $paymentId)
                     ->where('status', 'pending')
                     ->update(['status' => 'failed']);

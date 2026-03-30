@@ -40,7 +40,13 @@ class OrderController extends Controller
                     return '#' . $row->order_number;
                 })
                 ->addColumn('customer', function ($row) {
-                    return $row->first_name . ' ' . $row->last_name;
+                    $type = $row->user_id 
+                        ? '<span class="badge bg-success">Registered</span>' 
+                        : '<span class="badge bg-secondary">Guest</span>';
+                    return $row->first_name . ' ' . $row->last_name . 
+                        '<br><small class="text-muted"><i class="ri-mail-line"></i> ' . $row->email . '</small>' .
+                        '<br><small class="text-muted"><i class="ri-phone-line"></i> ' . ($row->phone ?? 'N/A') . '</small>' .
+                        '<br>' . $type;
                 })
                 ->addColumn('amounts', function ($row) {
                     return '£' . number_format($row->total, 2);
@@ -97,7 +103,7 @@ class OrderController extends Controller
                         <i class="ri-eye-line"></i> View
                     </a>';
                 })
-                ->rawColumns(['order_status', 'payment_status', 'action', 'delivery_type', 'payment_method'])
+                ->rawColumns(['order_status', 'payment_status', 'action', 'delivery_type', 'payment_method', 'customer'])
                 ->make(true);
         }
 
