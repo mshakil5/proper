@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Product;
-use App\Models\Contact;
-use App\Models\User;
-use Carbon\Carbon;
-use App\Models\Coupon;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\BirthdayVoucherMail;
-use App\Models\DeliverySubscription;
 use App\Mail\SubscriptionReminderMail;
+use App\Models\Category;
+use App\Models\Coupon;
+use App\Models\DeliverySubscription;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\OrderItemOption;
+use App\Models\Product;
+use App\Models\User;
+use App\Models\UserPoint;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class HomeController extends Controller
 {
@@ -32,6 +33,100 @@ class HomeController extends Controller
         } else {
             return redirect()->route('login');
         }
+    }
+
+    public function pos()
+    {
+        $categories = Category::with([
+            'products' => function ($q) {
+                $q->where('status', 1)
+                ->with(['options'])
+                ->orderBy('sl', 'asc');
+            }
+        ])
+        ->where('status', 1)
+        ->orderBy('sl', 'asc')
+        ->get();
+
+        $clients = User::where('user_type', 2)->orderBy('name')->get();
+
+        return view('admin.pos.create', compact('categories', 'clients'));
+    }
+
+    public function posGetProduct(Request $request)
+    {
+        $product = Product::with(['options.items.product'])->find($request->id);
+        if (!$product) {
+            return response()->json(['error' => 'Product not found'], 404);
+        }
+        return response()->json([
+            'id' => $product->id,
+            'title' => $product->title,
+            'price' => $product->price,
+            'image' => asset($product->image),
+            'has_attribute' => $product->has_attribute,
+            'attribute_price' => $product->attribute_price,
+            'attribute_name' => $product->attribute_name,
+            'has_options' => $product->options()->exists(),
+            'sku_ref' => $product->sku_ref,
+            'options' => $product->options->map(function($optionGroup) {
+                return [
+                    'id' => $optionGroup->id,
+                    'name' => $optionGroup->name,
+                    'required' => $optionGroup->is_required ? 1 : 0,
+                    'max' => $optionGroup->max_select,
+                    'type' => $optionGroup->type,
+                    'items' => $optionGroup->items->sortBy('override_price')->map(function($item) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->product->title ?? 'Unknown',
+                            'price' => $item->override_price ?? 0,
+                            'hubrise_option_ref' => $item->hubrise_option_ref ?? '',
+                            'product_id' => $item->product_id,
+                        ];
+                    })->values()
+                ];
+            })
+        ]);
+    }
+
+    public function posQuickCustomer(Request $request)
+    {
+        $request->validate([
+            'first_name' => 'required|string|max:100',
+            'last_name'  => 'required|string|max:100',
+            'email'      => 'required|email|unique:users,email',
+            'phone'      => 'required|string',
+            'password'   => 'nullable|string|min:6',
+        ]);
+
+        $user = User::create([
+            'name'       => $request->first_name . ' ' . $request->last_name,
+            'first_name' => $request->first_name,
+            'last_name'  => $request->last_name,
+            'email'      => strtolower($request->email),
+            'phone'      => preg_replace('/\s+/', '', $request->phone),
+            'password'   => Hash::make($request->password ?? 'Password123!'),
+            'user_type'  => '2',
+            'status'     => 1,
+            'image'      => '/placeholder.webp',
+            'last_login' => now(),
+        ]);
+
+        UserPoint::create([
+            'user_id'     => $user->id,
+            'order_id'    => null,
+            'source'      => 'registration_bonus',
+            'point'       => 500,
+            'description' => 'Registration bonus points',
+        ]);
+
+        return response()->json([
+            'id'    => $user->id,
+            'name'  => $user->name,
+            'phone' => $user->phone,
+            'email' => $user->email,
+        ]);
     }
 
     public function adminHome(Request $request)

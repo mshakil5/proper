@@ -102,6 +102,14 @@
                     </a>
                 </li>
 
+                <li class="nav-item d-none">
+                    <a href="{{ route('admin.pos') }}"
+                        class="nav-link {{ Route::is('admin.pos') ? 'active' : '' }}">
+                        <i class="ri-store-2-line me-2"></i>
+                        <span>POS</span>
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a href="{{ route('admin.orders.index') }}"
                         class="nav-link {{ Route::is('admin.orders.index') || Route::is('admin.orders.details') ? 'active' : '' }}">

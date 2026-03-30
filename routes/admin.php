@@ -23,6 +23,11 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
 
     Route::get('/dashboard', [HomeController::class, 'adminHome'])->name('admin.dashboard');
 
+    Route::get('/pos', [HomeController::class, 'pos'])->name('admin.pos');
+    Route::get('/pos/product', [HomeController::class, 'posGetProduct'])->name('admin.pos.product');
+
+    Route::post('/pos/quick-customer', [HomeController::class, 'posQuickCustomer'])->name('admin.pos.quick-customer');
+
     // Clients
     Route::get('/client', [ClientController::class, 'index'])->name('client.index');
     Route::post('/client', [ClientController::class, 'store'])->name('client.store');
