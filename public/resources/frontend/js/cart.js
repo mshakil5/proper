@@ -1003,28 +1003,6 @@ $(function () {
         let cart = sanitizeCart();
         let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-        if (subtotal < 25) {
-            let hasFriesOrDrinks = cart.some(item => {
-                let category = (item.category || '').toLowerCase();
-                return category.includes('fries') || category.includes('drinks');
-            });
-            
-            if (!hasFriesOrDrinks) {
-                showAlertModal(
-                    'Have you forgotten to add Fries or Drinks?',
-                    'Complete your meal with delicious sides and beverages',
-                    () => {
-                        $('#cartOffcanvas').removeClass('open');
-                        $('#cartOverlay').removeClass('open');
-                        $('#categoryPills .pill[data-filter="fries"]').click();
-                    },
-                    "Add Fries/Drinks",
-                    "Proceed to Checkout"
-                );
-                return;
-            }
-        }
-
         let hasPetFood = cart.some(item => {
             let category = (item.category || '').toLowerCase();
             return category.includes('treats for furry friends') ||
@@ -1045,6 +1023,28 @@ $(function () {
                 "Proceed to Checkout"
             );
             return;
+        }
+
+        if (subtotal < 25) {
+            let hasFriesOrDrinks = cart.some(item => {
+                let category = (item.category || '').toLowerCase();
+                return category.includes('fries') || category.includes('drinks');
+            });
+            
+            if (!hasFriesOrDrinks) {
+                showAlertModal(
+                    'Have you forgotten to add Fries or Drinks?',
+                    'Complete your meal with delicious sides and beverages',
+                    () => {
+                        $('#cartOffcanvas').removeClass('open');
+                        $('#cartOverlay').removeClass('open');
+                        $('#categoryPills .pill[data-filter="fries"]').click();
+                    },
+                    "Add Fries/Drinks",
+                    "Proceed to Checkout"
+                );
+                return;
+            }
         }
         
         continueCheckout();
@@ -1072,12 +1072,14 @@ $(function () {
 
                 html += `
                     <div style="padding:20px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:#f8f9fa;">
-                        <h4 style="margin:0; color:#1a1a1a;">${response.category_name || 'Treats for Furry Friends'}</h4>
+                        <h4 style="margin:0; color:#000;">
+                            ${response.category_name || 'Treats for Furry Friends'}
+                        </h4>
                         <button class="close-pet-modal" style="font-size:28px; background:none; border:none; cursor:pointer; color:#999;">×</button>
                     </div>
                     
                     <div style="padding:20px; max-height:65vh; overflow-y:auto;">
-                        <p style="margin:0 0 18px 0; color:#666; font-size:15px;">Select treats for your dog or cat:</p>
+                        <p style="margin:0 0 18px 0; color:#000; font-size:15px;">Select treats for your dog or cat:</p>
                         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">`;
 
                 let currentCart = sanitizeCart();
