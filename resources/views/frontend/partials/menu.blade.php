@@ -2,6 +2,7 @@
     $categories = App\Models\Category::with([
         'products' => function ($q) {
             $q->where('stock_status', 'in_stock')
+            ->where('status', 1)
             ->withCount('options');
         },
     ])

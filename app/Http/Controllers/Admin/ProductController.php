@@ -102,6 +102,19 @@ class ProductController extends Controller
                         </div>
                     ';
                 })
+
+                ->filterColumn('category_name', function($query, $keyword) {
+                    $query->whereHas('category', function($q) use ($keyword) {
+                        $q->where('name', 'like', "%{$keyword}%");
+                    });
+                })
+                ->filterColumn('price', function($query, $keyword) {
+                    $keyword = ltrim($keyword, '£');
+                    $query->where('price', 'like', "%{$keyword}%");
+                })
+                ->filterColumn('sku_ref', function($query, $keyword) {
+                    $query->where('sku_ref', 'like', "%{$keyword}%");
+                })
                 ->rawColumns(['status','action','image','sidebar','stock_status'])
                 ->make(true);
         }
