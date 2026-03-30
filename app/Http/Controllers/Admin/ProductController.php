@@ -106,7 +106,7 @@ class ProductController extends Controller
                 ->make(true);
         }
 
-        $categories = Category::where('status', 1)->get();
+        $categories = Category::latest()->get();
         $tags = Tag::where('status', 1)->get();
         return view('admin.product.index', compact('categories', 'tags'));
     }
