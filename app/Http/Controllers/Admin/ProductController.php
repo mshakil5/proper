@@ -106,7 +106,7 @@ class ProductController extends Controller
                 ->make(true);
         }
 
-        $categories = Category::latest()->get();
+        $categories = Category::orderBy('sl', 'asc')->get();
         $tags = Tag::where('status', 1)->get();
         return view('admin.product.index', compact('categories', 'tags'));
     }
@@ -299,8 +299,7 @@ class ProductController extends Controller
     public function toggleStockStatus(Request $request)
     {
         $product = Product::findOrFail($request->product_id);
-        $newStatus = $request->stock_status === 'in_stock' ? 'out_of_stock' : 'in_stock';
-        $product->update(['stock_status' => $newStatus]);
+        $product->update(['stock_status' => $request->stock_status]);
         return response()->json(['message' => 'Stock status updated successfully.'], 200);
     }
 

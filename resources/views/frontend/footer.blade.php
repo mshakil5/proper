@@ -65,7 +65,7 @@
                 </div>
 
                 @php
-                    $categories = App\Models\Category::where('status', 1)->pluck('name');
+                    $categories = App\Models\Category::orderBy('sl', 'asc')->where('status', 1)->pluck('name');
                     $chunks = $categories->chunk(ceil($categories->count() / 2));
                 @endphp
 
