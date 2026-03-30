@@ -171,7 +171,7 @@
                                 </select>
                             </div>
                         </div>
-                        <table id="productTable" class="table table-bordered table-striped">
+                        <table id="productTable" class="table table-bordered table-hover">
                             <thead>
                                 <tr>
                                     <th>Sl</th>
@@ -180,9 +180,8 @@
                                     <th>Price</th>
                                     <th>Category</th>
                                     <th>Reference</th>
-                                    <th>Status</th>
                                     <th>Stock</th>
-                                    <th>Show in Menu</th>
+                                    <th>In Option</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -198,7 +197,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <table id="productTableSub" class="table table-bordered table-striped">
+                        <table id="productTableSub" class="table table-bordered table-hover">
                             <thead>
                                 <tr>
                                     <th>Sl</th>
@@ -207,9 +206,8 @@
                                     <th>Price</th>
                                     <th>Category</th>
                                     <th>Reference</th>
-                                    <th>Status</th>
                                     <th>Stock</th>
-                                    <th>Show in Menu</th>
+                                    <th>In Option</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -234,6 +232,7 @@
                 serverSide: true,
                 pageLength: 25,
                 destroy: true,
+                order: [],
                 ajax: {
                     url: "{{ route('allproducts') }}",
                     data: function (d) {
@@ -252,7 +251,6 @@
                     { data: 'price', name: 'price' },
                     { data: 'category_name', name: 'category_name' },
                     { data: 'sku_ref', name: 'sku_ref' },
-                    { data: 'status', name: 'status', orderable: false, searchable: false },
                     { data: 'stock_status', name: 'stock_status', orderable: false, searchable: false },
                     { data: 'sidebar', name: 'sidebar', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
@@ -265,6 +263,8 @@
 
             $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
                 let type = $(e.target).data('type');
+
+                currentProductType = type;
 
                 if (type === 'sub') {
                     if ($.fn.DataTable.isDataTable('#productTableSub')) {
@@ -306,16 +306,17 @@
 
             $(document).on('change', '.toggle-stock-status', function() {
                 var product_id = $(this).data('id');
-                var stock_status = $(this).data('status');
+                var stock_status = $(this).prop('checked') ? 'in_stock' : 'out_of_stock';
+
                 $.post('/admin/products-toggle-stock', {
                     _token: '{{ csrf_token() }}',
                     product_id: product_id,
                     stock_status: stock_status
                 }, function(d) {
                     if (currentProductType === 'main') {
-                        mainTable.ajax.reload();
+                        mainTable.ajax.reload(null,false);
                     } else {
-                        subTable.ajax.reload();
+                        subTable.ajax.reload(null,false);
                     }
                     showSuccess(d.message);
                 }).fail(() => showError('Failed to update stock status'));

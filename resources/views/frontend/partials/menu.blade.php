@@ -1,12 +1,13 @@
 @php
     $categories = App\Models\Category::with([
         'products' => function ($q) {
-            $q->where('status', 1)->with('tag')->withCount('options');
+            $q->where('stock_status', 'in_stock')
+            ->withCount('options');
         },
     ])
-        ->where('status', 1)
-        ->orderBy('sl', 'asc')
-        ->get();
+    ->where('status', 1)
+    ->orderBy('sl', 'asc')
+    ->get();
     $firstCategory = $categories->first();
     $firstCategoryName = $firstCategory ? strtolower($firstCategory->name) : 'all';
 
@@ -51,13 +52,6 @@
                         style="display: {{ strtolower($category->name) === $firstCategoryName ? 'block' : 'none' }};">
                         <div class="img-wrap">
                             <img src="{{ asset($product->image) }}" alt="{{ $product->title }}">
-                            @if ($product->tag)
-                                @if (strtolower($product->tag->name) == 'veg')
-                                    <div class="badge-top veg">{{ $product->tag->name }}</div>
-                                @else
-                                    <div class="badge-top">{{ $product->tag->name }}</div>
-                                @endif
-                            @endif
                         </div>
                         <div class="card-body">
                             <h3 class="card-title">{{ $product->title }}</h3>

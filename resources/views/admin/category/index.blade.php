@@ -74,9 +74,9 @@
                                 <tr>
                                     <th>Sl</th>
                                     <th>Name</th>
-                                    <th>Hubrise Ref</th>
+                                    {{-- <th>Hubrise Ref</th> --}}
                                     <th>Status</th>
-                                    <th>Show in Menu</th>
+                                    <th>In Option</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -166,10 +166,10 @@
                         data: 'name',
                         name: 'name'
                     },
-                    {
-                        data: 'hubrise_ref',
-                        name: 'hubrise_ref'
-                    },
+                    // {
+                    //     data: 'hubrise_ref',
+                    //     name: 'hubrise_ref'
+                    // },
                     {
                         data: 'status',
                         name: 'status',
