@@ -39,7 +39,7 @@ class ProductController extends Controller
                 })
                 ->addColumn('image', function($row){
                     $src = $row->image ? asset($row->image) : asset('/placeholder.webp');
-                    return '<img src="'.$src.'" class="img-thumbnail">';
+                    return '<img src="'.$src.'" class="img-thumbnail img-fluid" width="200">';
                 })
                 ->addColumn('status', function($row){
                     $checked = $row->status == 1 ? 'checked' : '';
