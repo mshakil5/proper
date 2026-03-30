@@ -166,7 +166,6 @@ $(function () {
 
         let endTime = new Date(targetYear, targetMonth, targetDate, closeHour, closeMinute, 0);
 
-        // while (current <= endTime) {
         while ((current.getHours() * 60 + current.getMinutes()) + 20 <= closeHour * 60 + closeMinute) {
             let dayName = current.toLocaleDateString('en-GB', { weekday: 'long' });
             let start = current.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -403,7 +402,7 @@ $(function () {
         }, 1000);
     }
 
-    function showAlertModal(title, message, backCallback) {
+    function showAlertModal(title, message, backCallback, backButtonText = "Go Back", continueButtonText = "Continue") {
         const modalHtml = `
             <div class="cart-overlay open" id="alertOverlay"></div>
             <div class="alert-modal" id="alertModal">
@@ -420,10 +419,10 @@ $(function () {
                 </div>
                 <div class="alert-modal-actions">
                     <button class="btn-alert-action" id="goBack" style="background: #1a1a1a; flex: 1;">
-                        <i class="fas fa-arrow-left"></i> Go Back
+                        <i class="fas fa-arrow-left"></i> ${backButtonText}
                     </button>
                     <button class="btn-alert-action" id="confirmContinue" style="background: linear-gradient(135deg, #ff8a00, #ff5a00); flex: 1;">
-                        <i class="fas fa-check"></i> Continue
+                        <i class="fas fa-check"></i> ${continueButtonText}
                     </button>
                 </div>
             </div>
@@ -600,8 +599,6 @@ $(function () {
             $('#cartSubscriptionPaymentModal').remove();
         });
     }
-
-    // ===== EVENT HANDLERS =====
 
     $(document).on('click', '.open-product', function () {
         let hasOptions = $(this).data('has-options') == 1;
@@ -1004,11 +1001,11 @@ $(function () {
         e.preventDefault();
         
         let cart = sanitizeCart();
-        let subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        
+        let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
         if (subtotal < 25) {
             let hasFriesOrDrinks = cart.some(item => {
-                let category = item.category ? item.category.toLowerCase() : '';
+                let category = (item.category || '').toLowerCase();
                 return category.includes('fries') || category.includes('drinks');
             });
             
@@ -1020,27 +1017,181 @@ $(function () {
                         $('#cartOffcanvas').removeClass('open');
                         $('#cartOverlay').removeClass('open');
                         $('#categoryPills .pill[data-filter="fries"]').click();
-                    }
-                );
-                return;
-            }
-        } else {
-            let hasPetFood = cart.some(item => {
-                let category = item.category ? item.category.toLowerCase() : '';
-                return category.includes('pet food') || category.includes('dog') || category.includes('cat');
-            });
-            
-            if (!hasPetFood) {
-                showAlertModal(
-                    'Have you forgotten about your Dog/Cat or Pet Food?',
-                    'Add pet items to complete your order'
+                    },
+                    "Add Fries/Drinks",
+                    "Proceed to Checkout"
                 );
                 return;
             }
         }
+
+        let hasPetFood = cart.some(item => {
+            let category = (item.category || '').toLowerCase();
+            return category.includes('treats for furry friends') ||
+                category.includes('furry') ||
+                category.includes('pet');
+        });
+
+        if (!hasPetFood) {
+            showAlertModal(
+                'Have you forgotten about your Dog/Cat?',
+                'Add tasty treats for your furry friends',
+                () => {
+                    $('#cartOffcanvas').removeClass('open');
+                    $('#cartOverlay').removeClass('open');
+                    loadPetTreatsModal();
+                },
+                "Add Dog/Cat Meal",
+                "Proceed to Checkout"
+            );
+            return;
+        }
         
         continueCheckout();
     });
+
+    function loadPetTreatsModal() {
+        showLoader('Finding treats for your furry friends...');
+
+        $.ajax({
+            url: '/get-category-products',
+            type: 'GET',
+            data: { 
+                category_name: 'Treats for Furry Friends' 
+            },
+            dataType: 'json',
+            success: function(response) {
+                hideLoader();
+
+                if (!response.success || !response.products || response.products.length === 0) {
+                    showError('No pet treats available at the moment.');
+                    return;
+                }
+
+                let html = '<div id="petTreatsModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; width:90%; max-width:520px; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.4); z-index:99999; overflow:hidden; font-family:Arial, sans-serif;">';
+
+                html += `
+                    <div style="padding:20px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:#f8f9fa;">
+                        <h4 style="margin:0; color:#1a1a1a;">${response.category_name || 'Treats for Furry Friends'}</h4>
+                        <button class="close-pet-modal" style="font-size:28px; background:none; border:none; cursor:pointer; color:#999;">×</button>
+                    </div>
+                    
+                    <div style="padding:20px; max-height:65vh; overflow-y:auto;">
+                        <p style="margin:0 0 18px 0; color:#666; font-size:15px;">Select treats for your dog or cat:</p>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">`;
+
+                let currentCart = sanitizeCart();
+
+                response.products.forEach(function(product) {
+                    const isInCart = currentCart.some(function(item) {
+                        return Number(item.productId) === Number(product.id) && item.type === 'direct';
+                    });
+
+                    html += `
+                        <div style="border:1px solid #ddd; border-radius:10px; padding:12px; position:relative; background:#fff;">
+                            <div style="height:130px; margin-bottom:12px; border-radius:8px; overflow:hidden;">
+                                <img src="${product.image}" alt="${product.title}" 
+                                    style="width:100%; height:100%; object-fit:cover;" 
+                                    onerror="this.src='/placeholder.webp'">
+                            </div>
+                            <div style="font-size:15px; font-weight:600; margin-bottom:8px; line-height:1.3;">
+                                ${product.title}
+                            </div>
+                            <div style="color:#ff8a00; font-weight:bold; font-size:16px;">
+                                £${parseFloat(product.price).toFixed(2)}
+                            </div>
+                            
+                            <label style="position:absolute; top:15px; right:15px; cursor:pointer;">
+                                <input type="checkbox" class="pet-treat-checkbox"
+                                    data-id="${product.id}"
+                                    data-title="${product.title}"
+                                    data-price="${product.price}"
+                                    data-image="${product.image}"
+                                    data-sku-ref="${product.sku_ref || ''}"
+                                    data-category="Treats for Furry Friends"
+                                    ${isInCart ? 'checked disabled' : ''}
+                                    style="width:22px; height:22px; accent-color:#ff8a00;">
+                            </label>
+                        </div>`;
+                });
+
+                html += `</div></div>
+                    
+                    <div style="padding:18px 20px; border-top:1px solid #eee; display:flex; gap:12px;">
+                        <button id="cancelPetTreats" style="flex:1; padding:12px; background:#f1f1f1; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Cancel</button>
+                        <button id="addSelectedPetTreats" style="flex:1; padding:12px; background:linear-gradient(135deg, #ff8a00, #ff5a00); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Add Selected Treats</button>
+                    </div>
+                </div>`;
+
+                $('body').append(html);
+
+                $('.close-pet-modal, #cancelPetTreats').on('click', function() {
+                    $('#petTreatsModal').remove();
+                });
+
+                $('#addSelectedPetTreats').on('click', function() {
+                    let selected = [];
+                    
+                    $('.pet-treat-checkbox:checked').each(function() {
+                        if (!$(this).prop('disabled')) {
+                            selected.push({
+                                productId: Number($(this).data('id')),
+                                title: $(this).data('title'),
+                                price: parseFloat($(this).data('price')),
+                                image: $(this).data('image'),
+                                skuRef: $(this).data('sku-ref') || '',
+                                category: $(this).data('category')
+                            });
+                        }
+                    });
+
+                    if (selected.length === 0) {
+                        showError('Please select at least one treat');
+                        return;
+                    }
+
+                    addMultipleToCart(selected);
+                    $('#petTreatsModal').remove();
+                    renderCart();
+                    showSuccess(selected.length + ' treat(s) added to cart!');
+                });
+            },
+            error: function(xhr) {
+                hideLoader();
+                showError('Failed to load pet treats. Please try again.');
+            }
+        });
+    }
+
+    function addMultipleToCart(items) {
+        let cart = sanitizeCart();
+
+        items.forEach(item => {
+            let existing = cart.find(cartItem => 
+                Number(cartItem.productId) === Number(item.productId) && 
+                cartItem.type === 'direct'
+            );
+
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({
+                    productId: item.productId,
+                    id: item.productId,
+                    title: String(item.title || '').trim(),
+                    image: String(item.image || '').trim(),
+                    price: Number(item.price) || 0,
+                    skuRef: String(item.skuRef || '').trim(),
+                    category: String(item.category || '').trim(),
+                    quantity: 1,
+                    type: "direct"
+                });
+            }
+        });
+
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartUI();
+    }
 
     $(document).on('change', 'input[name="attribute_select"]', function() {
         if ($(this).val() === 'with_options') {
@@ -1113,8 +1264,6 @@ $(function () {
         updateCartUI();
         showSuccess('Items added from previous order!');
     });
-
-    // ===== INITIALIZATION =====
 
     loadDeliveryData();
     updateDeliveryStartTimes();

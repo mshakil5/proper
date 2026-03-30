@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\ContactMail;
 use App\Mail\OrderConfirmationMail;
+use App\Models\Category;
 use App\Models\CompanyDetails;
 use App\Models\Contact;
 use App\Models\ContactEmail;
@@ -257,6 +258,40 @@ class FrontendController extends Controller
         $html = view('frontend.product', compact('product'))->render();
 
         return response()->json(['html' => $html]);
+    }
+
+    public function getCategoryProducts(Request $request)
+    {
+        $categoryName = $request->query('category_name');
+
+        if (empty($categoryName)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Category name is required'
+            ], 400);
+        }
+
+        $category = Category::whereRaw('LOWER(name) = ?', [strtolower(trim($categoryName))])
+                            ->first();
+
+        if (!$category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Category not found'
+            ], 404);
+        }
+
+        $products = Product::where('category_id', $category->id)
+            ->where('stock_status', 'in_stock')
+            ->select('id', 'title', 'price', 'image', 'sku_ref')
+            ->orderBy('title', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'products' => $products,
+            'category_name' => $category->name
+        ]);
     }
 
     public function menu()

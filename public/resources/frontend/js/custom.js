@@ -111,3 +111,25 @@ window.showConfirm = function (msg, callback) {
         }
     });
 };
+
+window.showLoader = function(message = 'Loading...') {
+    let loader = document.getElementById('loadingModal');
+    if (!loader) {
+        const loaderHTML = `
+        <div id="loadingModal" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; z-index: 99999;">
+            <div style="background: white; padding: 40px 50px; border-radius: 16px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 320px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #ff8a00; margin-bottom: 20px; display: block;"></i>
+                <h4 style="margin: 0 0 8px; color: #1a1a1a;">${message}</h4>
+                <p style="margin: 0; color: #777; font-size: 14px;">Please wait...</p>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', loaderHTML);
+        loader = document.getElementById('loadingModal');
+    }
+    loader.style.display = 'flex';
+};
+
+window.hideLoader = function() {
+    const loader = document.getElementById('loadingModal');
+    if (loader) $(loader).fadeOut(300);
+};

@@ -40,6 +40,10 @@ Route::get('/our-story', [FrontendController::class, 'ourStory'])->name('our-sto
 
 Route::get('/gift-cards', [FrontendController::class, 'giftCards'])->name('gift-cards');
 
+Route::get('/product', [FrontendController::class, 'product']);
+
+Route::get('/get-category-products', [FrontendController::class, 'getCategoryProducts']);
+
 Route::middleware('auth')->group(function () {
     Route::post('/giftcard/checkout', [FrontendController::class, 'giftCardCheckout'])->name('giftcard.checkout');
     Route::get('/giftcard/payment/success', [FrontendController::class, 'giftCardPaymentSuccess'])->name('giftcard.payment.success');
@@ -81,7 +85,5 @@ Route::get('/earn-points', [FrontendController::class, 'earnPoints'])->name('ear
 Route::get('/sitemap.xml', [FrontendController::class, 'sitemap']);
 
 Route::get('/catalog/facebook', [FrontendController::class, 'facebookCatalog']);
-
-Route::get('/product', [FrontendController::class, 'product']);
 
 Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
