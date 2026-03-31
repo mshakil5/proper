@@ -1270,7 +1270,7 @@ $(function () {
 
     function initLinkedOptionFilter() {
         const title = $('#productTitle').text().trim().toLowerCase();
-        if (title !== 'combo kebab') return;
+        if (title != 'combo kebab') return;
 
         const sections = [];
         $('.product-section[data-option-id]').each(function() {
