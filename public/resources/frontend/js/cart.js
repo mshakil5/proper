@@ -1274,7 +1274,7 @@ $(function () {
 
     function initLinkedOptionFilter() {
         const title = $('#productTitle').text().trim().toLowerCase();
-        if (title.indexOf('combo kebab') === -1) return;
+        if (title.indexOf('combo kebab') == -1) return;
 
         const sections = [];
         $('.product-section[data-option-id]').each(function() {
@@ -1287,7 +1287,7 @@ $(function () {
             for (let j = i + 1; j < sections.length; j++) {
                 const aIds = sections[i].find('.option-input').map(function(){ return $(this).val(); }).get().sort().join(',');
                 const bIds = sections[j].find('.option-input').map(function(){ return $(this).val(); }).get().sort().join(',');
-                if (aIds === bIds) {
+                if (aIds == bIds) {
                     bindLinkedSections(sections[i], sections[j]);
                 }
             }
