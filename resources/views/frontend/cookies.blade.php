@@ -359,6 +359,44 @@
             flex-direction: column;
         }
     }
+    @media (max-width: 480px) {
+    #cookie-banner {
+        padding: 14px;
+    }
+
+    .ck-content {
+        flex-direction: row;
+        text-align: left;
+        align-items: flex-start;
+    }
+
+    .ck-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+        border-radius: 10px;
+    }
+
+    .ck-text h3 {
+        font-size: 14px;
+    }
+
+    .ck-text p {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .ck-buttons {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .ck-btn {
+        flex: 1;
+        padding: 9px 10px;
+        font-size: 13px;
+    }
+}
 </style>
 
 <script>
