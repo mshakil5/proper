@@ -614,9 +614,13 @@ $(function () {
                     $('#productModal .modal-body').html(res.html);
                     const modalEl = document.getElementById('productModal');
                     const modal = new bootstrap.Modal(modalEl);
+
+                    $(modalEl).one('shown.bs.modal', function() {
+                        updateTotalPrice();
+                        initLinkedOptionFilter();
+                    });
+
                     modal.show();
-                    updateTotalPrice();
-                    initLinkedOptionFilter();
                 },
                 error: function (err) {}
             });
@@ -1269,27 +1273,25 @@ $(function () {
     });
 
     function initLinkedOptionFilter() {
-        setTimeout(function() {
-            const title = $('#productTitle').text().trim().toLowerCase();
-            if (title.indexOf('combo kebab') === -1) return;
+        const title = $('#productTitle').text().trim().toLowerCase();
+        if (title.indexOf('combo kebab') === -1) return;
 
-            const sections = [];
-            $('.product-section[data-option-id]').each(function() {
-                sections.push($(this));
-            });
+        const sections = [];
+        $('.product-section[data-option-id]').each(function() {
+            sections.push($(this));
+        });
 
-            if (sections.length < 2) return;
+        if (sections.length < 2) return;
 
-            for (let i = 0; i < sections.length; i++) {
-                for (let j = i + 1; j < sections.length; j++) {
-                    const aIds = sections[i].find('.option-input').map(function(){ return $(this).val(); }).get().sort().join(',');
-                    const bIds = sections[j].find('.option-input').map(function(){ return $(this).val(); }).get().sort().join(',');
-                    if (aIds === bIds) {
-                        bindLinkedSections(sections[i], sections[j]);
-                    }
+        for (let i = 0; i < sections.length; i++) {
+            for (let j = i + 1; j < sections.length; j++) {
+                const aIds = sections[i].find('.option-input').map(function(){ return $(this).val(); }).get().sort().join(',');
+                const bIds = sections[j].find('.option-input').map(function(){ return $(this).val(); }).get().sort().join(',');
+                if (aIds === bIds) {
+                    bindLinkedSections(sections[i], sections[j]);
                 }
             }
-        }, 100);
+        }
     }
 
     function bindLinkedSections(sectionA, sectionB) {
