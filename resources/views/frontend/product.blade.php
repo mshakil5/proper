@@ -89,7 +89,7 @@
             </div>
             @else
 
-            @forelse($product->options as $option)
+            @forelse($product->options->sortBy('sort_order') as $option)
                 <div class="product-section" data-option-id="{{ $option->id }}"
                     data-required="{{ $option->is_required ? 1 : 0 }}" data-max="{{ $option->max_select }}">
                     <div class="product-section-title">

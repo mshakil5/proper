@@ -616,6 +616,7 @@ $(function () {
                     const modal = new bootstrap.Modal(modalEl);
                     modal.show();
                     updateTotalPrice();
+                    initLinkedOptionFilter();
                 },
                 error: function (err) {}
             });
@@ -1266,6 +1267,47 @@ $(function () {
         updateCartUI();
         showSuccess('Items added from previous order!');
     });
+
+    function initLinkedOptionFilter() {
+        const title = $('#productTitle').text().trim().toLowerCase();
+        if (title !== 'combo kebab') return;
+
+        const sections = [];
+        $('.product-section[data-option-id]').each(function() {
+            sections.push($(this));
+        });
+
+        if (sections.length < 2) return;
+
+        for (let i = 0; i < sections.length; i++) {
+            for (let j = i + 1; j < sections.length; j++) {
+                const aIds = sections[i].find('.option-input').map(function(){ return $(this).val(); }).get().sort().join(',');
+                const bIds = sections[j].find('.option-input').map(function(){ return $(this).val(); }).get().sort().join(',');
+
+                if (aIds === bIds) {
+                    bindLinkedSections(sections[i], sections[j]);
+                }
+            }
+        }
+    }
+
+    function bindLinkedSections(sectionA, sectionB) {
+        function syncFilter(changed, other) {
+            const checkedVal = changed.find('.option-input:checked').val();
+            other.find('.option-item').show();
+            if (checkedVal) {
+                other.find('.option-input[value="' + checkedVal + '"]').closest('.option-item').hide();
+                const conflict = other.find('.option-input[value="' + checkedVal + '"]:checked');
+                if (conflict.length) {
+                    conflict.prop('checked', false);
+                }
+            }
+            updateTotalPrice();
+        }
+
+        sectionA.on('change', '.option-input', function() { syncFilter(sectionA, sectionB); });
+        sectionB.on('change', '.option-input', function() { syncFilter(sectionB, sectionA); });
+    }
 
     loadDeliveryData();
     updateDeliveryStartTimes();
