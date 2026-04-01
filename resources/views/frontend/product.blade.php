@@ -26,16 +26,14 @@
 
                 <div class="option-group">
                     <div class="option-item">
-                        <input type="radio" name="attribute_select" value="standalone" 
-                            class="option-input attribute-input" id="attr_standalone">
+                        <input type="checkbox" name="attribute_select" value="standalone" class="option-input attribute-input" id="attr_standalone">
                         <label for="attr_standalone" class="option-label">
                             On its own
                         </label>
                     </div>
 
                     <div class="option-item">
-                        <input type="radio" name="attribute_select" value="with_options" 
-                            class="option-input attribute-input" id="attr_with_options">
+                        <input type="checkbox" name="attribute_select" value="with_options" class="option-input attribute-input" id="attr_with_options">
                         <label for="attr_with_options" class="option-label">
                             {{ $product->attribute_name }}
                             @if ($product->attribute_price > 0)
@@ -49,7 +47,7 @@
             <div id="optionsContainer" style="display: none;">
                 @forelse($product->options->sortBy('sort_order') as $option)
                     <div class="product-section" data-option-id="{{ $option->id }}"
-                        data-required="{{ $option->is_required ? 1 : 0 }}" data-max="{{ $option->max_select }}">
+                        data-required="{{ $option->is_required ? 1 : 0 }}" data-max="{{ $option->type === 'single' ? 1 : $option->max_select }}">
                         <div class="product-section-title">
                             <i class="fas fa-layer-group"></i>
                             {{ $option->name }}
@@ -57,11 +55,16 @@
                                 <span class="required">*</span>
                             @endif
                         </div>
+                        @if ($option->type === 'multiple' && $option->max_select > 0)
+                            <small class="text-muted d-block mb-2">
+                                Max selections: <strong>{{ $option->max_select }}</strong>
+                            </small>
+                        @endif
 
                         <div class="option-group">
                             @foreach ($option->items->sortBy('override_price') as $item)
                                 <div class="option-item">
-                                    <input type="{{ $option->type === 'single' ? 'radio' : 'checkbox' }}"
+                                    <input type="checkbox"
                                         name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
                                         value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
                                         data-title="{{ $item->product->title }}" data-product-id="{{ $item->product_id }}"
@@ -77,12 +80,6 @@
                                 </div>
                             @endforeach
                         </div>
-
-                        @if ($option->type === 'multiple' && $option->max_select > 0)
-                            <small class="text-muted d-block mt-2">
-                                Max selections: <strong>{{ $option->max_select }}</strong>
-                            </small>
-                        @endif
                     </div>
                 @empty
                 @endforelse
@@ -91,7 +88,7 @@
 
             @forelse($product->options->sortBy('sort_order') as $option)
                 <div class="product-section" data-option-id="{{ $option->id }}"
-                    data-required="{{ $option->is_required ? 1 : 0 }}" data-max="{{ $option->max_select }}">
+                    data-required="{{ $option->is_required ? 1 : 0 }}" data-max="{{ $option->type === 'single' ? 1 : $option->max_select }}">
                     <div class="product-section-title">
                         <i class="fas fa-layer-group"></i>
                         {{ $option->name }}
@@ -99,11 +96,16 @@
                             <span class="required">*</span>
                         @endif
                     </div>
+                    @if ($option->type === 'multiple' && $option->max_select > 0)
+                        <small class="text-muted d-block mb-2">
+                            Max selections: <strong>{{ $option->max_select }}</strong>
+                        </small>
+                    @endif
 
                     <div class="option-group">
                         @foreach ($option->items->sortBy('override_price') as $item)
                             <div class="option-item">
-                                <input type="{{ $option->type === 'single' ? 'radio' : 'checkbox' }}"
+                                <input type="checkbox"
                                     name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
                                     value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
                                     data-title="{{ $item->product->title }}" data-product-id="{{ $item->product_id }}"
@@ -119,12 +121,6 @@
                             </div>
                         @endforeach
                     </div>
-
-                    @if ($option->type === 'multiple')
-                        <small class="text-muted d-block mt-2">
-                            Max selections: <strong>{{ $option->max_select }}</strong>
-                        </small>
-                    @endif
                 </div>
             @empty
             @endforelse

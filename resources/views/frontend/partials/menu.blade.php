@@ -8,7 +8,13 @@
     ])
     ->where('status', 1)
     ->orderBy('sl', 'asc')
-    ->get();
+    ->get()
+    ->map(function ($category) {
+        if (strtolower($category->name) === 'fries') {
+            $category->setRelation('products', $category->products->sortBy('price')->values());
+        }
+        return $category;
+    });
     $firstCategory = $categories->first();
     $firstCategoryName = $firstCategory ? strtolower($firstCategory->name) : 'all';
 

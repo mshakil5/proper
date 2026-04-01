@@ -1336,7 +1336,7 @@ footer a:hover {
 }
 
 .product-modal-body::-webkit-scrollbar {
-    width: 6px;
+    width: 10px;
 }
 
 .product-modal-body::-webkit-scrollbar-track {
@@ -1733,7 +1733,7 @@ footer a:hover {
 }
 
 .cart-scrollable-content::-webkit-scrollbar {
-    width: 6px;
+    width: 10px;
 }
 
 .cart-scrollable-content::-webkit-scrollbar-track {

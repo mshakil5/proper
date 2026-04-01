@@ -656,7 +656,11 @@ $(function () {
         if ($(this).attr('type') === 'checkbox') {
             let max = Number(parentSection.data('max')) || 0;
             let checkedCount = parentSection.find('input[type="checkbox"]:checked').length;
-            if (max && checkedCount > max) {
+
+            if (max === 1) {
+                // single-select behaviour: uncheck others, allow unchecking current
+                parentSection.find('input[type="checkbox"]').not(this).prop('checked', false);
+            } else if (max && checkedCount > max) {
                 $(this).prop('checked', false);
                 showError(`Maximum ${max} selections allowed`);
             }
@@ -1026,14 +1030,15 @@ $(function () {
 
         if (!hasPetFood) {
             showAlertModal(
-                'Have you forgotten about your Dog/Cat?',
-                'Add tasty treats for your furry friends',
+                'Have you forgotten to add something for your furry friends?',
+                'Add pet treats to include the full family!',
                 () => {
                     $('#cartOffcanvas').removeClass('open');
                     $('#cartOverlay').removeClass('open');
-                    loadPetTreatsModal();
+                    $('#categoryPills .pill[data-filter="treats for furry friends"]').click();
+                    $('html, body').animate({ scrollTop: $('#product').offset().top }, 600);
                 },
-                "Add Dog/Cat Meal",
+                "Add Pet Treats",
                 "Proceed to Checkout"
             );
             return;
@@ -1210,9 +1215,15 @@ $(function () {
     }
 
     $(document).on('change', 'input[name="attribute_select"]', function() {
-        if ($(this).val() === 'with_options') {
-            $('#optionsContainer').slideDown();
-            $('.attribute-input').not(this).prop('checked', false);
+        $('.attribute-input').not(this).prop('checked', false);
+
+        if ($(this).is(':checked')) {
+            if ($(this).val() === 'with_options') {
+                $('#optionsContainer').slideDown();
+            } else {
+                $('#optionsContainer').slideUp();
+                $('#optionsContainer').find('.option-input').prop('checked', false);
+            }
         } else {
             $('#optionsContainer').slideUp();
             $('#optionsContainer').find('.option-input').prop('checked', false);
