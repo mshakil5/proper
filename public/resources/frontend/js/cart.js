@@ -366,6 +366,15 @@ $(function () {
         }
 
         if (selectedDelivery.type === 'delivery') {
+
+            let cart = sanitizeCart();
+            let subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            
+            if (subtotal < 15) {
+                showError('Minimum order for delivery is £15.00');
+                return;
+            }
+            
             if (!selectedDelivery.isValid) {
                 showError('Please verify your postcode for delivery');
                 return;

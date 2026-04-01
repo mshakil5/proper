@@ -58,8 +58,8 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Discount Type <span class="text-danger">*</span></label>
                                     <select class="form-control" id="discount_type" name="discount_type">
-                                        <option value="percent">Percentage (%)</option>
                                         <option value="fixed">Fixed Amount (£)</option>
+                                        {{-- <option value="percent">Percentage (%)</option> --}}
                                     </select>
                                 </div>
 

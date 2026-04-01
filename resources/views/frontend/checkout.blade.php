@@ -866,6 +866,16 @@
 
                 clearAllErrors();
 
+                if (checkoutData.delivery.type === 'delivery') {
+                    let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode.discount - pointsUsedDiscount;
+                    
+                    if (finalTotal < 15) {
+                        $btn.prop('disabled', false).text(originalText);
+                        showMinOrderModal();
+                        return;
+                    }
+                }
+
                 let customerData = getCustomerData();
                 let address = $('#address').val().trim();
                 let address2 = $('#address2').val().trim();
@@ -954,6 +964,162 @@
                     }
                 });
             });
+
+            function showMinOrderModal() {
+                let cart = checkoutData.cart.map(item => ({ ...item }));
+
+                function calcTotal(c) {
+                    let sub = c.reduce((s, i) => s + i.price * i.quantity, 0);
+                    return sub + checkoutData.deliveryCharge - appliedPromoCode.discount - pointsUsedDiscount;
+                }
+
+                function renderModalItems(c) {
+                    let html = '';
+                    c.forEach((item, idx) => {
+                        let optionsHTML = '';
+                        if (item.type === 'custom' && item.options) {
+                            optionsHTML = '<ul style="margin:2px 0 4px 0; padding-left:14px; font-size:11px; color:#999; list-style:disc;">';
+                            Object.values(item.options).forEach(optArr => {
+                                optArr.forEach(opt => {
+                                    optionsHTML += `<li>${escapeHtml(opt.title)}</li>`;
+                                });
+                            });
+                            optionsHTML += '</ul>';
+                        }
+
+                        html += `
+                            <div style="display:grid; grid-template-columns:50px 1fr auto; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid #eee;">
+                                <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
+                                <div>
+                                    <div style="font-size:13px;font-weight:600;color:#1a1a1a;">${escapeHtml(item.title)}</div>
+                                    ${optionsHTML}
+                                    <div style="font-size:13px;color:#ff8a00;font-weight:700;">£${item.price.toFixed(2)}</div>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <button class="min-order-minus" data-idx="${idx}" style="width:28px;height:28px;border-radius:50%;border:none;background:#f1f1f1;color:#1a1a1a;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+                                    <span class="min-order-qty" data-idx="${idx}" style="min-width:20px;text-align:center;font-weight:700;color:#1a1a1a;">${item.quantity}</span>
+                                    <button class="min-order-plus" data-idx="${idx}" style="width:28px;height:28px;border-radius:50%;border:none;background:#ff8a00;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    return html;
+                }
+
+                function renderModal() {
+                    let total = calcTotal(cart);
+                    let remaining = Math.max(0, 15 - total).toFixed(2);
+                    let reached = total >= 15;
+
+                    let modalHtml = `
+                        <div id="minOrderOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99998;"></div>
+                        <div id="minOrderModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;width:90%;max-width:480px;border-radius:16px;z-index:99999;overflow:hidden;font-family:inherit;max-height:90vh;display:flex;flex-direction:column;">
+                            
+                            <div style="padding:18px 20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <div style="font-size:16px;font-weight:700;color:#1a1a1a;">Almost there! 🛒</div>
+                                    <div style="font-size:12px;color:#999;margin-top:2px;">Minimum £15.00 required for home delivery</div>
+                                </div>
+                                <button id="minOrderClose" style="background:none;border:none;color:#999;font-size:22px;cursor:pointer;line-height:1;">×</button>
+                            </div>
+
+                            <div style="padding:14px 20px;background:#f8f9fa;border-bottom:1px solid #eee;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                    <span style="font-size:13px;color:#666;">Current total (after discounts):</span>
+                                    <span id="minOrderTotal" style="font-size:15px;font-weight:700;color:#ff8a00;">£${total.toFixed(2)}</span>
+                                </div>
+                                <div style="background:#eee;border-radius:8px;overflow:hidden;height:8px;">
+                                    <div id="minOrderBar" style="height:100%;background:linear-gradient(90deg,#ff8a00,#ff5a00);transition:width 0.3s;width:${Math.min(100,(total/15)*100)}%;"></div>
+                                </div>
+                                <div id="minOrderHint" style="font-size:12px;color:#666;margin-top:6px;text-align:right;">
+                                    ${reached ? '<span style="color:#28a745;font-weight:600;">✓ Minimum reached!</span>' : `Add <strong style="color:#1a1a1a;">£${remaining}</strong> more to continue`}
+                                </div>
+                            </div>
+
+                            <div style="padding:0 20px;overflow-y:auto;flex:1;">
+                                <div id="minOrderItems">${renderModalItems(cart)}</div>
+                            </div>
+
+                            <div style="padding:16px 20px;border-top:1px solid #eee;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                <button id="minOrderCancel" style="padding:12px;background:#f1f1f1;color:#1a1a1a;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">Cancel</button>
+                                <button id="minOrderContinue" ${reached ? '' : 'disabled'} style="padding:12px;background:${reached ? 'linear-gradient(135deg,#ff8a00,#ff5a00)' : '#ddd'};color:${reached ? '#fff' : '#aaa'};border:none;border-radius:8px;font-weight:600;cursor:${reached ? 'pointer' : 'not-allowed'};font-size:14px;transition:all 0.3s;">
+                                    ${reached ? 'Continue to Order ✓' : 'Add More Items'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    $('#minOrderOverlay, #minOrderModal').remove();
+                    $('body').append(modalHtml);
+
+                    $('#minOrderClose, #minOrderCancel').on('click', function() {
+                        $('#minOrderOverlay, #minOrderModal').remove();
+                    });
+
+                    $('#minOrderOverlay').on('click', function() {
+                        $('#minOrderOverlay, #minOrderModal').remove();
+                    });
+
+                    $(document).on('click', '.min-order-plus', function() {
+                        let idx = $(this).data('idx');
+                        cart[idx].quantity += 1;
+                        updateModal();
+                    });
+
+                    $(document).on('click', '.min-order-minus', function() {
+                        let idx = $(this).data('idx');
+                        if (cart[idx].quantity > 1) {
+                            cart[idx].quantity -= 1;
+                        }
+                        updateModal();
+                    });
+
+                    $('#minOrderContinue').on('click', function() {
+                        if (calcTotal(cart) < 15) return;
+
+                        checkoutData.cart = cart;
+                        checkoutData.subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+                        checkoutData.total = checkoutData.subtotal + checkoutData.deliveryCharge;
+                        localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+                        localStorage.setItem('cart', JSON.stringify(cart));
+
+                        $('#minOrderOverlay, #minOrderModal').remove();
+
+                        displaySummaryItems();
+                        updateTotals();
+
+                        setTimeout(() => {
+                            $('#confirmOrderBtn').trigger('click');
+                        }, 300);
+                    });
+                }
+
+                function updateModal() {
+                    let total = calcTotal(cart);
+                    let remaining = Math.max(0, 15 - total).toFixed(2);
+                    let reached = total >= 15;
+
+                    $('#minOrderItems').html(renderModalItems(cart));
+                    $('#minOrderTotal').text('£' + total.toFixed(2));
+                    $('#minOrderBar').css('width', Math.min(100, (total / 15) * 100) + '%');
+
+                    if (reached) {
+                        $('#minOrderContinue')
+                            .prop('disabled', false)
+                            .css({ background: 'linear-gradient(135deg,#ff8a00,#ff5a00)', color: '#fff', cursor: 'pointer' })
+                            .text('Continue to Order ✓');
+                        $('#minOrderHint').html('<span style="color:#28a745;font-weight:600;">✓ Minimum reached!</span>');
+                    } else {
+                        $('#minOrderContinue')
+                            .prop('disabled', true)
+                            .css({ background: '#ddd', color: '#aaa', cursor: 'not-allowed' })
+                            .text('Add More Items');
+                        $('#minOrderHint').html(`Add <strong style="color:#1a1a1a;">£${remaining}</strong> more to continue`);
+                    }
+                }
+
+                renderModal();
+            }
 
             displayDeliveryDetails();
             toggleAddressCard();
