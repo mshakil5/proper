@@ -1316,20 +1316,30 @@ $(function () {
 
     function bindLinkedSections(sectionA, sectionB) {
         function syncFilter(changed, other) {
-            const checkedVal = changed.find('.option-input:checked').val();
+            const checkedInput = changed.find('.option-input:checked');
+            const checkedVal = checkedInput.val();
+
             other.find('.option-item').show();
+
             if (checkedVal) {
-                other.find('.option-input[value="' + checkedVal + '"]').closest('.option-item').hide();
-                const conflict = other.find('.option-input[value="' + checkedVal + '"]:checked');
-                if (conflict.length) {
-                    conflict.prop('checked', false);
+                const conflictOption = other.find('.option-input[value="' + checkedVal + '"]');
+                conflictOption.closest('.option-item').hide();
+
+                if (conflictOption.is(':checked')) {
+                    conflictOption.prop('checked', false);
                 }
             }
+
             updateTotalPrice();
         }
 
-        sectionA.on('change', '.option-input', function() { syncFilter(sectionA, sectionB); });
-        sectionB.on('change', '.option-input', function() { syncFilter(sectionB, sectionA); });
+        function fullSync() {
+            syncFilter(sectionA, sectionB);
+            syncFilter(sectionB, sectionA);
+        }
+
+        sectionA.on('change', '.option-input', function () { fullSync(); });
+        sectionB.on('change', '.option-input', function () { fullSync(); });
     }
 
     loadDeliveryData();
