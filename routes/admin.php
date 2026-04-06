@@ -133,6 +133,9 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::post('/products-toggle-stock', [ProductController::class, 'toggleStockStatus']);
     Route::post('/products/{id}/remove-image', [ProductController::class, 'removeImage']);
 
+    Route::post('/products-reorder', [ProductController::class, 'reorder'])->name('product.reorder');
+    Route::get('/products-sort/{category_id}', [ProductController::class, 'sortView'])->name('product.sort');
+
     // Product Option
     Route::get('/product/options/{id}', [ProductOptionController::class, 'index'])->name('product.options');
     Route::post('/product-options', [ProductOptionController::class, 'store']);

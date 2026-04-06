@@ -82,8 +82,13 @@ class ProductController extends Controller
                                         <i class="ri-list-settings-fill align-bottom me-2 text-muted"></i> Options
                                     </a>
                                 </li>
-
-                                <li><hr class="dropdown-divider"></li>
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <a href="'.route('product.sort', $row->category_id).'" class="dropdown-item">
+                                        <i class="ri-drag-move-fill align-bottom me-2 text-muted"></i> Sort Products
+                                    </a>
+                                </li>
+                                <li class="dropdown-divider"></li>
                                 <li>
                                     <button class="dropdown-item" id="EditBtn" rid="'.$row->id.'">
                                         <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
@@ -324,5 +329,23 @@ class ProductController extends Controller
         }
         $product->update(['image' => '/placeholder.webp']);
         return response()->json(['message' => 'Image removed successfully!'], 200);
+    }
+
+    public function sortView($category_id)
+    {
+        $category = Category::findOrFail($category_id);
+        $products = Product::where('category_id', $category_id)
+            ->where('status', 1)
+            ->orderBy('sl', 'asc')
+            ->get();
+        return view('admin.product.sort', compact('category', 'products'));
+    }
+
+    public function reorder(Request $request)
+    {
+        foreach ($request->order as $index => $id) {
+            Product::where('id', $id)->update(['sl' => $index + 1]);
+        }
+        return response()->json(['message' => 'Order updated successfully.']);
     }
 }

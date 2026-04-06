@@ -3,18 +3,14 @@
         'products' => function ($q) {
             $q->where('stock_status', 'in_stock')
             ->where('status', 1)
-            ->withCount('options');
+            ->withCount('options')
+            ->orderBy('sl', 'asc')
+            ->orderBy('price', 'asc');
         },
     ])
     ->where('status', 1)
     ->orderBy('sl', 'asc')
-    ->get()
-    ->map(function ($category) {
-        if (strtolower($category->name) === 'fries') {
-            $category->setRelation('products', $category->products->sortBy('price')->values());
-        }
-        return $category;
-    });
+    ->get();
     $firstCategory = $categories->first();
     $firstCategoryName = $firstCategory ? strtolower($firstCategory->name) : 'all';
 

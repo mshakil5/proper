@@ -44,6 +44,12 @@ class CategoryController extends Controller
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
+                                    <a href="'.route('product.sort', $row->id).'" class="dropdown-item">
+                                        <i class="ri-drag-move-fill align-bottom me-2 text-muted"></i> Sort Products
+                                    </a>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
                                     <button class="dropdown-item" id="EditBtn" rid="'.$row->id.'">
                                         <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
                                     </button>
