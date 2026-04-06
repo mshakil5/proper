@@ -23,7 +23,11 @@ class OrderController extends Controller
             }
 
             if ($request->has('customer') && $request->customer) {
-                $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$request->customer}%"]);
+                $query->where(function($q) use ($request) {
+                    $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$request->customer}%"])
+                    ->orWhere('email', 'like', "%{$request->customer}%")
+                    ->orWhere('phone', 'like', "%{$request->customer}%");
+                });
             }
 
             if ($request->has('start_date') && $request->start_date) {

@@ -34,7 +34,7 @@
                 <div class="col-md-6">
                     <div class="row g-2">
                         <div class="col-md-4">
-                            <input type="text" id="customerFilter" class="form-control" placeholder="Customer Name">
+                            <input type="text" id="customerFilter" class="form-control" placeholder="Name, email or phone...">
                         </div>
                         <div class="col-md-3">
                             <input type="date" id="startDateFilter" class="form-control">
