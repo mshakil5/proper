@@ -8,7 +8,7 @@
             <p class="text-muted">Drag and drop to reorder products.</p>
         </div>
         <div class="col-auto">
-            <a href="{{ route('allproducts') }}" class="btn btn-light">Back</a>
+            <a href="{{ route('allproducts') }}" class="btn btn-primary">Back</a>
             <button id="saveOrder" class="btn btn-primary">Save Order</button>
         </div>
     </div>
