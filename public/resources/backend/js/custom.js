@@ -25,6 +25,26 @@ function showError(msg) {
     });
 }
 
+window.showConfirm = function (msg, callback) {
+    Swal.fire({
+        title: msg ?? 'Are you sure?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No',
+        reverseButtons: true,
+        customClass: {
+            popup: 'swal-confirm-popup',
+            confirmButton: 'swal-confirm-btn',
+            cancelButton: 'swal-cancel-btn'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            callback();
+        }
+    });
+};
+
 //reload
 function reload(ms = 2000) {
     setTimeout(() => {

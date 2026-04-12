@@ -16,15 +16,20 @@
             
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <h5>Customer Information</h5>
+                    <h5>Customer & Order Information</h5>
                     <div class="border p-3 rounded">
+                        <p><strong>Order Type:</strong> 
+                            <span class="badge bg-{{ $order->order_type === 'pos' ? 'warning' : 'primary' }}">
+                                {{ $order->order_type === 'pos' ? 'POS Sale' : 'Online Sale' }}
+                            </span>
+                        </p>
                         <p><strong>Name:</strong> {{ $order->first_name }} {{ $order->last_name }}</p>
                         <p><strong>Email:</strong> {{ $order->email }}</p>
-                        <p><strong>Phone:</strong> {{ $order->phone }}</p>
+                        <p><strong>Phone:</strong> {{ $order->phone ?? 'N/A' }}</p>
                         @if($order->user)
-                        <p><strong>Account Type:</strong> Registered</p>
+                            <p><strong>Account Type:</strong> Registered</p>
                         @else
-                        <p><strong>Account Type:</strong> Guest</p>
+                            <p><strong>Account Type:</strong> Guest</p>
                         @endif
                     </div>
                 </div>

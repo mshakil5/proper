@@ -102,7 +102,7 @@
                     </a>
                 </li>
 
-                <li class="nav-item d-none">
+                <li class="nav-item">
                     <a href="{{ route('admin.pos') }}"
                         class="nav-link {{ Route::is('admin.pos') ? 'active' : '' }}">
                         <i class="ri-store-2-line me-2"></i>

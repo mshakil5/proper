@@ -22,18 +22,37 @@ class OrderController extends Controller
                 $query->where('user_id', $request->client_id);
             }
 
-            if ($request->has('customer') && $request->customer) {
-                $query->where(function($q) use ($request) {
-                    $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$request->customer}%"])
-                    ->orWhere('email', 'like', "%{$request->customer}%")
-                    ->orWhere('phone', 'like', "%{$request->customer}%");
+            if ($request->has('order_type') && $request->order_type && $request->order_type !== 'all') {
+                $query->where('order_type', $request->order_type);
+            }
+
+            if ($request->has('payment_method') && $request->payment_method) {
+                $query->where('payment_method', $request->payment_method);
+            }
+            $searchValue = null;
+
+            if ($request->has('search') && !empty($request->search['value'])) {
+                $searchValue = trim($request->search['value']);
+            }
+            elseif ($request->filled('order_number')) {
+                $searchValue = trim($request->order_number);
+            }
+
+            if ($searchValue) {
+                $clean = str_replace('#', '', $searchValue);
+
+                $query->where(function ($q) use ($clean, $searchValue) {
+                    $q->where('order_number', 'LIKE', "%{$clean}%")
+                      ->orWhere('order_number', 'LIKE', "%{$searchValue}%")
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$searchValue}%"])
+                      ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                      ->orWhere('phone', 'LIKE', "%{$searchValue}%");
                 });
             }
 
             if ($request->has('start_date') && $request->start_date) {
                 $query->whereDate('created_at', '>=', $request->start_date);
             }
-
             if ($request->has('end_date') && $request->end_date) {
                 $query->whereDate('created_at', '<=', $request->end_date);
             }
@@ -41,7 +60,7 @@ class OrderController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('order_number', function ($row) {
-                    return '#' . $row->order_number;
+                    return '<strong>#' . $row->order_number . '</strong>';
                 })
                 ->addColumn('customer', function ($row) {
                     $type = $row->user_id 
@@ -51,6 +70,11 @@ class OrderController extends Controller
                         '<br><small class="text-muted"><i class="ri-mail-line"></i> ' . $row->email . '</small>' .
                         '<br><small class="text-muted"><i class="ri-phone-line"></i> ' . ($row->phone ?? 'N/A') . '</small>' .
                         '<br>' . $type;
+                })
+                ->addColumn('order_type', function ($row) {
+                    $label = $row->order_type === 'pos' ? 'POS Sale' : 'Online Sale';
+                    $color = $row->order_type === 'pos' ? 'warning' : 'primary';
+                    return '<span class="badge bg-' . $color . '">' . $label . '</span>';
                 })
                 ->addColumn('amounts', function ($row) {
                     return '£' . number_format($row->total, 2);
@@ -75,26 +99,18 @@ class OrderController extends Controller
                         }
                         return '<span class="badge bg-warning">Pending (Cash)</span>';
                     }
-
                     $status = $row->payment?->status ?? 'pending';
                     $badge  = $row->payment?->status_badge ?? 'warning';
                     return '<span class="badge bg-' . $badge . '">' . ucfirst($status) . '</span>';
                 })
                 ->addColumn('delivery_type', function ($row) {
-                    $colors = [
-                        'delivery'   => 'primary',
-                        'collection' => 'info',
-                    ];
+                    $colors = ['delivery' => 'primary', 'collection' => 'info'];
                     $type  = $row->delivery_type ?? 'N/A';
                     $color = $colors[$type] ?? 'secondary';
                     return '<span class="badge bg-' . $color . '">' . ucfirst($type) . '</span>';
                 })
                 ->addColumn('payment_method', function ($row) {
-                    $colors = [
-                        'cash'   => 'success',
-                        'stripe' => 'info',
-                        'paypal' => 'warning',
-                    ];
+                    $colors = ['cash' => 'success', 'stripe' => 'info', 'paypal' => 'warning'];
                     $method = $row->payment_method ?? 'N/A';
                     $color  = $colors[$method] ?? 'secondary';
                     return '<span class="badge bg-' . $color . '">' . ucfirst($method) . '</span>';
@@ -107,7 +123,7 @@ class OrderController extends Controller
                         <i class="ri-eye-line"></i> View
                     </a>';
                 })
-                ->rawColumns(['order_status', 'payment_status', 'action', 'delivery_type', 'payment_method', 'customer'])
+                ->rawColumns(['order_number', 'customer', 'order_type', 'order_status', 'payment_status', 'delivery_type', 'payment_method', 'action'])
                 ->make(true);
         }
 

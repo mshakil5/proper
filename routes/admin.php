@@ -18,15 +18,20 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\GiftcardPackageController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\CredentialController;
+use App\Http\Controllers\Admin\PosController;
 
 Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], function(){
 
     Route::get('/dashboard', [HomeController::class, 'adminHome'])->name('admin.dashboard');
 
-    Route::get('/pos', [HomeController::class, 'pos'])->name('admin.pos');
-    Route::get('/pos/product', [HomeController::class, 'posGetProduct'])->name('admin.pos.product');
-
-    Route::post('/pos/quick-customer', [HomeController::class, 'posQuickCustomer'])->name('admin.pos.quick-customer');
+    Route::get('/pos', [PosController::class, 'pos'])->name('admin.pos');
+    Route::get('/pos/product', [PosController::class, 'posGetProduct'])->name('admin.pos.product');
+    Route::post('/pos/quick-customer', [PosController::class, 'posQuickCustomer'])->name('admin.pos.quick-customer');
+    Route::get('/pos/customer-info', [PosController::class, 'posGetCustomerInfo'])->name('admin.pos.customer-info');
+    Route::post('/pos/validate-promo', [PosController::class, 'posValidatePromo'])->name('admin.pos.validate-promo');
+    Route::post('/pos/place-order', [PosController::class, 'posPlaceOrder'])->name('admin.pos.place-order');
+    Route::get('/pos/payment/success', [PosController::class, 'posPaymentSuccess'])->name('admin.pos.payment.success');
+    Route::get('/pos/payment/cancel', [PosController::class, 'posPaymentCancel'])->name('admin.pos.payment.cancel');
 
     // Clients
     Route::get('/client', [ClientController::class, 'index'])->name('client.index');
