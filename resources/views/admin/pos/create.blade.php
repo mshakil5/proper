@@ -365,14 +365,14 @@
                             <input type="radio" name="posPaymentMethod" value="cash" id="posCash" checked style="accent-color:#ff5a00;">
                             <span style="font-size:13px;font-weight:700;">💵 Cash on Delivery</span>
                         </label>
-                        <label style="display:flex;align-items:center;gap:10px;padding:10px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .15s;" id="payStripeLabel">
+                        {{-- <label style="display:flex;align-items:center;gap:10px;padding:10px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .15s;" id="payStripeLabel">
                             <input type="radio" name="posPaymentMethod" value="stripe" id="posStripe" style="accent-color:#ff5a00;">
                             <span style="font-size:13px;font-weight:700;">💳 Stripe</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;padding:10px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .15s;" id="payPaypalLabel">
                             <input type="radio" name="posPaymentMethod" value="paypal" id="posPaypal" style="accent-color:#ff5a00;">
                             <span style="font-size:13px;font-weight:700;"><i class="fab fa-paypal"></i> PayPal</span>
-                        </label>
+                        </label> --}}
                     </div>
                 </div>
             </div>
