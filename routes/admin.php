@@ -1,24 +1,25 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Admin\FAQController;
-use App\Http\Controllers\Admin\TagController;
-use App\Http\Controllers\Admin\MasterController;
-use App\Http\Controllers\Admin\SliderController;
-use App\Http\Controllers\Admin\ContactController;
-use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\BlockedCustomerController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ContactMailController;
-use App\Http\Controllers\Admin\CompanyDetailsController;
-use App\Http\Controllers\Admin\ProductOptionController;
-use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ClientController;
-use App\Http\Controllers\Admin\GiftcardPackageController;
-use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\CompanyDetailsController;
+use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\ContactMailController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CredentialController;
+use App\Http\Controllers\Admin\FAQController;
+use App\Http\Controllers\Admin\GiftcardPackageController;
+use App\Http\Controllers\Admin\MasterController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PosController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductOptionController;
+use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\SliderController;
+use App\Http\Controllers\Admin\TagController;
+use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], function(){
 
@@ -175,4 +176,10 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::get('/credentials', [CredentialController::class, 'index'])->name('credentials.index');
     Route::get('/credentials/{id}/edit', [CredentialController::class, 'edit'])->name('credentials.edit');
     Route::put('/credentials/{id}', [CredentialController::class, 'update'])->name('credentials.update');
+
+    Route::get('/blocked-customers', [BlockedCustomerController::class, 'index'])->name('admin.blocked.index');
+    Route::post('/blocked-customers', [BlockedCustomerController::class, 'store'])->name('admin.blocked.store');
+    Route::get('/blocked-customers/{id}/edit', [BlockedCustomerController::class, 'edit'])->name('admin.blocked.edit');
+    Route::put('/blocked-customers/{id}', [BlockedCustomerController::class, 'update'])->name('admin.blocked.update');
+    Route::delete('/blocked-customers/{id}', [BlockedCustomerController::class, 'destroy'])->name('admin.blocked.destroy');
 });

@@ -195,6 +195,14 @@
                 </li>
 
                 <li class="nav-item">
+                    <a href="{{ route('admin.blocked.index') }}"
+                        class="nav-link {{ Route::is('admin.blocked.*') ? 'active' : '' }}">
+                        <i class="ri-forbid-2-line"></i>
+                        <span>Blocked Customers</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link menu-link {{ $settingsRoute ? 'active' : '' }}" href="#sidebarSettings"
                         data-bs-toggle="collapse" role="button"
                         aria-expanded="{{ $settingsRoute ? 'true' : 'false' }}" aria-controls="sidebarSettings">
