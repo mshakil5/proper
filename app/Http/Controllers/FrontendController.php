@@ -744,6 +744,17 @@ class FrontendController extends Controller
         ]);
 
         $customer = $request->input('customer');
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['message' => 'Invalid email'], 400);
+        }
+
+        $domain = substr(strrchr($email, "@"), 1);
+
+        if (!checkdnsrr($domain, "MX")) {
+            return response()->json(['message' => 'Email domain not valid'], 400);
+        }
+
         $delivery = $request->input('delivery');
         $cart = $request->input('cart');
         $paymentMethod = $request->input('paymentMethod');
