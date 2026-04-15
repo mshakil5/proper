@@ -86,15 +86,35 @@ body {
     border: none !important;
     color: white !important;
     font-weight: 600 !important;
+    
+    width: auto !important;
+    min-width: 100px !important;
+    height: auto !important;
+    
+    border-radius: 30px !important;
+    
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
     padding: 12px 20px !important;
-    border-radius: 35px !important;
-    transition: background 0.3s ease !important;
+    
+    transition: all 0.3s ease !important;
     font-size: 14px !important;
     cursor: pointer !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    text-transform: capitalize !important;
 }
 
 .btn-order:hover {
-    background: #ff5a00 !important;
+    background: #e67e00 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-order:active {
+    transform: translateY(0px) !important;
 }
 
 .rating-badge {
