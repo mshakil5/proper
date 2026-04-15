@@ -18,36 +18,112 @@
                 {{ $product->short_description ?? ($product->long_description ?? '') }}</p>
 
             @if ($product->has_attribute)
-            <div class="product-section" data-attribute="1" data-attribute-price="{{ $product->attribute_price }}">
-                <div class="product-section-title">
-                    <i class="fas fa-ruler"></i>
-                    Size:
-                </div>
-
-                <div class="option-group">
-                    <div class="option-item">
-                        <input type="checkbox" name="attribute_select" value="standalone" class="option-input attribute-input" id="attr_standalone">
-                        <label for="attr_standalone" class="option-label">
-                            On its own
-                        </label>
+                <div class="product-section" data-attribute="1" data-attribute-price="{{ $product->attribute_price }}">
+                    <div class="product-section-title">
+                        <i class="fas fa-ruler"></i>
+                        Size:
                     </div>
 
-                    <div class="option-item">
-                        <input type="checkbox" name="attribute_select" value="with_options" class="option-input attribute-input" id="attr_with_options">
-                        <label for="attr_with_options" class="option-label">
-                            {{ $product->attribute_name }}
-                            @if ($product->attribute_price > 0)
-                                <span class="option-price">+£{{ number_format($product->attribute_price, 2) }}</span>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="checkbox" name="attribute_select" value="standalone"
+                                class="option-input attribute-input" id="attr_standalone">
+                            <label for="attr_standalone" class="option-label">
+                                On its own
+                            </label>
+                        </div>
+
+                        <div class="option-item">
+                            <input type="checkbox" name="attribute_select" value="with_options"
+                                class="option-input attribute-input" id="attr_with_options">
+                            <label for="attr_with_options" class="option-label">
+                                {{ $product->attribute_name }}
+                                @if ($product->attribute_price > 0)
+                                    <span
+                                        class="option-price">+£{{ number_format($product->attribute_price, 2) }}</span>
+                                @endif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="optionsContainer" style="display: none;">
+                    @forelse($product->options->sortBy('sort_order') as $option)
+                        <div class="product-section" data-option-id="{{ $option->id }}"
+                            data-required="{{ $option->is_required ? 1 : 0 }}"
+                            data-max="{{ $option->type === 'single' ? 1 : $option->max_select }}">
+                            <div class="product-section-title">
+                                <i class="fas fa-layer-group"></i>
+                                {{ $option->name }}
+                                @if ($option->is_required)
+                                    <span class="required">*</span>
+                                @endif
+                            </div>
+                            @if ($option->type === 'multiple' && $option->max_select > 0)
+                                <small class="text-muted d-block mb-2">
+                                    Max selections: <strong>{{ $option->max_select }}</strong>
+                                </small>
                             @endif
-                        </label>
-                    </div>
-                </div>
-            </div>
 
-            <div id="optionsContainer" style="display: none;">
+                            <div class="option-group">
+                                @foreach ($option->items->sortBy('override_price') as $item)
+                                    <div class="option-item"
+                                        data-is-sauce="{{ strtolower($option->name) === 'sauce options' ? '1' : '0' }}">
+                                        @if (strtolower($option->name) === 'sauce options')
+                                            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                                <div style="flex: 1;">
+                                                    <label class="option-label" style="margin: 0;">
+                                                        {{ $item->product->title }}
+                                                    </label>
+                                                    @if ($item->override_price > 0)
+                                                        <span
+                                                            class="option-price">+£{{ number_format($item->override_price, 2) }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="cart-qty-control"
+                                                    style="display: flex; align-items: center; gap: 8px;">
+                                                    <button type="button" class="cart-qty-btn sauce-qty-minus"
+                                                        data-item-id="{{ $item->product_id }}">−</button>
+                                                    <span class="cart-qty-display sauce-qty-input" value="0"
+                                                        min="0" max="3"
+                                                        data-item-id="{{ $item->product_id }}"
+                                                        data-price="{{ $item->override_price }}"
+                                                        data-title="{{ $item->product->title }}">0</span>
+                                                    <button type="button" class="cart-qty-btn sauce-qty-plus"
+                                                        data-item-id="{{ $item->product_id }}">+</button>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <input type="checkbox"
+                                                name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
+                                                value="{{ $item->product_id }}"
+                                                data-price="{{ $item->override_price }}"
+                                                data-title="{{ $item->product->title }}"
+                                                data-product-id="{{ $item->product_id }}"
+                                                data-hubrise-option-ref="{{ $item->hubrise_option_ref ?? '' }}"
+                                                class="option-input"
+                                                id="option_{{ $option->id }}_{{ $item->product_id }}">
+                                            <label for="option_{{ $option->id }}_{{ $item->product_id }}"
+                                                class="option-label">
+                                                {{ $item->product->title }}
+                                            </label>
+                                            @if ($item->override_price > 0)
+                                                <span
+                                                    class="option-price">+£{{ number_format($item->override_price, 2) }}</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @empty
+                    @endforelse
+                </div>
+            @else
                 @forelse($product->options->sortBy('sort_order') as $option)
                     <div class="product-section" data-option-id="{{ $option->id }}"
-                        data-required="{{ $option->is_required ? 1 : 0 }}" data-max="{{ $option->type === 'single' ? 1 : $option->max_select }}">
+                        data-required="{{ $option->is_required ? 1 : 0 }}"
+                        data-max="{{ $option->type === 'single' ? 1 : $option->max_select }}">
                         <div class="product-section-title">
                             <i class="fas fa-layer-group"></i>
                             {{ $option->name }}
@@ -63,19 +139,49 @@
 
                         <div class="option-group">
                             @foreach ($option->items->sortBy('override_price') as $item)
-                                <div class="option-item">
-                                    <input type="checkbox"
-                                        name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
-                                        value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
-                                        data-title="{{ $item->product->title }}" data-product-id="{{ $item->product_id }}"
-                                        data-hubrise-option-ref="{{ $item->hubrise_option_ref ?? '' }}"
-                                        class="option-input"
-                                        id="option_{{ $option->id }}_{{ $item->product_id }}">
-                                    <label for="option_{{ $option->id }}_{{ $item->product_id }}" class="option-label">
-                                        {{ $item->product->title }}
-                                    </label>
-                                    @if ($item->override_price > 0)
-                                        <span class="option-price">+£{{ number_format($item->override_price, 2) }}</span>
+                                <div class="option-item"
+                                    data-is-sauce="{{ strtolower($option->name) === 'sauce options' ? '1' : '0' }}">
+                                    @if (strtolower($option->name) === 'sauce options')
+                                        <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                            <div style="flex: 1;">
+                                                <label class="option-label" style="margin: 0;">
+                                                    {{ $item->product->title }}
+                                                </label>
+                                                @if ($item->override_price > 0)
+                                                    <span
+                                                        class="option-price">+£{{ number_format($item->override_price, 2) }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="cart-qty-control"
+                                                style="display: flex; align-items: center; gap: 8px;">
+                                                <button type="button" class="cart-qty-btn sauce-qty-minus"
+                                                    data-item-id="{{ $item->product_id }}">−</button>
+                                                <span class="cart-qty-display sauce-qty-input" value="0"
+                                                    min="0" max="3"
+                                                    data-item-id="{{ $item->product_id }}"
+                                                    data-price="{{ $item->override_price }}"
+                                                    data-title="{{ $item->product->title }}">0</span>
+                                                <button type="button" class="cart-qty-btn sauce-qty-plus"
+                                                    data-item-id="{{ $item->product_id }}">+</button>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <input type="checkbox"
+                                            name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
+                                            value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
+                                            data-title="{{ $item->product->title }}"
+                                            data-product-id="{{ $item->product_id }}"
+                                            data-hubrise-option-ref="{{ $item->hubrise_option_ref ?? '' }}"
+                                            class="option-input"
+                                            id="option_{{ $option->id }}_{{ $item->product_id }}">
+                                        <label for="option_{{ $option->id }}_{{ $item->product_id }}"
+                                            class="option-label">
+                                            {{ $item->product->title }}
+                                        </label>
+                                        @if ($item->override_price > 0)
+                                            <span
+                                                class="option-price">+£{{ number_format($item->override_price, 2) }}</span>
+                                        @endif
                                     @endif
                                 </div>
                             @endforeach
@@ -83,47 +189,6 @@
                     </div>
                 @empty
                 @endforelse
-            </div>
-            @else
-
-            @forelse($product->options->sortBy('sort_order') as $option)
-                <div class="product-section" data-option-id="{{ $option->id }}"
-                    data-required="{{ $option->is_required ? 1 : 0 }}" data-max="{{ $option->type === 'single' ? 1 : $option->max_select }}">
-                    <div class="product-section-title">
-                        <i class="fas fa-layer-group"></i>
-                        {{ $option->name }}
-                        @if ($option->is_required)
-                            <span class="required">*</span>
-                        @endif
-                    </div>
-                    @if ($option->type === 'multiple' && $option->max_select > 0)
-                        <small class="text-muted d-block mb-2">
-                            Max selections: <strong>{{ $option->max_select }}</strong>
-                        </small>
-                    @endif
-
-                    <div class="option-group">
-                        @foreach ($option->items->sortBy('override_price') as $item)
-                            <div class="option-item">
-                                <input type="checkbox"
-                                    name="option_{{ $option->id }}{{ $option->type === 'multi' ? '[]' : '' }}"
-                                    value="{{ $item->product_id }}" data-price="{{ $item->override_price }}"
-                                    data-title="{{ $item->product->title }}" data-product-id="{{ $item->product_id }}"
-                                    data-hubrise-option-ref="{{ $item->hubrise_option_ref ?? '' }}"
-                                    class="option-input"
-                                    id="option_{{ $option->id }}_{{ $item->product_id }}">
-                                <label for="option_{{ $option->id }}_{{ $item->product_id }}" class="option-label">
-                                    {{ $item->product->title }}
-                                </label>
-                                @if ($item->override_price > 0)
-                                    <span class="option-price">+£{{ number_format($item->override_price, 2) }}</span>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @empty
-            @endforelse
             @endif
 
         </div>

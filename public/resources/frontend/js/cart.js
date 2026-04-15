@@ -224,9 +224,15 @@ $(function () {
             $('#optionsContainer').find('.option-input:checked').each(function () {
                 extraPrice += Number($(this).data('price')) || 0;
             });
+            $('#optionsContainer').find('.sauce-qty-input').each(function () {
+                extraPrice += (Number($(this).text()) || 0) * (Number($(this).data('price')) || 0);
+            });
         } else if (!hasAttribute) {
             $('.option-input:checked').each(function () {
                 extraPrice += Number($(this).data('price')) || 0;
+            });
+            $('.sauce-qty-input').each(function () {
+                extraPrice += (Number($(this).text()) || 0) * (Number($(this).data('price')) || 0);
             });
         }
 
@@ -722,17 +728,15 @@ $(function () {
 
         let valid = true;
         let missingOptions = [];
-        
+
         if (hasAttribute && attributeSelect === 'with_options') {
-            $('#optionsContainer')
-            .find('.product-section:not([data-attribute="1"])')
-                .each(function () {
+            $('#optionsContainer').find('.product-section:not([data-attribute="1"])').each(function () {
                 let isRequired = Number($(this).data('required'));
                 let hasSelection = $(this).find('input:checked').length > 0;
-                
-                if (isRequired && !hasSelection) {
-                    let optionName = $(this).find('.product-section-title').text().trim();
-                    missingOptions.push(optionName);
+                let hasSauce = $(this).find('.sauce-qty-input').toArray().some(el => Number($(el).text()) > 0);
+
+                if (isRequired && !hasSelection && !hasSauce) {
+                    missingOptions.push($(this).find('.product-section-title').text().trim());
                     valid = false;
                 }
             });
@@ -740,10 +744,10 @@ $(function () {
             $('.product-section').each(function () {
                 let isRequired = Number($(this).data('required'));
                 let hasSelection = $(this).find('input:checked').length > 0;
-                
-                if (isRequired && !hasSelection) {
-                    let optionName = $(this).find('.product-section-title').text().trim();
-                    missingOptions.push(optionName);
+                let hasSauce = $(this).find('.sauce-qty-input').toArray().some(el => Number($(el).text()) > 0);
+
+                if (isRequired && !hasSelection && !hasSauce) {
+                    missingOptions.push($(this).find('.product-section-title').text().trim());
                     valid = false;
                 }
             });
@@ -751,27 +755,17 @@ $(function () {
 
         if (!valid) {
             $('.product-section').removeClass('option-error');
-
             let firstError = null;
-
             missingOptions.forEach(name => {
                 let section = $('.product-section').filter(function () {
                     return $(this).find('.product-section-title').text().trim() === name;
                 });
-
                 section.addClass('option-error');
-
                 if (!firstError) firstError = section;
             });
-
             if (firstError && firstError.length) {
-                firstError[0].scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                firstError[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-
-            showError('Please select required option(s)');
             return;
         }
 
@@ -782,41 +776,58 @@ $(function () {
 
         if (hasAttribute && attributeSelect === 'with_options') {
             attributePrice = Number($('[data-attribute-price]').data('attribute-price')) || 0;
-        }
 
-        if (hasAttribute && attributeSelect === 'with_options') {
             $('#optionsContainer').find('.option-input:checked').each(function () {
                 let label = $(this).data('title');
                 let price = Number($(this).data('price')) || 0;
-                let productId = Number($(this).data('product-id')) || null;
-                let hubriseOptionRef = $(this).data('hubrise-option-ref') || '';
+                let pid   = Number($(this).data('product-id')) || null;
+                let href  = $(this).data('hubrise-option-ref') || '';
                 extraPrice += price;
-
                 let name = $(this).attr('name');
                 if (!options[name]) options[name] = [];
-                options[name].push({ 
-                    title: label, 
-                    price: price, 
-                    productId: productId,
-                    hubriseOptionRef: hubriseOptionRef
-                });
+                options[name].push({ title: label, price: price, productId: pid, hubriseOptionRef: href });
             });
+
+            $('#optionsContainer').find('.sauce-qty-input').each(function () {
+                let qty = Number($(this).text()) || 0;
+                if (qty > 0) {
+                    let price = Number($(this).data('price')) || 0;
+                    let title = $(this).data('title');
+                    let itemId = Number($(this).data('item-id')) || null;
+                    let name = 'option_' + $(this).closest('.product-section').data('option-id');
+                    extraPrice += price * qty;
+                    if (!options[name]) options[name] = [];
+                    for (let i = 0; i < qty; i++) {
+                        options[name].push({ title: title, price: price, productId: itemId, hubriseOptionRef: '' });
+                    }
+                }
+            });
+
         } else if (!hasAttribute) {
             $('.option-input:checked').each(function () {
                 let label = $(this).data('title');
                 let price = Number($(this).data('price')) || 0;
-                let productId = Number($(this).data('product-id')) || null;
-                let hubriseOptionRef = $(this).data('hubrise-option-ref') || '';
+                let pid   = Number($(this).data('product-id')) || null;
+                let href  = $(this).data('hubrise-option-ref') || '';
                 extraPrice += price;
-
                 let name = $(this).attr('name');
                 if (!options[name]) options[name] = [];
-                options[name].push({ 
-                    title: label, 
-                    price: price, 
-                    productId: productId,
-                    hubriseOptionRef: hubriseOptionRef
-                });
+                options[name].push({ title: label, price: price, productId: pid, hubriseOptionRef: href });
+            });
+
+            $('.sauce-qty-input').each(function () {
+                let qty = Number($(this).text()) || 0;
+                if (qty > 0) {
+                    let price = Number($(this).data('price')) || 0;
+                    let title = $(this).data('title');
+                    let itemId = Number($(this).data('item-id')) || null;
+                    let name = 'option_' + $(this).closest('.product-section').data('option-id');
+                    extraPrice += price * qty;
+                    if (!options[name]) options[name] = [];
+                    for (let i = 0; i < qty; i++) {
+                        options[name].push({ title: title, price: price, productId: itemId, hubriseOptionRef: '' });
+                    }
+                }
             });
         }
 
@@ -869,8 +880,10 @@ $(function () {
     });
 
     $(document).on('click', '.cart-qty-minus', function () {
-        let index = $(this).data('index');
+        let index = parseInt($(this).data('index'));
         let cart = sanitizeCart();
+
+        if (index < 0 || index >= cart.length) return;
 
         if (cart[index].quantity > 1) {
             cart[index].quantity -= 1;
@@ -878,21 +891,27 @@ $(function () {
             renderCart();
         } else {
             showConfirm('Remove this item from cart?', function () {
-                cart.splice(index, 1);
-                localStorage.setItem('cart', JSON.stringify(cart));
-                renderCart();
+                let freshCart = sanitizeCart();
+                if (index < freshCart.length) {
+                    freshCart.splice(index, 1);
+                    localStorage.setItem('cart', JSON.stringify(freshCart));
+                    renderCart();
+                }
             });
         }
     });
 
     $(document).on('click', '.cart-remove-btn', function () {
-        let index = $(this).data('index');
-        let cart = sanitizeCart();
-
+        let index = parseInt($(this).data('index'));
+        
         showConfirm('Remove this item from cart?', function () {
-            cart.splice(index, 1);
-            localStorage.setItem('cart', JSON.stringify(cart));
-            renderCart();
+            let cart = sanitizeCart();
+            if (index >= 0 && index < cart.length) {
+                cart.splice(index, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+                updateCartUI();
+            }
         });
     });
 
@@ -1337,6 +1356,50 @@ $(function () {
 
         sectionA.on('change', '.option-input', function () { fullSync(); });
         sectionB.on('change', '.option-input', function () { fullSync(); });
+    }
+
+    $(document).on('click', '.sauce-qty-plus', function () {
+        let itemId  = $(this).data('item-id');
+        let display = $('[data-item-id="' + itemId + '"].sauce-qty-input');
+        let currentVal  = Number(display.text()) || 0;
+        let totalSauces = getTotalSauceCount();
+
+        if (currentVal < 3 && totalSauces < 3) {
+            let newVal = currentVal + 1;
+            display.text(newVal);
+            // ★ write qty back onto the input so form submit can read it
+            let input = $('[data-sauce-item-id="' + itemId + '"]');
+            input.data('sauce-qty', newVal);
+            input.attr('data-sauce-qty', newVal);
+            if (newVal > 0) input.prop('checked', true);
+            updateTotalPrice();
+        } else {
+            showError('Maximum 3 sauce selections allowed');
+        }
+    });
+
+    $(document).on('click', '.sauce-qty-minus', function () {
+        let itemId  = $(this).data('item-id');
+        let display = $('[data-item-id="' + itemId + '"].sauce-qty-input');
+        let currentVal = Number(display.text()) || 0;
+
+        if (currentVal > 0) {
+            let newVal = currentVal - 1;
+            display.text(newVal);
+            let input = $('[data-sauce-item-id="' + itemId + '"]');
+            input.data('sauce-qty', newVal);
+            input.attr('data-sauce-qty', newVal);
+            if (newVal === 0) input.prop('checked', false);
+            updateTotalPrice();
+        }
+    });
+
+    function getTotalSauceCount() {
+        let total = 0;
+        $('.sauce-qty-input').each(function () {
+            total += Number($(this).text()) || 0;
+        });
+        return total;
     }
 
     loadDeliveryData();
