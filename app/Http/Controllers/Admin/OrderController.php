@@ -37,6 +37,9 @@ class OrderController extends Controller
             elseif ($request->filled('order_number')) {
                 $searchValue = trim($request->order_number);
             }
+            elseif ($request->filled('customer')) {
+                $searchValue = trim($request->customer);
+            }
 
             if ($searchValue) {
                 $clean = str_replace('#', '', $searchValue);
