@@ -1033,13 +1033,7 @@ $(function () {
                 'Have you forgotten to add something for your furry friends?',
                 'Add pet treats to include the full family!',
                 () => {
-
                     loadPetTreatsModal();
-
-                    // $('#cartOffcanvas').removeClass('open');
-                    // $('#cartOverlay').removeClass('open');
-                    // $('#categoryPills .pill[data-filter="treats for furry friends"]').click();
-                    // $('html, body').animate({ scrollTop: $('#product').offset().top }, 600);
                 },
                 "Add Pet Treats",
                 "Proceed to Checkout"
