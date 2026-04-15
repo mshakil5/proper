@@ -87,8 +87,8 @@
                         <th>#</th>
                         <th>Order No</th>
                         <th>Customer</th>
-                        <th>Sale Type</th>
                         <th>Amount</th>
+                        <th>Sale Type</th>
                         <th>Type</th>
                         <th>Order Status</th>
                         <th>Payment Method</th>
@@ -128,8 +128,8 @@ $(function() {
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'order_number', name: 'order_number' },
             { data: 'customer', name: 'customer' },
-            { data: 'order_type', name: 'order_type' },
             { data: 'amounts', name: 'total' },
+            { data: 'order_type', name: 'order_type' },
             { data: 'delivery_type', name: 'delivery_type' },
             { data: 'order_status', name: 'status' },
             { data: 'payment_method', name: 'payment_method' },

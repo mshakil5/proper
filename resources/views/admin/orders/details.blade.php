@@ -152,10 +152,24 @@
                     <div class="border p-3 rounded">
                         <p><strong>Method:</strong> {{ ucfirst(str_replace('_', ' ', $order->payment_method)) }}</p>
                         <p>
-                            <strong>Status:</strong> 
-                            <span class="badge bg-{{ $order->payment?->status_badge }}">
-                                {{ ucfirst($order->payment?->status ?? 'pending') }}
-                            </span>
+                            <strong>Status:</strong>
+
+                            @if($order->payment_method == 'cash')
+                                @if($order->status == 'delivered')
+                                    <span class="badge bg-success">Completed</span>
+                                @else
+                                    <span class="badge bg-warning">Pending (Cash)</span>
+                                @endif
+                            @else
+                                @php
+                                    $status = $order->payment?->status ?? 'pending';
+                                    $badge  = $order->payment?->status_badge ?? 'warning';
+                                @endphp
+
+                                <span class="badge bg-{{ $badge }}">
+                                    {{ ucfirst($status) }}
+                                </span>
+                            @endif
                         </p>
                         @if($order->payment && $order->payment->transaction_id)
                             <p>
