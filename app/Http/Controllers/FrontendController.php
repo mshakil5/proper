@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Mail\ContactMail;
 use App\Mail\OrderConfirmationMail;
+use App\Models\BlockedCustomer;
+use App\Models\BlockedCustomerOrder;
 use App\Models\Category;
 use App\Models\CompanyDetails;
 use App\Models\Contact;
@@ -744,7 +746,8 @@ class FrontendController extends Controller
         ]);
 
         $customer = $request->input('customer');
-
+        $email = $customer['email'];
+    
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json(['message' => 'Invalid email'], 400);
         }
@@ -895,6 +898,17 @@ class FrontendController extends Controller
             $total = 0;
         }
 
+        $blockedCustomerCheck = $this->checkIfBlockedCustomer($email, $request->input('customer.phone'),$domain
+        );
+
+        if ($blockedCustomerCheck['isBlocked']) {
+            return $this->handleBlockedCustomerOrder(
+                $request,
+                $blockedCustomerCheck['blockedCustomerId'],
+                $total
+            );
+        }
+
         $calculationData = [
             'subtotal' => $subtotal,
             'deliveryCharge' => $deliveryCharge,
@@ -921,6 +935,64 @@ class FrontendController extends Controller
         } elseif ($paymentMethod === 'paypal') {
             return $this->processPayPalPayment($calculationData);
         }
+    }
+    
+    private function checkIfBlockedCustomer($email, $phone, $domain)
+    {
+        $blocked = BlockedCustomer::where(function($query) use ($email, $phone, $domain) {
+            $query->where('email', $email)
+                ->orWhere('phone', $phone)
+                ->orWhere('domain', $domain);
+        })->first();
+    
+        if ($blocked) {
+            return [
+                'isBlocked' => true,
+                'blockedCustomerId' => $blocked->id
+            ];
+        }
+    
+        return [
+            'isBlocked' => false,
+            'blockedCustomerId' => null
+        ];
+    }
+    
+    private function handleBlockedCustomerOrder(Request $request, $blockedCustomerId, $total)
+    {
+        $orderData = [
+            'customer' => $request->input('customer'),
+            'delivery' => $request->input('delivery'),
+            'address' => $request->input('address'),
+            'address2' => $request->input('address2'),
+            'city' => $request->input('city'),
+
+            // ✅ original cart
+            'cart' => $request->input('cart'),
+
+            // ✅ final total from calculation
+            'summary' => [
+                'total' => $total
+            ],
+
+            'paymentMethod' => $request->input('paymentMethod'),
+            'notes' => $request->input('notes'),
+            'timestamp' => now()
+        ];
+
+        BlockedCustomerOrder::create([
+            'blocked_customer_id' => $blockedCustomerId,
+            'email' => $request->input('customer.email'),
+            'phone' => $request->input('customer.phone'),
+            'order_data' => $orderData
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order placed successfully',
+            'orderNumber' => 'ORD-' . time(),
+            'orderId' => 0
+        ]);
     }
 
     private function processStripePayment($calculationData)

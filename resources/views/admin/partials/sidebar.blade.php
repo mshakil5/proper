@@ -31,6 +31,7 @@
 
                 @php
                     $productActive = Route::is('allcategories', 'alltags', 'allproducts', 'product.options');
+                    $blockedActive = Route::is('admin.blocked.*', 'admin.blocked-orders.*');
                     $settingsRoute = Route::is(
                         'admin.companyDetails',
                         'admin.company.seo-meta',
@@ -195,11 +196,35 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{{ route('admin.blocked.index') }}"
-                        class="nav-link {{ Route::is('admin.blocked.*') ? 'active' : '' }}">
-                        <i class="ri-forbid-2-line"></i>
-                        <span>Blocked Customers</span>
+                    <a class="nav-link menu-link {{ $blockedActive ? 'active' : '' }}" 
+                        href="#sidebarBlocked"
+                        data-bs-toggle="collapse"
+                        aria-expanded="{{ $blockedActive ? 'true' : 'false' }}"
+                        aria-controls="sidebarBlocked">
+
+                        <i class="ri-forbid-2-line"></i> 
+                        <span>Blocked Management</span>
                     </a>
+
+                    <div class="collapse menu-dropdown {{ $blockedActive ? 'show' : '' }}" id="sidebarBlocked">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a href="{{ route('admin.blocked.index') }}"
+                                    class="nav-link {{ Route::is('admin.blocked.*') ? 'active' : '' }}">
+                                    Blocked Customers
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="{{ route('admin.blocked-orders.index') }}"
+                                    class="nav-link {{ Route::is('admin.blocked-orders.*') ? 'active' : '' }}">
+                                    Blocked Orders
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
                 </li>
 
                 <li class="nav-item">

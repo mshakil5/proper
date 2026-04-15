@@ -29,8 +29,15 @@ class BlockedCustomerController extends Controller
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
                                 <button class="dropdown-item editBtn" data-id="'.$row->id.'">
+                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
                                     Edit
                                 </button>
+                            </li>
+                            <li class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="'.route('admin.blocked-orders.index', ['blocked_customer_id' => $row->id]).'">
+                                    <i class="ri-shopping-cart-line align-bottom me-2 text-muted"></i> Orders
+                                </a>
                             </li>
                             <li class="dropdown-divider"></li>
                             <li>
@@ -38,6 +45,7 @@ class BlockedCustomerController extends Controller
                                     data-delete-url="'.route('admin.blocked.destroy',$row->id).'"
                                     data-method="DELETE"
                                     data-table="#blockedTable">
+                                    <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
                                     Delete
                                 </button>
                             </li>

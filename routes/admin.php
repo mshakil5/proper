@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BlockedCustomerController;
+use App\Http\Controllers\Admin\BlockedCustomerOrderController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CompanyDetailsController;
@@ -182,4 +183,8 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::get('/blocked-customers/{id}/edit', [BlockedCustomerController::class, 'edit'])->name('admin.blocked.edit');
     Route::put('/blocked-customers/{id}', [BlockedCustomerController::class, 'update'])->name('admin.blocked.update');
     Route::delete('/blocked-customers/{id}', [BlockedCustomerController::class, 'destroy'])->name('admin.blocked.destroy');
+
+    Route::get('/blocked-orders', [BlockedCustomerOrderController::class, 'index'])->name('admin.blocked-orders.index');
+    Route::get('/blocked-orders/{id}', [BlockedCustomerOrderController::class, 'show'])->name('admin.blocked-orders.show');
+    Route::delete('/blocked-orders/{id}', [BlockedCustomerOrderController::class, 'destroy'])->name('admin.blocked-orders.destroy');
 });
