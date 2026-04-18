@@ -8,14 +8,28 @@
         <div class="card-body py-3">
             <div class="row">
                 <div class="col-md-12">
-                    <div class="btn-group flex-wrap">
-                        <a href="{{ route('admin.orders.index') }}" class="btn btn-{{ request('status') == null ? 'primary' : 'light' }}">All Orders</a>
-                        <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" class="btn btn-{{ request('status') == 'pending' ? 'warning' : 'light' }}">Pending</a>
-                        <a href="{{ route('admin.orders.index', ['status' => 'confirmed']) }}" class="btn btn-{{ request('status') == 'confirmed' ? 'info' : 'light' }}">Confirmed</a>
-                        <a href="{{ route('admin.orders.index', ['status' => 'preparing']) }}" class="btn btn-{{ request('status') == 'preparing' ? 'primary' : 'light' }}">Preparing</a>
-                        <a href="{{ route('admin.orders.index', ['status' => 'ready']) }}" class="btn btn-{{ request('status') == 'ready' ? 'info' : 'light' }}">Ready</a>
-                        <a href="{{ route('admin.orders.index', ['status' => 'delivered']) }}" class="btn btn-{{ request('status') == 'delivered' ? 'success' : 'light' }}">Delivered</a>
-                        <a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}" class="btn btn-{{ request('status') == 'cancelled' ? 'danger' : 'light' }}">Cancelled</a>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        
+                        <div class="btn-group flex-wrap">
+                            <a href="{{ route('admin.orders.index') }}" class="btn btn-{{ request('status') == null ? 'primary' : 'light' }}">All Orders</a>
+                            <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" class="btn btn-{{ request('status') == 'pending' ? 'warning' : 'light' }}">Pending</a>
+                            <a href="{{ route('admin.orders.index', ['status' => 'confirmed']) }}" class="btn btn-{{ request('status') == 'confirmed' ? 'info' : 'light' }}">Confirmed</a>
+                            <a href="{{ route('admin.orders.index', ['status' => 'preparing']) }}" class="btn btn-{{ request('status') == 'preparing' ? 'primary' : 'light' }}">Preparing</a>
+                            <a href="{{ route('admin.orders.index', ['status' => 'ready']) }}" class="btn btn-{{ request('status') == 'ready' ? 'info' : 'light' }}">Ready</a>
+                            <a href="{{ route('admin.orders.index', ['status' => 'delivered']) }}" class="btn btn-{{ request('status') == 'delivered' ? 'success' : 'light' }}">Delivered</a>
+                            <a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}" class="btn btn-{{ request('status') == 'cancelled' ? 'danger' : 'light' }}">Cancelled</a>
+                        </div>
+
+                        <div>
+                            @if(request('type') === 'pos')
+                                <span class="badge bg-warning fs-6">POS Orders</span>
+                            @elseif(request('type') === 'frontend')
+                                <span class="badge bg-primary fs-6">Online Orders</span>
+                            @else
+                                <span class="badge bg-secondary fs-6">All Orders</span>
+                            @endif
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -32,7 +46,7 @@
         <div class="collapse" id="advancedFilters">
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4 d-none">
                         <label class="form-label">Sale Type</label>
                         <select id="orderTypeFilter" class="form-select">
                             <option value="all">All (POS + Online)</option>
@@ -41,7 +55,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Payment Method</label>
                         <select id="paymentMethodFilter" class="form-select">
                             <option value="">All Methods</option>
@@ -51,11 +65,11 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">From Date</label>
                         <input type="date" id="startDateFilter" class="form-control">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">To Date</label>
                         <input type="date" id="endDateFilter" class="form-control">
                     </div>
@@ -88,7 +102,6 @@
                         <th>Order No</th>
                         <th>Customer</th>
                         <th>Amount</th>
-                        <th>Sale Type</th>
                         <th>Type</th>
                         <th>Order Status</th>
                         <th>Payment Method</th>
@@ -118,6 +131,7 @@ $(function() {
                 d.customer        = $('#customerFilter').val();
                 d.start_date      = $('#startDateFilter').val();
                 d.end_date        = $('#endDateFilter').val();
+                d.type = new URLSearchParams(window.location.search).get('type') || '';
 
                 if ($('#orderNumberFilter').val().trim() !== '') {
                     d.order_number = $('#orderNumberFilter').val().trim();
@@ -129,7 +143,6 @@ $(function() {
             { data: 'order_number', name: 'order_number' },
             { data: 'customer', name: 'customer' },
             { data: 'amounts', name: 'total' },
-            { data: 'order_type', name: 'order_type' },
             { data: 'delivery_type', name: 'delivery_type' },
             { data: 'order_status', name: 'status' },
             { data: 'payment_method', name: 'payment_method' },

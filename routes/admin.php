@@ -32,8 +32,7 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::get('/pos/customer-info', [PosController::class, 'posGetCustomerInfo'])->name('admin.pos.customer-info');
     Route::post('/pos/validate-promo', [PosController::class, 'posValidatePromo'])->name('admin.pos.validate-promo');
     Route::post('/pos/place-order', [PosController::class, 'posPlaceOrder'])->name('admin.pos.place-order');
-    Route::get('/pos/payment/success', [PosController::class, 'posPaymentSuccess'])->name('admin.pos.payment.success');
-    Route::get('/pos/payment/cancel', [PosController::class, 'posPaymentCancel'])->name('admin.pos.payment.cancel');
+    Route::post('/pos/printer-log', [PosController::class, 'posPrinterLog'])->name('admin.pos.printer-log');
 
     // Clients
     Route::get('/client', [ClientController::class, 'index'])->name('client.index');
@@ -172,6 +171,8 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
 
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+    Route::get('/orders/pos', [OrderController::class, 'index'])->name('admin.orders.pos');
+    Route::get('/orders/online', [OrderController::class, 'index'])->name('admin.orders.online');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.details');
 
     Route::get('/credentials', [CredentialController::class, 'index'])->name('credentials.index');

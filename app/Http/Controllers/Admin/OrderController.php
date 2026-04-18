@@ -17,6 +17,9 @@ class OrderController extends Controller
             if ($request->has('status') && $request->status) {
                 $query->where('status', $request->status);
             }
+            if ($request->has('type') && $request->type) {
+                $query->where('order_type', $request->type);
+            }
 
             if ($request->has('client_id') && $request->client_id) {
                 $query->where('user_id', $request->client_id);
