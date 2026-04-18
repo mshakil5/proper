@@ -1,1118 +1,2773 @@
 @extends('admin.pages.master')
 @section('title', 'POS — Point of Sale')
-
 @section('content')
-<style>
-    .pos-wrapper {
-        display: grid;
-        grid-template-columns: 1fr 420px;
-        gap: 0;
-        height: calc(100vh - 60px);
-        background: #f4f6fa;
-        transition: grid-template-columns .3s ease;
-    }
-    .pos-wrapper.panel-collapsed {
-        grid-template-columns: 1fr 52px;
-    }
+    <style>
+        :root {
+            --pos-bg: #0f0f0f;
+            --pos-surface: #1a1a1a;
+            --pos-surface2: #242424;
+            --pos-border: #2e2e2e;
+            --pos-accent: #ff5a00;
+            --pos-accent-dim: rgba(255, 90, 0, .15);
+            --pos-text: #f0f0f0;
+            --pos-muted: #888;
+            --pos-success: #22c55e;
+            --pos-danger: #ef4444;
+            --pos-radius: 14px;
+            --c0: #ff5a00;
+            --c1: #3b82f6;
+            --c2: #22c55e;
+            --c3: #a855f7;
+            --c4: #f59e0b;
+            --c5: #ec4899;
+            --c6: #14b8a6;
+            --c7: #ef4444;
+            --c8: #8b5cf6;
+            --c9: #06b6d4;
+        }
 
-    .pos-left {
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        padding: 16px;
-        gap: 12px;
-    }
-    .cat-pills { display:flex; gap:8px; flex-wrap:wrap; }
-    .cat-pill {
-        padding:7px 18px; border-radius:30px; border:1.5px solid #e5e7eb;
-        background:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; white-space:nowrap;
-    }
-    .cat-pill.active { background:#ff5a00; color:#fff; border-color:#ff5a00; }
-    .products-scroll { flex:1; overflow-y:auto; }
-    .products-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; padding-bottom:10px; }
-    .product-tile {
-        background:#fff; border-radius:14px; border:2px solid #f0f0f0;
-        cursor:pointer; transition:all .15s; overflow:hidden;
-    }
-    .product-tile:hover { border-color:#ff5a00; transform:translateY(-2px); box-shadow:0 4px 16px rgba(255,90,0,.15); }
-    .product-tile:active { transform:scale(.97); }
-    .product-tile img { width:100%; height:110px; object-fit:cover; }
-    .product-tile-body { padding:8px 10px 10px; }
-    .product-tile-name { font-size:13px; font-weight:700; color:#111; line-height:1.3; margin-bottom:4px; }
-    .product-tile-price { font-size:14px; font-weight:800; color:#ff5a00; }
-    .product-tile-badge { font-size:10px; background:#fff3ee; color:#ff5a00; padding:2px 7px; border-radius:20px; display:inline-block; margin-bottom:4px; }
+        * {
+            box-sizing: border-box;
+        }
 
-    .pos-right {
-        background:#fff; border-left:1px solid #e5e7eb;
-        display:flex; flex-direction:column; overflow:hidden; position:relative;
-    }
-    .pos-collapse-btn {
-        position:absolute; top:14px; left:0px; z-index:10;
-        width:32px; height:32px; border-radius:50%;
-        background:#fff; border:1.5px solid #e5e7eb;
-        display:flex; align-items:center; justify-content:center;
-        cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.12);
-        font-size:14px; transition:all .2s;
-    }
-    .pos-collapse-btn:hover { background:#ff5a00; color:#fff; border-color:#ff5a00; }
-    .panel-collapsed .pos-right-content { display:none; }
-    .pos-right-collapsed-label {
-        display:none; writing-mode:vertical-rl; text-orientation:mixed;
-        font-size:13px; font-weight:700; color:#666; padding:20px 0;
-        align-items:center; justify-content:center; cursor:pointer; flex:1;
-    }
-    .panel-collapsed .pos-right-collapsed-label { display:flex; }
-    .pos-right-content { display:flex; flex-direction:column; overflow-y:auto; height:100%; }
+        body {
+            background: var(--pos-bg) !important;
+            font-size: 15px;
+        }
 
-    .pos-panel-header { padding:16px 20px 12px; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
-    .pos-panel-header h5 { font-size:16px; font-weight:800; margin:0 0 10px; }
-    .pos-type-btns { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
-    .pos-type-btn {
-        padding:10px; border-radius:10px; border:2px solid #e5e7eb; background:#fff;
-        font-size:13px; font-weight:700; cursor:pointer; text-align:center; transition:all .15s;
-    }
-    .pos-type-btn.active { background:#111; color:#fff; border-color:#111; }
-    .pos-type-btn i { display:block; font-size:18px; margin-bottom:2px; }
-    .pos-field {
-        width:100%; border:1.5px solid #e5e7eb; border-radius:10px;
-        padding:9px 12px; font-size:13px; outline:none; margin-bottom:8px;
-    }
-    .pos-field:focus { border-color:#ff5a00; }
-    .customer-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
-    .customer-row select { flex:1; }
-    .btn-new-customer {
-        padding:8px 12px; border-radius:10px; background:#111; color:#fff;
-        border:none; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
-    }
+        .pos-shell {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: calc(100vh - 60px);
+            background: var(--pos-bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
 
-    .pos-panel-section { border-bottom:1px solid #f0f0f0; flex-shrink:0; }
-    .pos-panel-section-header {
-        padding:10px 20px; display:flex; align-items:center; justify-content:space-between;
-        cursor:pointer; background:#fafafa; user-select:none;
-    }
-    .pos-panel-section-header:hover { background:#f0f0f0; }
-    .pos-panel-section-title { font-size:13px; font-weight:700; color:#333; }
-    .pos-panel-section-icon { font-size:12px; color:#999; transition:transform .2s; }
-    .pos-panel-section-icon.open { transform:rotate(180deg); }
-    .pos-panel-section-body { padding:12px 20px; }
-    .pos-panel-section-body.hidden { display:none; }
+        .pos-main {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-right: 1px solid var(--pos-border);
+        }
 
-    .pos-order-items { overflow-y:auto; padding:12px 16px; max-height:220px; }
-    .order-item-row {
-        display:flex; align-items:center; gap:10px;
-        padding:10px 12px; background:#f8f9fa; border-radius:12px; margin-bottom:8px;
-    }
-    .order-item-img { width:44px; height:44px; border-radius:8px; object-fit:cover; flex-shrink:0; }
-    .order-item-info { flex:1; min-width:0; }
-    .order-item-name { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .order-item-opts { font-size:11px; color:#888; line-height:1.4; }
-    .order-item-price { font-size:13px; font-weight:800; color:#ff5a00; }
-    .qty-ctrl { display:flex; align-items:center; gap:4px; flex-shrink:0; }
-    .qty-btn {
-        width:28px; height:28px; border-radius:8px; border:1.5px solid #e5e7eb;
-        background:#fff; font-size:16px; line-height:1; cursor:pointer;
-        display:flex; align-items:center; justify-content:center; font-weight:700;
-    }
-    .qty-btn:hover { background:#ff5a00; color:#fff; border-color:#ff5a00; }
-    .qty-val { font-size:14px; font-weight:800; min-width:20px; text-align:center; }
-    .remove-btn {
-        width:28px; height:28px; border-radius:8px; border:none;
-        background:#fee2e2; color:#dc2626; cursor:pointer;
-        display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
-    }
+        .pos-steps {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: var(--pos-surface);
+            border-bottom: 1px solid var(--pos-border);
+            padding: 0 16px;
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
 
-    .pos-footer { padding:14px 16px; border-top:1px solid #f0f0f0; flex-shrink:0; position:sticky; bottom:0; background:#fff; z-index:5; }
-    .pos-summary-row { display:flex; justify-content:space-between; font-size:13px; color:#666; margin-bottom:4px; }
-    .pos-summary-row.discount { color:#28a745; }
-    .pos-total-row { display:flex; justify-content:space-between; font-size:20px; font-weight:800; color:#111; margin:8px 0 12px; }
-    .btn-place {
-        width:100%; height:52px; background:#ff5a00; color:#fff; border:none;
-        border-radius:14px; font-size:16px; font-weight:800; cursor:pointer; transition:all .15s;
-    }
-    .btn-place:hover { background:#e04e00; }
-    .btn-place:disabled { background:#ccc; cursor:not-allowed; }
-    .btn-clear {
-        background:none; border:1.5px solid #e5e7eb; border-radius:10px;
-        padding:6px 14px; font-size:13px; font-weight:600; cursor:pointer;
-    }
-    .btn-clear:hover { border-color:#dc2626; color:#dc2626; }
+        .pos-step-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 18px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--pos-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all .2s;
+            user-select: none;
+        }
 
-    .pos-empty { text-align:center; color:#bbb; padding:40px 20px; }
-    .pos-empty i { font-size:48px; display:block; margin-bottom:10px; }
+        .pos-step-tab .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--pos-border);
+            color: var(--pos-muted);
+            font-size: 12px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
 
-    .pos-promo-row { display:flex; gap:6px; margin-bottom:8px; }
-    .pos-promo-row input { flex:1; }
-    .btn-pos-promo {
-        padding:9px 14px; background:#111; color:#fff; border:none;
-        border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
-    }
-    .pos-points-box { background:#f8f9fa; border-radius:10px; padding:10px 12px; margin-top:6px; }
-    .pos-points-row { display:flex; justify-content:space-between; font-size:12px; color:#666; margin-bottom:3px; }
+        .pos-step-tab.active {
+            color: var(--pos-accent);
+            border-bottom-color: var(--pos-accent);
+        }
 
-    .pos-modal-overlay {
-        position:fixed; inset:0; background:rgba(0,0,0,.5);
-        z-index:9999; display:flex; align-items:center; justify-content:center;
-    }
-    .pos-modal {
-        background:#fff; border-radius:20px; width:460px;
-        max-width:95vw; max-height:90vh; overflow-y:auto; padding:24px;
-    }
-    .pos-modal-title { font-size:18px; font-weight:800; margin-bottom:16px; }
-    .pos-option-group { margin-bottom:16px; }
-    .option-group-title {
-        font-size:13px; font-weight:700; color:#555; margin-bottom:8px;
-        display:flex; justify-content:space-between;
-    }
-    .option-item {
-        display:flex; align-items:center; gap:10px;
-        padding:10px 12px; border:2px solid #f0f0f0; border-radius:10px;
-        margin-bottom:6px; cursor:pointer; transition:all .15s;
-    }
-    .option-item:hover { border-color:#ff5a00; }
-    .option-item.selected { border-color:#ff5a00; background:#fff8f5; }
-    .option-item-name { flex:1; font-size:14px; font-weight:600; }
-    .option-item-price { font-size:13px; color:#ff5a00; font-weight:700; }
-    .attr-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
-    .attr-btn {
-        padding:12px; border:2px solid #e5e7eb; border-radius:12px;
-        text-align:center; cursor:pointer; font-weight:700; font-size:13px; transition:all .15s;
-    }
-    .attr-btn.selected { border-color:#ff5a00; background:#fff8f5; color:#ff5a00; }
-    .qty-row { display:flex; align-items:center; gap:12px; justify-content:center; margin:16px 0; }
-    .qty-row .qty-btn { width:38px; height:38px; font-size:20px; }
-    .qty-row .qty-val { font-size:22px; font-weight:800; min-width:40px; }
-    .btn-add-to-order {
-        width:100%; height:48px; background:#ff5a00; color:#fff; border:none;
-        border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; margin-top:8px;
-    }
-    .option-error { border:2px solid #dc2626 !important; border-radius:10px; }
-    .form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-</style>
+        .pos-step-tab.active .step-num {
+            background: var(--pos-accent);
+            color: #fff;
+        }
 
-<div class="pos-wrapper" id="posWrapper">
+        .pos-step-tab.done {
+            color: var(--pos-success);
+        }
 
-    <div class="pos-left">
-        <input type="text" id="posSearch" placeholder="🔍  Search products..."
-            style="width:100%;height:46px;border-radius:12px;border:1.5px solid #e5e7eb;padding:0 16px;font-size:15px;outline:none;">
+        .pos-step-tab.done .step-num {
+            background: var(--pos-success);
+            color: #fff;
+        }
 
-        <div class="cat-pills" id="catPills">
-            <div class="cat-pill active" data-cat="all">All</div>
-            @foreach ($categories as $cat)
-                <div class="cat-pill" data-cat="{{ $cat->id }}">{{ $cat->name }}</div>
-            @endforeach
-        </div>
+        .step-arrow {
+            color: var(--pos-border);
+            font-size: 18px;
+            padding: 0 4px;
+        }
 
-        <div class="products-scroll">
-            <div class="products-grid" id="productsGrid">
-                @foreach ($categories as $category)
-                    @foreach ($category->products as $product)
-                        <div class="product-tile"
-                            data-cat="{{ $category->id }}"
-                            data-name="{{ strtolower($product->title) }}"
-                            data-id="{{ $product->id }}"
-                            data-has-options="{{ $product->options()->exists() ? 1 : 0 }}">
-                            <img src="{{ asset($product->image ?? '/placeholder.webp') }}" alt="{{ $product->title }}">
-                            <div class="product-tile-body">
-                                @if ($product->options()->exists())
-                                    <div class="product-tile-badge">+ Options</div>
-                                @endif
-                                <div class="product-tile-name">{{ $product->title }}</div>
-                                <div class="product-tile-price">£{{ number_format($product->price, 2) }}</div>
-                            </div>
-                        </div>
-                    @endforeach
-                @endforeach
+        .pos-step-panel {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .pos-step-panel.active {
+            display: flex;
+        }
+
+        .step1-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 40px;
+            height: 100%;
+            align-content: center;
+        }
+
+        .order-type-card {
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            border: 3px solid transparent;
+        }
+
+        .order-type-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .order-type-card.selected {
+            transform: translateY(-3px);
+        }
+
+        .order-type-card .icon {
+            font-size: 52px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .order-type-card .label {
+            font-size: 20px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .order-type-card .sub {
+            font-size: 14px;
+            color: rgba(255, 255, 255, .7);
+            margin-top: 6px;
+        }
+
+        .order-type-card[data-type="collection"] {
+            background: rgba(34, 197, 94, .2);
+            border-color: #22c55e;
+        }
+
+        .order-type-card[data-type="collection"]:hover,
+        .order-type-card[data-type="collection"].selected {
+            background: rgba(34, 197, 94, .35);
+        }
+
+        .order-type-card[data-type="delivery"] {
+            background: rgba(59, 130, 246, .2);
+            border-color: #3b82f6;
+        }
+
+        .order-type-card[data-type="delivery"]:hover,
+        .order-type-card[data-type="delivery"].selected {
+            background: rgba(59, 130, 246, .35);
+        }
+
+        .order-type-card[data-type="walkin"] {
+            background: rgba(245, 158, 11, .2);
+            border-color: #f59e0b;
+        }
+
+        .order-type-card[data-type="walkin"]:hover,
+        .order-type-card[data-type="walkin"].selected {
+            background: rgba(245, 158, 11, .35);
+        }
+
+        .step2-body {
+            padding: 24px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .step2-body h3 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--pos-text);
+            margin-bottom: 16px;
+        }
+
+        .pos-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--pos-muted);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .pos-input {
+            width: 100%;
+            background: var(--pos-surface2);
+            border: 1.5px solid var(--pos-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 15px;
+            color: var(--pos-text);
+            outline: none;
+            margin-bottom: 12px;
+            transition: border-color .15s;
+        }
+
+        .pos-input:focus {
+            border-color: var(--pos-accent);
+        }
+
+        .pos-input::placeholder {
+            color: var(--pos-muted);
+        }
+
+        .pos-input.error {
+            border-color: var(--pos-danger);
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .cust-suggestions {
+            position: absolute;
+            z-index: 1000;
+            background: var(--pos-surface2);
+            border: 1.5px solid var(--pos-accent);
+            border-radius: 10px;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            top: calc(100% + 2px);
+            left: 0;
+        }
+
+        .cust-suggestion-item {
+            padding: 10px 14px;
+            font-size: 14px;
+            color: var(--pos-text);
+            cursor: pointer;
+            border-bottom: 1px solid var(--pos-border);
+        }
+
+        .cust-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .cust-suggestion-item:hover {
+            background: var(--pos-accent-dim);
+            color: var(--pos-accent);
+        }
+
+        .cust-suggestion-item .cust-sug-name {
+            font-weight: 700;
+        }
+
+        .cust-suggestion-item .cust-sug-sub {
+            font-size: 12px;
+            color: var(--pos-muted);
+        }
+
+        .or-divider {
+            text-align: center;
+            color: var(--pos-muted);
+            font-size: 13px;
+            font-weight: 700;
+            margin: 12px 0;
+            position: relative;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: var(--pos-border);
+        }
+
+        .or-divider::before {
+            left: 0;
+        }
+
+        .or-divider::after {
+            right: 0;
+        }
+
+        .select2-container--default .select2-selection--single {
+            background: var(--pos-surface2) !important;
+            border: 1.5px solid var(--pos-border) !important;
+            border-radius: 10px !important;
+            height: 46px !important;
+            color: var(--pos-text) !important;
+            margin-bottom: 12px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--pos-text) !important;
+            line-height: 42px !important;
+            padding-left: 14px !important;
+            font-size: 15px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            top: 10px !important;
+        }
+
+        .select2-dropdown {
+            background: var(--pos-surface2) !important;
+            border: 1.5px solid var(--pos-border) !important;
+            border-radius: 10px !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: var(--pos-surface) !important;
+            border: 1px solid var(--pos-border) !important;
+            color: var(--pos-text) !important;
+            border-radius: 6px !important;
+            padding: 6px 10px;
+            font-size: 14px;
+        }
+
+        .select2-container--default .select2-results__option {
+            color: var(--pos-text) !important;
+            padding: 10px 14px !important;
+            font-size: 14px;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: var(--pos-accent) !important;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 14px;
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .cat-card {
+            border-radius: 16px;
+            border: none;
+            padding: 28px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cat-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, .25);
+            border-radius: 16px;
+        }
+
+        .cat-card:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        .cat-card.selected {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 0 0 3px #fff;
+        }
+
+        .cat-card .cat-icon {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cat-card .cat-name {
+            font-size: 1.85rem;
+            font-weight: 800;
+            line-height: 1.2;
+            text-transform: uppercase;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, .6);
+            position: relative;
+            z-index: 1;
+        }
+
+        .cat-card .cat-count {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .8);
+            margin-top: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .product-grid-step {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            align-content: start;
+        }
+
+        .prod-btn {
+            border-radius: 14px;
+            border: none;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .15s;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .prod-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 14px;
+        }
+
+        .prod-btn:hover {
+            transform: translateY(-4px) scale(1.03);
+        }
+
+        .prod-btn .prod-badge {
+            font-size: 12px;
+            background: rgba(255, 255, 255, .3);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .prod-btn .prod-name {
+            font-size: 17.5px;
+            font-weight: 800;
+            line-height: 1.25;
+            text-align: center;
+        }
+
+        .options-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .option-group-pos {
+            margin-bottom: 20px;
+        }
+
+        .option-group-title-pos {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--pos-muted);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .option-btns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px;
+        }
+
+        .opt-btn {
+            padding: 16px 12px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all .15s;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            min-height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .opt-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, .3);
+        }
+
+        .opt-btn span {
+            position: relative;
+            z-index: 1;
+            line-height: 1.3;
+        }
+
+        .opt-btn:hover {
+            transform: scale(1.03);
+        }
+
+        .opt-btn.selected {
+            box-shadow: 0 0 0 3px #fff inset;
+        }
+
+        .opt-btn.option-error {
+            box-shadow: 0 0 0 3px var(--pos-danger) inset !important;
+        }
+
+        .attr-choice-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .attr-choice-btn {
+            padding: 18px 12px;
+            border-radius: 12px;
+            border: 2px solid var(--pos-border);
+            background: var(--pos-surface);
+            cursor: pointer;
+            text-align: center;
+            transition: all .15s;
+        }
+
+        .attr-choice-btn:hover {
+            border-color: var(--pos-accent);
+        }
+
+        .attr-choice-btn.selected {
+            border-color: var(--pos-accent);
+            background: var(--pos-accent-dim);
+        }
+
+        .attr-choice-btn .attr-label {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--pos-text);
+        }
+
+        .attr-choice-btn .attr-sub {
+            font-size: 13px;
+            color: var(--pos-muted);
+            margin-top: 4px;
+        }
+
+        .sauce-group-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sauce-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 2px solid var(--pos-border);
+            background: var(--pos-surface);
+        }
+
+        .sauce-item-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--pos-text);
+        }
+
+        .sauce-item-price {
+            font-size: 13px;
+            color: var(--pos-muted);
+        }
+
+        .sauce-qty-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sauce-ctrl-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1.5px solid var(--pos-border);
+            background: var(--pos-surface2);
+            color: var(--pos-text);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .sauce-ctrl-btn:hover {
+            background: var(--pos-accent);
+            border-color: var(--pos-accent);
+            color: #fff;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .time-btn {
+            padding: 13px 10px;
+            border-radius: 10px;
+            border: 2px solid var(--pos-border);
+            background: var(--pos-surface);
+            cursor: pointer;
+            text-align: center;
+            transition: all .15s;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--pos-text);
+        }
+
+        .time-btn:hover {
+            border-color: var(--pos-accent);
+        }
+
+        .time-btn.selected {
+            border-color: var(--pos-accent);
+            background: var(--pos-accent-dim);
+            color: var(--pos-accent);
+        }
+
+        .pos-textarea {
+            width: 100%;
+            background: var(--pos-surface2);
+            border: 1.5px solid var(--pos-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 15px;
+            color: var(--pos-text);
+            outline: none;
+            resize: none;
+            margin-bottom: 12px;
+        }
+
+        .pos-textarea:focus {
+            border-color: var(--pos-accent);
+        }
+
+        .pos-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-top: 1px solid var(--pos-border);
+            background: var(--pos-surface);
+            flex-shrink: 0;
+        }
+
+        .btn-nav {
+            padding: 11px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .btn-nav-back {
+            background: var(--pos-surface2);
+            color: var(--pos-text);
+            border: 1.5px solid var(--pos-border);
+        }
+
+        .btn-nav-back:hover {
+            border-color: var(--pos-accent);
+            color: var(--pos-accent);
+        }
+
+        .btn-nav-next {
+            background: var(--pos-accent);
+            color: #fff;
+        }
+
+        .btn-nav-next:hover {
+            background: #e04e00;
+        }
+
+        .btn-nav-next:disabled {
+            background: var(--pos-border);
+            color: var(--pos-muted);
+            cursor: not-allowed;
+        }
+
+        .btn-nav-place {
+            background: var(--pos-success);
+            color: #fff;
+        }
+
+        .btn-nav-place:hover {
+            background: #16a34a;
+        }
+
+        .btn-nav-place:disabled {
+            background: var(--pos-border);
+            color: var(--pos-muted);
+            cursor: not-allowed;
+        }
+
+        .step-hint {
+            font-size: 13px;
+            color: var(--pos-muted);
+            font-weight: 600;
+        }
+
+        .pos-cart {
+            display: flex;
+            flex-direction: column;
+            background: var(--pos-surface);
+            overflow: hidden;
+        }
+
+        .cart-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--pos-border);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cart-header h4 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--pos-text);
+            margin: 0;
+        }
+
+        .btn-clear-cart {
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: 1.5px solid var(--pos-border);
+            background: none;
+            color: var(--pos-muted);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-clear-cart:hover {
+            border-color: var(--pos-danger);
+            color: var(--pos-danger);
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .cart-empty {
+            text-align: center;
+            color: var(--pos-muted);
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+
+        .cart-empty i {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--pos-surface2);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border: 1px solid var(--pos-border);
+        }
+
+        .cart-item-color {
+            width: 4px;
+            align-self: stretch;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .cart-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cart-item-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--pos-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cart-item-opts {
+            font-size: 12px;
+            color: var(--pos-muted);
+            line-height: 1.5;
+            margin-top: 2px;
+        }
+
+        .cart-item-price {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--pos-accent);
+            white-space: nowrap;
+        }
+
+        .qty-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            border: 1.5px solid var(--pos-border);
+            background: var(--pos-surface);
+            color: var(--pos-text);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .qty-btn:hover {
+            background: var(--pos-accent);
+            border-color: var(--pos-accent);
+            color: #fff;
+        }
+
+        .qty-val {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--pos-text);
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .btn-remove-item {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            border: none;
+            background: rgba(239, 68, 68, .15);
+            color: var(--pos-danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .cart-summary {
+            padding: 12px 16px;
+            border-top: 1px solid var(--pos-border);
+            flex-shrink: 0;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--pos-muted);
+            margin-bottom: 5px;
+        }
+
+        .summary-row.total {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--pos-text);
+            margin-top: 8px;
+        }
+
+        .order-meta {
+            padding: 10px 16px;
+            background: var(--pos-surface2);
+            border-top: 1px solid var(--pos-border);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--pos-border);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--pos-muted);
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+
+        .meta-pill.accent {
+            background: var(--pos-accent-dim);
+            color: var(--pos-accent);
+        }
+
+        .qty-add-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .6);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-add-box {
+            background: var(--pos-surface);
+            border-radius: 20px;
+            padding: 28px;
+            width: 320px;
+            border: 1.5px solid var(--pos-border);
+        }
+
+        .qty-add-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--pos-text);
+            margin-bottom: 4px;
+        }
+
+        .qty-add-opts {
+            font-size: 13px;
+            color: var(--pos-muted);
+            margin-bottom: 18px;
+        }
+
+        .qty-add-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .qty-add-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 2px solid var(--pos-border);
+            background: var(--pos-surface2);
+            color: var(--pos-text);
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-add-btn:hover {
+            border-color: var(--pos-accent);
+            background: var(--pos-accent-dim);
+        }
+
+        .qty-add-val {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--pos-text);
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .btn-add-confirm {
+            width: 100%;
+            height: 48px;
+            background: var(--pos-accent);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .btn-add-cancel {
+            width: 100%;
+            height: 40px;
+            background: none;
+            border: 1.5px solid var(--pos-border);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--pos-muted);
+            cursor: pointer;
+        }
+
+        .pos-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pos-success-box {
+            background: var(--pos-surface);
+            border-radius: 20px;
+            padding: 32px;
+            width: 420px;
+            text-align: center;
+            border: 1.5px solid var(--pos-border);
+        }
+
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 12px;
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--pos-text);
+            margin-bottom: 4px;
+        }
+
+        .success-order {
+            font-size: 34px;
+            font-weight: 900;
+            color: var(--pos-accent);
+            margin: 12px 0;
+        }
+
+        .btn-new-order {
+            width: 100%;
+            height: 50px;
+            background: var(--pos-accent);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-print-again {
+            width: 100%;
+            height: 44px;
+            background: var(--pos-surface2);
+            color: var(--pos-text);
+            border: 1.5px solid var(--pos-border);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            animation: slideIn .3s ease;
+        }
+
+        .toast.success {
+            background: #16a34a;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .pos-section-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--pos-muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 14px;
+        }
+
+        .pos-step-header {
+            padding: 14px 20px 0;
+            flex-shrink: 0;
+        }
+
+        #deliveryAddressBlock {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--pos-border);
+        }
+    </style>
+
+    <div class="pos-shell">
+        <div class="pos-main">
+            <div class="pos-steps" id="posStepTabs">
+                <div class="pos-step-tab active" data-step="1"><span class="step-num">1</span> Order Type</div>
+                <span class="step-arrow">›</span>
+                <div class="pos-step-tab" data-step="2"><span class="step-num">2</span> Customer</div>
+                <span class="step-arrow">›</span>
+                <div class="pos-step-tab" data-step="3"><span class="step-num">3</span> Category</div>
+                <span class="step-arrow">›</span>
+                <div class="pos-step-tab" data-step="4"><span class="step-num">4</span> Products</div>
+                <span class="step-arrow">›</span>
+                <div class="pos-step-tab" data-step="5"><span class="step-num">5</span> Options</div>
+                <span class="step-arrow">›</span>
+                <div class="pos-step-tab" data-step="6"><span class="step-num">6</span> Finalize</div>
             </div>
-            <div id="noResults" style="display:none;" class="pos-empty">
-                <i class="ri-search-line"></i>No products found
-            </div>
-        </div>
-    </div>
 
-    <div class="pos-right">
-        <div class="pos-collapse-btn" id="collapseBtn" title="Toggle order panel">‹</div>
-        <div class="pos-right-collapsed-label" id="expandLabel">🧾 Order</div>
-
-        <div class="pos-right-content" id="posRightContent">
-
-            <div class="pos-panel-header">
-                <div class="d-flex justify-content-between align-items-center mb-2 px-5">
-                    <h5>🧾 Current Order</h5>
-                    <div class="d-flex gap-2 align-items-center">
-                        <span class="badge bg-secondary" id="itemCountBadge">0 items</span>
-                        <button class="btn-clear" id="clearOrderBtn">Clear</button>
+            <div class="pos-step-panel active" id="step1">
+                <div class="step1-grid">
+                    <div class="order-type-card" data-type="collection">
+                        <span class="icon">🛍️</span>
+                        <div class="label">Collection</div>
+                        <div class="sub">Customer collects in store</div>
+                    </div>
+                    <div class="order-type-card" data-type="delivery">
+                        <span class="icon">🛵</span>
+                        <div class="label">Delivery</div>
+                        <div class="sub">Deliver to address</div>
+                    </div>
+                    <div class="order-type-card" data-type="walkin">
+                        <span class="icon">🚶</span>
+                        <div class="label">Walk-in</div>
+                        <div class="sub">Dine in / no customer needed</div>
                     </div>
                 </div>
+            </div>
 
-                <div class="pos-type-btns">
-                    <div class="pos-type-btn active" data-type="collection">
-                        <i class="ri-walk-line"></i> Collection
-                    </div>
-                    <div class="pos-type-btn" data-type="delivery">
-                        <i class="ri-e-bike-2-line"></i> Delivery
-                    </div>
-                </div>
-
-                <select class="pos-field" id="posTimeSlot">
-                    <option value="">⏰ Select Time Slot...</option>
-                </select>
-
-                <div class="customer-row">
-                    <select class="pos-field" id="posCustomer" style="margin-bottom:0;">
-                        <option value="">— Walk-in Customer —</option>
+            <div class="pos-step-panel" id="step2">
+                <div class="step2-body">
+                    <div class="pos-section-title">Find Existing Customer</div>
+                    <select id="posCustomerSelect" style="width:100%;">
+                        <option value="">— Search by name or phone —</option>
                         @foreach ($clients as $client)
-                            <option value="{{ $client->id }}"
-                                data-name="{{ $client->name }}"
-                                data-phone="{{ $client->phone }}"
-                                data-email="{{ $client->email }}"
+                            <option value="{{ $client->id }}" data-name="{{ $client->name }}"
+                                data-phone="{{ $client->phone }}" data-email="{{ $client->email }}"
                                 data-points="{{ $client->available_points ?? 0 }}">
                                 {{ $client->name }} — {{ $client->phone }}
                             </option>
                         @endforeach
                     </select>
-                    <button class="btn-new-customer" id="openNewCustomerBtn">+ New</button>
-                </div>
-
-                <div id="deliveryAddressSection" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0;">
-                <div class="pos-field-wrapper">
-                    <label style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px;display:block;">Postcode <span style="color:#dc2626;">*</span></label>
-                    <input type="text" class="pos-field" id="deliveryPostcode" placeholder="e.g. LN5 8LQ" style="margin-bottom:8px;">
-                </div>
-
-                <div class="pos-field-wrapper">
-                    <label style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px;display:block;">Street Address <span style="color:#dc2626;">*</span></label>
-                    <input type="text" class="pos-field" id="deliveryAddress" placeholder="123 Main Street" style="margin-bottom:8px;">
-                </div>
-
-                <div class="form-row-2">
-                    <div>
-                        <label style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px;display:block;">City <span style="color:#dc2626;">*</span></label>
-                        <input type="text" class="pos-field" id="deliveryCity" placeholder="Lincoln" style="margin-bottom:0;">
-                    </div>
-                    <div>
-                        <label style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px;display:block;">Address Line 2 (Optional)</label>
-                        <input type="text" class="pos-field" id="deliveryAddress2" placeholder="Flat 4 / Apartment" style="margin-bottom:0;">
-                    </div>
-                </div>
-            </div>
-
-            <div class="pos-panel-section">
-                <div class="pos-panel-section-header" id="orderItemsToggle">
-                    <span class="pos-panel-section-title">🛒 Order Items</span>
-                    <span class="pos-panel-section-icon open" id="orderItemsIcon">▼</span>
-                </div>
-                <div class="pos-panel-section-body" id="orderItemsBody" style="padding:0;">
-                    <div class="pos-order-items" id="orderItemsList">
-                        <div class="pos-empty"><i class="ri-shopping-basket-line"></i>Tap a product to add</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pos-panel-section d-none">
-                <div class="pos-panel-section-header" id="promoToggle">
-                    <span class="pos-panel-section-title">🎟 Promo / Gift Card</span>
-                    <span class="pos-panel-section-icon" id="promoIcon">▼</span>
-                </div>
-                <div class="pos-panel-section-body hidden" id="promoBody">
-                    <div class="pos-promo-row">
-                        <input type="text" class="pos-field" id="posPromoCode" placeholder="Enter code..." style="margin-bottom:0;text-transform:uppercase;">
-                        <button class="btn-pos-promo" id="applyPromoBtn">Apply</button>
-                    </div>
-                    <div id="promoResultMsg" style="display:none;font-size:12px;font-weight:600;margin-top:4px;padding:6px 10px;border-radius:8px;"></div>
-                </div>
-            </div>
-
-            <div class="pos-panel-section" id="pointsSection" style="display:none;">
-                <div class="pos-panel-section-header" id="pointsToggle">
-                    <span class="pos-panel-section-title">⭐ Redeem Points</span>
-                    <span class="pos-panel-section-icon" id="pointsIcon">▼</span>
-                </div>
-                <div class="pos-panel-section-body hidden" id="pointsBody">
-                    <div class="pos-points-box" id="pointsInfoBox">
-                        <div class="pos-points-row">
-                            <span>Available:</span><strong id="availablePointsDisplay">0</strong>
+                    <div class="or-divider">OR</div>
+                    <div class="pos-section-title">New Customer</div>
+                    <div id="newCustomerInlineBlock">
+                        <div class="form-row-2">
+                            <div style="position:relative;">
+                                <label class="pos-label">Name <span style="color:var(--pos-accent);">*</span></label>
+                                <input class="pos-input" id="custName" placeholder="Full name" autocomplete="off">
+                                <div id="nameSuggestions" class="cust-suggestions" style="display:none;"></div>
+                            </div>
+                            <div style="position:relative;">
+                                <label class="pos-label">Phone <span
+                                        style="color:var(--pos-muted);font-size:10px;">(optional)</span></label>
+                                <input class="pos-input" id="custPhone" placeholder="07700000000" autocomplete="off">
+                                <div id="phoneSuggestions" class="cust-suggestions" style="display:none;"></div>
+                            </div>
                         </div>
-                        <div class="pos-points-row"><span>100 pts = £1</span></div>
+                        <div style="position:relative;">
+                            <label class="pos-label">Email <span
+                                    style="color:var(--pos-muted);font-size:10px;">(optional)</span></label>
+                            <input class="pos-input" id="custEmail" type="email" placeholder="customer@email.com"
+                                autocomplete="off">
+                            <div id="emailSuggestions" class="cust-suggestions" style="display:none;"></div>
+                        </div>
+                        <div id="createAccountBlock" style="margin-top: 4px;">
+                            <label
+                                style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--pos-muted);margin-bottom:12px;">
+                                <input type="checkbox" id="createAccountCheck" style="accent-color:var(--pos-accent);">
+                                Create customer account
+                            </label>
+                            <div id="accountPasswordBlock" style="display:none;">
+                                <label class="pos-label">Password</label>
+                                <input class="pos-input" id="custPassword" type="password" value="Password123!"
+                                    placeholder="Password">
+                            </div>
+                        </div>
                     </div>
-                    <div style="display:flex;gap:6px;margin-top:8px;">
-                        <input type="number" class="pos-field" id="posPointsToUse" min="0" value="0" placeholder="Points to redeem" style="margin-bottom:0;">
-                        <button class="btn-pos-promo" id="applyPointsBtn">Apply</button>
-                    </div>
-                    <div class="pos-points-box" style="margin-top:8px;">
-                        <div class="pos-points-row"><span>Points used:</span><strong id="pointsUsedDisplay">0</strong></div>
-                        <div class="pos-points-row"><span>Discount:</span><strong id="pointsDiscountDisplay" style="color:#28a745;">£0.00</strong></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pos-panel-section">
-                <div class="pos-panel-section-header" id="notesToggle">
-                    <span class="pos-panel-section-title">📝 Order Notes</span>
-                    <span class="pos-panel-section-icon" id="notesIcon">▼</span>
-                </div>
-                <div class="pos-panel-section-body hidden" id="notesBody">
-                    <textarea class="pos-field" id="posNotes" rows="2" placeholder="Special instructions..." style="resize:none;margin-bottom:0;"></textarea>
-                </div>
-            </div>
-
-            <div class="pos-panel-section">
-                <div class="pos-panel-section-header" style="cursor:default;">
-                    <span class="pos-panel-section-title">💳 Payment Method</span>
-                </div>
-                <div class="pos-panel-section-body" id="paymentBody">
-                    <div style="display:flex;flex-direction:column;gap:6px;">
-                        <label style="display:flex;align-items:center;gap:10px;padding:10px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .15s;" id="payCashLabel">
-                            <input type="radio" name="posPaymentMethod" value="cash" id="posCash" checked style="accent-color:#ff5a00;">
-                            <span style="font-size:13px;font-weight:700;">💵 Cash on Delivery</span>
-                        </label>
-                        {{-- <label style="display:flex;align-items:center;gap:10px;padding:10px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .15s;" id="payStripeLabel">
-                            <input type="radio" name="posPaymentMethod" value="stripe" id="posStripe" style="accent-color:#ff5a00;">
-                            <span style="font-size:13px;font-weight:700;">💳 Stripe</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:10px;padding:10px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .15s;" id="payPaypalLabel">
-                            <input type="radio" name="posPaymentMethod" value="paypal" id="posPaypal" style="accent-color:#ff5a00;">
-                            <span style="font-size:13px;font-weight:700;"><i class="fab fa-paypal"></i> PayPal</span>
-                        </label> --}}
+                    <div id="deliveryAddressBlock">
+                        <div class="pos-section-title">Delivery Address</div>
+                        <label class="pos-label">Postcode <span style="color:var(--pos-accent);">*</span></label>
+                        <input class="pos-input" id="deliveryPostcode" placeholder="e.g. LN5 8LQ">
+                        <label class="pos-label">Street Address <span style="color:var(--pos-accent);">*</span></label>
+                        <input class="pos-input" id="deliveryAddress" placeholder="123 Main Street">
+                        <div class="form-row-2">
+                            <div>
+                                <label class="pos-label">City <span style="color:var(--pos-accent);">*</span></label>
+                                <input class="pos-input" id="deliveryCity" placeholder="Lincoln">
+                            </div>
+                            <div>
+                                <label class="pos-label">Address Line 2</label>
+                                <input class="pos-input" id="deliveryAddress2" placeholder="Flat / Apt (optional)">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="pos-footer">
-                <div class="pos-summary-row"><span>Subtotal</span><span id="posSubtotal">£0.00</span></div>
-                <div class="pos-summary-row" id="posDeliveryRow" style="display:none;"><span>Delivery</span><span id="posDeliveryCharge">£0.00</span></div>
-                <div class="pos-summary-row discount" id="posPromoRow" style="display:none;"><span>Promo Discount</span><span id="posPromoDiscount">-£0.00</span></div>
-                <div class="pos-summary-row discount" id="posPointsRow" style="display:none;"><span>Points Discount</span><span id="posPointsDiscount">-£0.00</span></div>
-                <div class="pos-total-row"><span>Total</span><span id="posTotal">£0.00</span></div>
-                <button class="btn-place" id="placeOrderBtn" disabled>✅ Place Order</button>
+            <div class="pos-step-panel" id="step3">
+                <div class="pos-step-header">
+                    <div class="pos-section-title">Choose a Category</div>
+                </div>
+                <div class="category-grid" id="categoryGrid">
+                    @php
+                        $catColors = [
+                            '#ff5a00',
+                            '#3b82f6',
+                            '#22c55e',
+                            '#a855f7',
+                            '#f59e0b',
+                            '#ec4899',
+                            '#14b8a6',
+                            '#ef4444',
+                            '#8b5cf6',
+                            '#06b6d4',
+                        ];
+                    @endphp
+
+                    @foreach ($categories as $ci => $cat)
+                        <div class="cat-card" data-cat-id="{{ $cat->id }}"
+                            style="background: {{ $catColors[$ci % count($catColors)] }};">
+
+                            <div class="cat-name">
+                                {{ $loop->iteration }}.
+                                {{ $cat->name }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
 
+            <div class="pos-step-panel" id="step4">
+                <div class="pos-step-header" style="padding-bottom:10px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <div class="pos-section-title" id="step4CategoryLabel">Products</div>
+                        <input type="text" id="productSearch" class="pos-input" placeholder="🔍 Search..."
+                            style="width:200px;margin-bottom:0;">
+                    </div>
+                </div>
+                <div class="product-grid-step" id="productGrid">
+                    @foreach ($categories as $ci => $cat)
+                        @foreach ($cat->products as $product)
+                            <div class="prod-btn" data-color="{{ $ci % 10 }}" data-cat="{{ $cat->id }}"
+                                data-id="{{ $product->id }}" data-name="{{ strtolower($product->title) }}"
+                                data-has-options="{{ $product->options()->exists() ? 1 : 0 }}"
+                                data-has-attr="{{ $product->has_attribute ? 1 : 0 }}"
+                                style="display:none; background: {{ $catColors[$ci % count($catColors)] }};">
+
+                                @if ($product->options()->exists())
+                                    <div class="prod-badge">+ Options</div>
+                                @endif
+
+                                <div class="prod-name">
+                                    {{ $loop->iteration }}.
+                                    {{ $product->title }}
+                                </div>
+                            </div>
+                        @endforeach
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="pos-step-panel" id="step5">
+                <div class="pos-step-header">
+                    <div class="pos-section-title" id="step5ProductLabel">Choose Options</div>
+                </div>
+                <div class="options-body" id="optionsBody">
+                    <div style="color:var(--pos-muted);font-size:14px;">Select a product first</div>
+                </div>
+            </div>
+
+            <div class="pos-step-panel" id="step6">
+                <div class="step2-body">
+                    <div class="pos-section-title">Time Slot</div>
+                    <div class="time-grid" id="timeSlotGrid"></div>
+                    <div class="pos-section-title" style="margin-top:8px;">Order Notes <span
+                            style="font-weight:400;font-size:12px;color:var(--pos-muted);">(optional)</span></div>
+                    <textarea class="pos-textarea" id="posNotes" rows="3" placeholder="Special instructions, allergies..."></textarea>
+                </div>
+            </div>
+
+            <div class="pos-nav-bar">
+                <button class="btn-nav btn-nav-back" id="btnBack" style="display:none;">← Back</button>
+                <div class="step-hint" id="stepHint">Select order type to begin</div>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn-nav btn-nav-next" id="btnNext" disabled>Next →</button>
+                    <button class="btn-nav btn-nav-place" id="btnPlace" style="display:none;" disabled>✅ Place
+                        Order</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pos-cart">
+            <div class="cart-header">
+                <h4>🧾 Order</h4>
+                <button class="btn-clear-cart" id="btnTestPrint" style="border-color:#3b82f6;color:#3b82f6;">🖨️ Test</button>
+                <button class="btn-clear-cart" id="btnClearCart">Clear All</button>
+            </div>
+            <div class="order-meta" id="orderMeta">
+                <span class="meta-pill" id="metaType">No type</span>
+                <span class="meta-pill" id="metaCustomer">Walk-in</span>
+            </div>
+            <div class="cart-items" id="cartItems">
+                <div class="cart-empty"><i class="ri-shopping-basket-line"></i>Cart is empty</div>
+            </div>
+            <div class="cart-summary">
+                <div class="summary-row"><span>Subtotal</span><span id="cartSubtotal">£0.00</span></div>
+                <div class="summary-row" id="deliveryRow" style="display:none;"><span>Delivery</span><span
+                        id="cartDelivery">£0.00</span></div>
+                <div class="summary-row total"><span>Total</span><span id="cartTotal">£0.00</span></div>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="productModal" style="display:none;" class="pos-modal-overlay">
-    <div class="pos-modal" id="productModalInner"></div>
-</div>
-
-<div id="newCustomerModal" style="display:none;" class="pos-modal-overlay">
-    <div class="pos-modal">
-        <div class="pos-modal-title">➕ Quick Add Customer</div>
-        <div class="form-row-2">
-            <div>
-                <label style="font-size:12px;font-weight:700;color:#555;">First Name *</label>
-                <input class="pos-field" id="ncFirstName" placeholder="John">
+    <div id="qtyModal" style="display:none;" class="qty-add-modal">
+        <div class="qty-add-box">
+            <div class="qty-add-title" id="qtyModalTitle">Product Name</div>
+            <div class="qty-add-opts" id="qtyModalOpts"></div>
+            <div class="qty-add-row">
+                <button class="qty-add-btn" id="qtyMinus">−</button>
+                <span class="qty-add-val" id="qtyVal">1</span>
+                <button class="qty-add-btn" id="qtyPlus">+</button>
             </div>
-            <div>
-                <label style="font-size:12px;font-weight:700;color:#555;">Last Name *</label>
-                <input class="pos-field" id="ncLastName" placeholder="Doe">
-            </div>
-        </div>
-        <label style="font-size:12px;font-weight:700;color:#555;">Email *</label>
-        <input class="pos-field" id="ncEmail" type="email" placeholder="john@example.com">
-        <label style="font-size:12px;font-weight:700;color:#555;">Phone *</label>
-        <input class="pos-field" id="ncPhone" placeholder="07700000000">
-        <label style="font-size:12px;font-weight:700;color:#555;">Password</label>
-        <input class="pos-field" id="ncPassword" type="password" value="Password123!">
-        <div style="display:flex;gap:10px;margin-top:8px;">
-            <button id="cancelNewCustomerBtn" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-weight:700;cursor:pointer;">Cancel</button>
-            <button id="saveNewCustomerBtn" style="flex:1;padding:12px;border-radius:10px;border:none;background:#ff5a00;color:#fff;font-weight:800;cursor:pointer;">Save Customer</button>
+            <button class="btn-add-confirm" id="qtyConfirm">Add to Order</button>
+            <button class="btn-add-cancel" id="qtyCancel">Cancel</button>
         </div>
     </div>
-</div>
 
-<div id="successModal" style="display:none;" class="pos-modal-overlay">
-    <div class="pos-modal" style="text-align:center;">
-        <div style="font-size:56px;margin-bottom:8px;">✅</div>
-        <div style="font-size:20px;font-weight:800;margin-bottom:4px;">Order Placed!</div>
-        <div style="font-size:13px;color:#888;margin-bottom:12px;">Order Number</div>
-        <div style="font-size:28px;font-weight:900;color:#ff5a00;margin-bottom:20px;" id="successOrderNum">—</div>
-        <button id="newOrderBtn" style="width:100%;height:48px;background:#111;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;">🛒 New Order</button>
+    <div id="successModal" style="display:none;" class="pos-modal-overlay">
+        <div class="pos-success-box">
+            <div class="success-icon">✅</div>
+            <div class="success-title">Order Placed!</div>
+            <div style="font-size:14px;color:var(--pos-muted);">Order Number</div>
+            <div class="success-order" id="successOrderNum">—</div>
+            <div style="font-size:14px;color:var(--pos-muted);margin-bottom:8px;">Cash · <span
+                    id="successTotal">£0.00</span></div>
+            <button class="btn-print-again" id="btnPrintAgain">🖨️ Reprint Receipts</button>
+            <button class="btn-new-order" id="btnNewOrder">🛒 New Order</button>
+        </div>
     </div>
-</div>
 
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script id="categoriesData" type="application/json">
+        @php
+            $catData = [];
+            foreach ($categories as $cat) {
+                $products = [];
+                foreach ($cat->products as $p) {
+                    $optionGroups = [];
+                    foreach ($p->options as $opt) {
+                        $items = [];
+                        foreach ($opt->items->sortBy('override_price') as $oi) {
+                            $items[] = [
+                                'id'        => $oi->id,
+                                'title'     => $oi->product->title ?? 'Unknown',
+                                'price'     => (float)($oi->override_price ?? 0),
+                                'productId' => $oi->product_id,
+                                'hubrise'   => $oi->hubrise_option_ref ?? '',
+                            ];
+                        }
+                        $optionGroups[] = [
+                            'id'       => $opt->id,
+                            'name'     => $opt->name,
+                            'type'     => $opt->type,
+                            'required' => (bool)$opt->is_required,
+                            'max'      => $opt->max_select ?? 1,
+                            'items'    => $items,
+                        ];
+                    }
+                    $products[] = [
+                        'id'           => $p->id,
+                        'title'        => $p->title,
+                        'price'        => (float)$p->price,
+                        'skuRef'       => $p->sku_ref ?? '',
+                        'hasAttribute' => (bool)$p->has_attribute,
+                        'attrName'     => $p->attribute_name ?? '',
+                        'attrPrice'    => (float)($p->attribute_price ?? 0),
+                        'hasOptions'   => $p->options->isNotEmpty(),
+                        'options'      => $optionGroups,
+                    ];
+                }
+                $catData[] = ['id' => $cat->id, 'name' => $cat->name, 'products' => $products];
+            }
+            echo json_encode($catData);
+        @endphp
+    </script>
+
+    <script id="clientsData" type="application/json">
+        @php
+            $clientsArr = [];
+            foreach ($clients as $c) {
+                $clientsArr[] = [
+                    'id'    => $c->id,
+                    'name'  => $c->name,
+                    'phone' => $c->phone,
+                    'email' => $c->email,
+                    'points'=> $c->available_points ?? 0,
+                ];
+            }
+            echo json_encode($clientsArr);
+        @endphp
+    </script>
 @endsection
 
 @section('script')
-<script>
-    $(function () {
+    <script>
+        $(function() {
 
-        const SHOP_HOURS = {
-            Monday:    { open:'16:30', close:'23:30' },
-            Tuesday:   { open:'16:30', close:'23:30' },
-            Wednesday: { open:'16:30', close:'23:30' },
-            Thursday:  { open:'16:30', close:'23:30' },
-            Friday:    { open:'16:30', close:'23:30' },
-            Saturday:  { open:'16:30', close:'23:30' },
-            Sunday:    { open:'16:30', close:'22:00' },
-        };
+            const categoriesData = JSON.parse(document.getElementById('categoriesData').textContent);
+            const clientsData = JSON.parse(document.getElementById('clientsData').textContent);
 
-        let deliveryType    = 'collection';
-        let cart            = [];
-        let appliedPromo    = { type: null, id: null, discount: 0, code: null };
-        let pointsUsed      = 0;
-        let pointsDiscount  = 0;
-        let selectedCustomer = { id: null, name: '', email: '', phone: '', points: 0 };
-        let deliveryCharge  = 0;
-
-        const wrapper  = document.getElementById('posWrapper');
-        const colBtn   = document.getElementById('collapseBtn');
-        const expLabel = document.getElementById('expandLabel');
-        let collapsed  = false;
-
-        colBtn.addEventListener('click', togglePanel);
-        expLabel.addEventListener('click', togglePanel);
-
-        function togglePanel() {
-            collapsed = !collapsed;
-            wrapper.classList.toggle('panel-collapsed', collapsed);
-            colBtn.innerHTML = collapsed ? '›' : '‹';
-        }
-
-        function makeCollapsible(toggleId, bodyId, iconId) {
-            $('#' + toggleId).on('click', function () {
-                const body = $('#' + bodyId);
-                const icon = $('#' + iconId);
-                body.toggleClass('hidden');
-                icon.toggleClass('open');
-            });
-        }
-        makeCollapsible('orderItemsToggle', 'orderItemsBody', 'orderItemsIcon');
-        makeCollapsible('promoToggle',   'promoBody',   'promoIcon');
-        makeCollapsible('pointsToggle',  'pointsBody',  'pointsIcon');
-        makeCollapsible('notesToggle',   'notesBody',   'notesIcon');
-
-        $(document).on('change', 'input[name="posPaymentMethod"]', function () {
-            $('input[name="posPaymentMethod"]').each(function () {
-                $(this).closest('label').css('border-color', '#e5e7eb');
-            });
-            $(this).closest('label').css('border-color', '#ff5a00');
-        });
-        $('#posCash').closest('label').css('border-color', '#ff5a00');
-
-        function generateTimeSlots() {
-            const now     = new Date();
-            const dayName = now.toLocaleDateString('en-GB', { weekday:'long' });
-            const hours   = SHOP_HOURS[dayName];
-            const [openH, openM]   = hours.open.split(':').map(Number);
-            const [closeH, closeM] = hours.close.split(':').map(Number);
-
-            let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), openH, openM);
-            const close = new Date(now.getFullYear(), now.getMonth(), now.getDate(), closeH, closeM);
-
-            if (now > cursor) {
-                const rounded = Math.ceil(now.getMinutes() / 20) * 20;
-                if (rounded >= 60) {
-                    cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0);
-                } else {
-                    cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), rounded);
-                }
-            }
-
-            const slots = [];
-            const fmt = d => d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', hour12:true });
-
-            while (cursor < close) {
-                const end = new Date(cursor.getTime() + 20 * 60000);
-                if (end > close) break;
-                slots.push({ value: fmt(cursor) + '-' + fmt(end), label: fmt(cursor) + ' – ' + fmt(end) });
-                cursor = end;
-            }
-            return slots;
-        }
-
-        function populateSlots() {
-            const slots = generateTimeSlots();
-            let html = '<option value="">⏰ Select Time Slot...</option>';
-            slots.forEach(s => { html += `<option value="${s.value}">${s.label}</option>`; });
-            $('#posTimeSlot').html(html);
-        }
-        populateSlots();
-
-        $(document).on('click', '.cat-pill', function () {
-            $('.cat-pill').removeClass('active');
-            $(this).addClass('active');
-            filterProducts();
-        });
-
-        $('#posSearch').on('input', filterProducts);
-
-        function filterProducts() {
-            const q   = $('#posSearch').val().toLowerCase().trim();
-            const cat = $('.cat-pill.active').data('cat');
-            let visible = 0;
-            $('.product-tile').each(function () {
-                const matchCat = cat === 'all' || $(this).data('cat') == cat;
-                const matchQ   = !q || $(this).data('name').includes(q);
-                $(this).toggle(matchCat && matchQ);
-                if (matchCat && matchQ) visible++;
-            });
-            $('#noResults').toggle(visible === 0);
-        }
-
-        $(document).on('click', '.pos-type-btn', function () {
-            deliveryType = $(this).data('type');
-            $('.pos-type-btn').removeClass('active');
-            $(this).addClass('active');
-
-            if (deliveryType === 'delivery') {
-                $('#deliveryAddressSection').slideDown(200);
-                deliveryCharge = 2.50;
-            } else {
-                $('#deliveryAddressSection').slideUp(200);
-                deliveryCharge = 0;
-            }
-
-            $('#posDeliveryRow').toggle(deliveryType === 'delivery');
-            updateTotals();
-        });
-
-        $('#posCustomer').on('change', function () {
-            const selected = $(this).find('option:selected');
-            const id       = $(this).val();
-
-            if (!id) {
-                selectedCustomer = { id: null, name: '', email: '', phone: '', points: 0 };
-                $('#pointsSection').hide();
-                resetPoints();
-                return;
-            }
-
-            selectedCustomer = {
-                id:     id,
-                name:   selected.data('name') || '',
-                email:  selected.data('email') || '',
-                phone:  selected.data('phone') || '',
-                points: parseInt(selected.data('points')) || 0,
+            const SHOP_HOURS = {
+                Monday: {
+                    open: '16:30',
+                    close: '23:30'
+                },
+                Tuesday: {
+                    open: '16:30',
+                    close: '23:30'
+                },
+                Wednesday: {
+                    open: '16:30',
+                    close: '23:30'
+                },
+                Thursday: {
+                    open: '16:30',
+                    close: '23:30'
+                },
+                Friday: {
+                    open: '16:30',
+                    close: '23:30'
+                },
+                Saturday: {
+                    open: '16:30',
+                    close: '23:30'
+                },
+                Sunday: {
+                    open: '16:30',
+                    close: '22:00'
+                },
             };
 
-            if (selectedCustomer.points >= 100) {
-                $('#pointsSection').show();
-                $('#availablePointsDisplay').text(selectedCustomer.points);
-                $('#posPointsToUse').attr('max', selectedCustomer.points);
-            } else {
-                $('#pointsSection').hide();
-                resetPoints();
-            }
-        });
+            let currentStep = 1;
+            let orderType = null;
+            let customer = {
+                id: null,
+                name: 'Walk-in',
+                email: '',
+                phone: '',
+                points: 0
+            };
+            let selectedCatId = null;
+            let currentProduct = null;
+            let currentOptions = {};
+            let currentAttr = null;
+            let cart = [];
+            let deliveryCharge = 0;
+            let selectedTime = null;
+            let lastOrderData = null;
 
-        function resetPoints() {
-            pointsUsed     = 0;
-            pointsDiscount = 0;
-            $('#posPointsToUse').val(0);
-            $('#pointsUsedDisplay').text(0);
-            $('#pointsDiscountDisplay').text('£0.00');
-            $('#posPointsRow').hide();
-            updateTotals();
-        }
+            function goToStep(n) {
+                if (n < 1 || n > 6) return;
+                currentStep = n;
+                $('.pos-step-panel').removeClass('active');
+                $('#step' + n).addClass('active');
+                $('.pos-step-tab').each(function() {
+                    const s = parseInt($(this).data('step'));
+                    $(this).removeClass('active done');
+                    if (s === n) $(this).addClass('active');
+                    else if (s < n) $(this).addClass('done');
+                });
 
-        $('#applyPromoBtn').on('click', function () {
-            const code = $('#posPromoCode').val().trim().toUpperCase();
-            if (!code) { showError('Enter a promo code'); return; }
+                $('#btnBack').toggle(n > 1);
+                $('#btnNext').toggle(n < 6);
 
-            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-            if (subtotal <= 0) { showError('Add items first'); return; }
-
-            $.ajax({
-                url: '{{ route('admin.pos.validate-promo') }}',
-                type: 'POST',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                data: { code: code, subtotal: subtotal, customer_id: selectedCustomer.id || '' },
-                success: function (res) {
-                    let actualDiscount = res.discount_amount;
-                    const remaining = subtotal + deliveryCharge - pointsDiscount;
-                    if (res.type === 'gift_card') actualDiscount = Math.min(actualDiscount, remaining);
-
-                    appliedPromo = { type: res.type, id: res.code_data.id, discount: actualDiscount, code: code };
-
-                    const msg = res.type === 'gift_card'
-                        ? `✓ Gift Card applied! -£${actualDiscount.toFixed(2)}`
-                        : `✓ Coupon applied! -£${actualDiscount.toFixed(2)}`;
-
-                    $('#promoResultMsg').text(msg).css({ display:'block', background:'#f0fdf4', color:'#166534' });
-                    $('#posPromoRow').show();
-                    $('#posPromoDiscount').text('-£' + actualDiscount.toFixed(2));
-                    updateTotals();
-                    showSuccess('Promo applied!');
-                },
-                error: function (xhr) {
-                    appliedPromo = { type: null, id: null, discount: 0, code: null };
-                    $('#posPromoRow').hide();
-                    const msg = xhr.responseJSON?.message || 'Invalid code';
-                    $('#promoResultMsg').text('✗ ' + msg).css({ display:'block', background:'#fef2f2', color:'#dc2626' });
-                    updateTotals();
-                    showError(msg);
+                const hasItems = cart.length > 0;
+                if (hasItems) {
+                    $('#btnPlace').show().prop('disabled', false);
+                } else {
+                    $('#btnPlace').toggle(n === 6).prop('disabled', true);
                 }
-            });
-        });
 
-        $('#applyPointsBtn').on('click', function () {
-            let val        = parseInt($('#posPointsToUse').val()) || 0;
-            const maxPts   = selectedCustomer.points;
-            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-            const remaining = subtotal + deliveryCharge - appliedPromo.discount;
-            const maxByTotal = Math.floor(remaining * 100);
+                if (n === 4) renderProducts();
+                if (n === 5) renderOptions();
+                if (n === 6) renderTimeSlots();
 
-            val = Math.min(val, maxPts, maxByTotal);
-            val = Math.max(val, 0);
-
-            $('#posPointsToUse').val(val);
-            pointsUsed     = val;
-            pointsDiscount = Math.round(val / 100 * 100) / 100;
-
-            $('#pointsUsedDisplay').text(val);
-            $('#pointsDiscountDisplay').text('£' + pointsDiscount.toFixed(2));
-
-            if (pointsDiscount > 0) {
-                $('#posPointsRow').show();
-                $('#posPointsDiscount').text('-£' + pointsDiscount.toFixed(2));
-            } else {
-                $('#posPointsRow').hide();
+                validateStep();
+                updateHint();
             }
-            updateTotals();
-            showSuccess('Points applied!');
-        });
 
-        $(document).on('click', '.product-tile', function () {
-            const id        = $(this).data('id');
-            const hasOptions = $(this).data('has-options') == 1;
+            function updateHint() {
+                const hints = {
+                    1: 'Select how customer is ordering',
+                    2: 'Enter or select customer details',
+                    3: 'Choose a product category',
+                    4: 'Select products to add (Next when done)',
+                    5: 'Choose options and add to cart',
+                    6: 'Select time slot then place order',
+                };
+                $('#stepHint').text(hints[currentStep] || '');
+            }
 
-            $.ajax({
-                url: '{{ route('admin.pos.product') }}',
-                type: 'GET',
-                data: { id: id },
-                success: function (res) {
-                    if (!hasOptions) {
-                        addToCartSimple({ id: id, title: res.title, price: parseFloat(res.price), image: res.image, sku_ref: res.sku_ref }, 1);
-                    } else {
-                        $('#productModalInner').html(res.html);
-                        $('#productModal').show();
-                        updatePosModalPrice();
-                        
+            function validateStep() {
+                const hasItems = cart.length > 0;
+
+                let nextOk = false;
+                switch (currentStep) {
+                    case 1: nextOk = !!orderType; break;
+                    case 2: nextOk = validateStep2(); break;
+                    case 3: nextOk = !!selectedCatId; break;
+                    case 4: nextOk = true; break;
+                    case 5: nextOk = true; break;
+                    case 6: nextOk = hasItems && !!selectedTime; break;
+                }
+                $('#btnNext').prop('disabled', !nextOk);
+
+                if (hasItems) {
+                    $('#btnPlace').show().prop('disabled', false);
+                } else {
+                    $('#btnPlace').hide().prop('disabled', true);
+                }
+
+                $('#btnNext').toggle(currentStep < 6);
+            }
+
+            function validateStep2() {
+                if (orderType === 'walkin') return true;
+                const name = $('#custName').val().trim();
+                if (!name && !customer.id) return false;
+                if (orderType === 'delivery') {
+                    return $('#deliveryPostcode').val().trim() &&
+                        $('#deliveryAddress').val().trim() &&
+                        $('#deliveryCity').val().trim();
+                }
+                return true;
+            }
+
+            $(document).on('keydown', function(e) {
+                const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+                const inInput = (tag === 'input' || tag === 'textarea' || tag === 'select');
+
+                if (!inInput && (e.key === 'ArrowRight' || e.key === 'Enter')) {
+                    if ($('#qtyModal').is(':visible')) {
+                        if (e.key === 'Enter') $('#qtyConfirm').trigger('click');
+                        return;
                     }
-                },
-                error: function () { showError('Failed to load product'); }
-            });
-        });
-
-        $('#productModal').on('click', function (e) {
-            if (e.target === this) closePosProductModal();
-        });
-
-        window.closePosProductModal = function () {
-            $('#productModal').hide();
-            $('#productModalInner').html('');
-        };
-
-        $(document).on('click', '.attr-btn', function () {
-            $('.attr-btn').removeClass('selected');
-            $(this).addClass('selected');
-            if ($(this).data('attr') === 'with_options') {
-                $('#posOptionsContainer').slideDown();
-            } else {
-                $('#posOptionsContainer').slideUp();
-                $('#posOptionsContainer .option-item').removeClass('selected').find('input').prop('checked', false);
-            }
-            updatePosModalPrice();
-        });
-
-        $(document).on('click', '.option-item', function () {
-            const group = $(this).closest('.pos-option-group');
-            const input = $(this).find('input')[0];
-
-            group.find('.option-item').removeClass('selected');
-            group.find('input').prop('checked', false);
-
-            $(this).addClass('selected');
-            input.checked = true;
-
-            const title = $('#productModalInner .pos-modal-title').text().toLowerCase();
-            if (!title.includes('combo kebab')) return;
-
-            let selected = [];
-
-            $('#productModalInner input:checked').each(function () {
-                selected.push($(this).val());
-            });
-
-            $('.pos-option-group').each(function () {
-                $(this).find('.option-item').each(function () {
-                    const val = $(this).find('input').val();
-
-                    if (selected.includes(val) && !$(this).find('input').is(':checked')) {
-                        $(this).hide();
-                    } else {
-                        $(this).show();
+                    if (currentStep < 6 && !$('#btnNext').prop('disabled')) {
+                        e.preventDefault();
+                        $('#btnNext').trigger('click');
                     }
-                });
-            });
-
-            updatePosModalPrice();
-        });
-
-        function updatePosModalPrice() {
-            const basePrice     = parseFloat($('#posModalPrice').data('base-price')) || 0;
-            const hasAttribute  = $('.attr-btn').length > 0;
-            const attrSelected  = $('.attr-btn.selected').data('attr');
-            let attributePrice  = 0;
-            let extraPrice      = 0;
-
-            if (hasAttribute && attrSelected === 'with_options') {
-                attributePrice = parseFloat($('.attr-btn[data-attr="with_options"]').data('attr-price')) || 0;
-                $('#posOptionsContainer input:checked').each(function () {
-                    extraPrice += parseFloat($(this).data('price')) || 0;
-                });
-            } else if (!hasAttribute) {
-                $('#posOptionsContainer input:checked').each(function () {
-                    extraPrice += parseFloat($(this).data('price')) || 0;
-                });
-            }
-
-            const qty   = parseInt($('#posModalQty').text()) || 1;
-            const total = (basePrice + attributePrice + extraPrice) * qty;
-            $('#posModalPrice').text(total.toFixed(2));
-        }
-
-        $(document).on('click', '#posModalQtyPlus', function () {
-            let qty = parseInt($('#posModalQty').text()) || 1;
-            $('#posModalQty').text(qty + 1);
-            updatePosModalPrice();
-        });
-
-        $(document).on('click', '#posModalQtyMinus', function () {
-            let qty = parseInt($('#posModalQty').text()) || 1;
-            if (qty > 1) $('#posModalQty').text(qty - 1);
-            updatePosModalPrice();
-        });
-
-        $(document).on('submit', '#posProductForm', function (e) {
-            e.preventDefault();
-
-            const productId    = parseInt($('#posProductId').val()) || null;
-            const skuRef       = $('#posProductSkuRef').val() || '';
-            if (!productId) return;
-
-            const hasAttribute = $('.attr-btn').length > 0;
-            const attrSelected = $('.attr-btn.selected').data('attr') || 'standalone';
-
-            if (hasAttribute && !attrSelected) {
-                showError('Please choose an option');
-                return;
-            }
-
-            let valid        = true;
-            let missingOpts  = [];
-            const container  = (hasAttribute && attrSelected === 'with_options')
-                ? $('#posOptionsContainer .pos-option-group')
-                : (!hasAttribute ? $('.pos-option-group') : $());
-
-            container.each(function () {
-                if (parseInt($(this).data('required')) && !$(this).find('input:checked').length) {
-                    missingOpts.push($(this));
-                    valid = false;
+                }
+                if (!inInput && (e.key === 'ArrowLeft')) {
+                    if (currentStep > 1) {
+                        e.preventDefault();
+                        $('#btnBack').trigger('click');
+                    }
+                }
+                if (!inInput && e.key === 'Enter' && currentStep === 6) {
+                    if (!$('#btnPlace').prop('disabled')) {
+                        e.preventDefault();
+                        $('#btnPlace').trigger('click');
+                    }
+                }
+                if ($('#qtyModal').is(':visible')) {
+                    if (e.key === '+' || e.key === '=') $('#qtyPlus').trigger('click');
+                    if (e.key === '-') $('#qtyMinus').trigger('click');
                 }
             });
 
-            if (!valid) {
-                $('.pos-option-group').removeClass('option-error');
-                missingOpts.forEach(s => s.addClass('option-error'));
-                if (missingOpts.length) missingOpts[0][0].scrollIntoView({ behavior:'smooth', block:'start' });
-                return;
-            }
-
-            let options        = {};
-            let extraPrice     = 0;
-            let attributePrice = 0;
-            const basePrice    = parseFloat($('#posModalPrice').data('base-price')) || 0;
-            const productTitle = $('#posProductForm').closest('.pos-modal').find('.pos-modal-title').text().trim();
-            const productImage = $('#posProductImage').attr('src') || '';
-
-            if (hasAttribute && attrSelected === 'with_options') {
-                attributePrice = parseFloat($('.attr-btn[data-attr="with_options"]').data('attr-price')) || 0;
-                $('#posOptionsContainer input:checked').each(function () {
-                    const name = $(this).attr('name');
-                    const price = parseFloat($(this).data('price')) || 0;
-                    extraPrice += price;
-                    if (!options[name]) options[name] = [];
-                    options[name].push({ title: $(this).data('title'), price: price, productId: $(this).data('product-id'), hubriseOptionRef: $(this).data('hubrise') || '' });
-                });
-            } else if (!hasAttribute) {
-                $('#posOptionsContainer input:checked').each(function () {
-                    const name = $(this).attr('name');
-                    const price = parseFloat($(this).data('price')) || 0;
-                    extraPrice += price;
-                    if (!options[name]) options[name] = [];
-                    options[name].push({ title: $(this).data('title'), price: price, productId: $(this).data('product-id'), hubriseOptionRef: $(this).data('hubrise') || '' });
-                });
-            }
-
-            const qty        = parseInt($('#posModalQty').text()) || 1;
-            const finalPrice = basePrice + extraPrice + attributePrice;
-            const isStandalone = hasAttribute && attrSelected === 'standalone';
-
-            if (isStandalone) {
-                const existing = cart.find(i => i.productId === productId && i.type === 'direct_with_attribute');
-                if (existing) { existing.qty += qty; }
-                else {
-                    cart.push({ productId, skuRef, title: productTitle, image: productImage, price: basePrice + attributePrice, qty, type:'direct_with_attribute', options:{}, attribute:true, attributePrice });
-                }
-                showSuccess('Added to order!');
-            } else {
-                const productHash = createProductHash(productId, productTitle, options, attributePrice);
-                const existing    = cart.find(i => i.type === 'custom' && i.productHash === productHash && i.attributePrice === attributePrice);
-                if (existing) { existing.qty += qty; showSuccess('Updated quantity!'); }
-                else {
-                    cart.push({ productId, skuRef, productHash, title: productTitle, image: productImage, price: finalPrice, qty, type:'custom', options, attribute: hasAttribute && attrSelected === 'with_options', attributePrice });
-                    showSuccess('Added to order!');
-                }
-            }
-
-            closePosProductModal();
-            renderOrder();
-        });
-
-        function createProductHash(productId, title, options, attributePrice) {
-            let optStr = '';
-            if (Object.keys(options).length) {
-                optStr = Object.keys(options).sort().map(k => k + ':' + options[k].map(o => o.title).sort().join('|')).join('||');
-            }
-            return productId + '::' + title + '::' + attributePrice + (optStr ? '::' + optStr : '');
-        }
-
-        function addToCartSimple(product, qty) {
-            const existing = cart.find(i => i.productId === product.id && i.type === 'direct');
-            if (existing) { existing.qty += qty; }
-            else {
-                cart.push({ productId: product.id, skuRef: product.sku_ref || '', title: product.title, image: product.image, price: parseFloat(product.price), qty, type:'direct', options:{}, attribute:false, attributePrice:0 });
-            }
-            showSuccess('Added to order!');
-            renderOrder();
-        }
-
-        function renderOrder() {
-            if (!cart.length) {
-                $('#orderItemsList').html('<div class="pos-empty"><i class="ri-shopping-basket-line"></i>Tap a product to add</div>');
-                updateTotals();
-                return;
-            }
-
-            let html = '';
-            cart.forEach((item, idx) => {
-                let optsHtml = '';
-                if (item.options && Object.keys(item.options).length) {
-                    optsHtml = '<div class="order-item-opts">';
-                    Object.values(item.options).forEach(arr => {
-                        arr.forEach(o => { optsHtml += o.title + (o.price > 0 ? ` (+£${parseFloat(o.price).toFixed(2)})` : '') + '<br>'; });
-                    });
-                    optsHtml += '</div>';
-                }
-                html += `
-                <div class="order-item-row">
-                    <img src="${item.image}" class="order-item-img" alt="">
-                    <div class="order-item-info">
-                        <div class="order-item-name">${item.title}</div>
-                        ${optsHtml}
-                        <div class="order-item-price">£${(item.price * item.qty).toFixed(2)}</div>
-                    </div>
-                    <div class="qty-ctrl">
-                        <button class="qty-btn cart-qty-minus" data-index="${idx}">−</button>
-                        <span class="qty-val">${item.qty}</span>
-                        <button class="qty-btn cart-qty-plus" data-index="${idx}">+</button>
-                    </div>
-                    <button class="remove-btn remove-item-btn" data-index="${idx}"><i class="ri-delete-bin-line"></i></button>
-                </div>`;
+            $('#btnNext').on('click', function() {
+                if (currentStep === 2) commitCustomer();
+                if (currentStep < 6) goToStep(currentStep + 1);
+            });
+            $('#btnBack').on('click', function() {
+                if (currentStep > 1) goToStep(currentStep - 1);
+            });
+            $('.pos-step-tab').on('click', function() {
+                const n = parseInt($(this).data('step'));
+                if (n < currentStep) goToStep(n);
+                else if (n === 6 && cart.length > 0) goToStep(n);
             });
 
-            $('#orderItemsList').html(html);
-            updateTotals();
-        }
+            $(document).on('click', '.order-type-card', function() {
+                orderType = $(this).data('type');
+                $('.order-type-card').removeClass('selected');
+                $(this).addClass('selected');
+                updateMetaPills();
+                validateStep();
+                if (orderType === 'walkin') {
+                    customer = {
+                        id: null,
+                        name: 'Walk-in',
+                        email: '',
+                        phone: '',
+                        points: 0
+                    };
+                    deliveryCharge = 0;
+                    setTimeout(() => goToStep(3), 200);
+                } else {
+                    setTimeout(() => {
+                        if (orderType === 'delivery') $('#deliveryAddressBlock').show();
+                        else $('#deliveryAddressBlock').hide();
+                        goToStep(2);
+                    }, 200);
+                }
+            });
 
-        $(document).on('click', '.cart-qty-plus', function () {
-            const idx = parseInt($(this).data('index'));
-            cart[idx].qty += 1;
-            renderOrder();
-        });
+            $('#posCustomerSelect').select2({
+                placeholder: '— Search by name or phone —',
+                allowClear: true,
+                dropdownParent: $('#step2'),
+            });
 
-        $(document).on('click', '.cart-qty-minus', function () {
-            const idx = parseInt($(this).data('index'));
-            if (cart[idx].qty > 1) { cart[idx].qty -= 1; renderOrder(); }
-            else {
-                showConfirm('Remove this item?', function () { cart.splice(idx, 1); renderOrder(); });
-            }
-        });
-
-        $(document).on('click', '.remove-item-btn', function () {
-            const idx = parseInt($(this).data('index'));
-            showConfirm('Remove this item?', function () { cart.splice(idx, 1); renderOrder(); });
-        });
-
-        function updateTotals() {
-            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-            const count    = cart.reduce((s, i) => s + i.qty, 0);
-            const total    = Math.max(0, subtotal + deliveryCharge - appliedPromo.discount - pointsDiscount);
-
-            $('#posSubtotal').text('£' + subtotal.toFixed(2));
-            $('#posTotal').text('£' + total.toFixed(2));
-            $('#itemCountBadge').text(count + (count === 1 ? ' item' : ' items'));
-            $('#placeOrderBtn').prop('disabled', cart.length === 0);
-
-            if (deliveryCharge > 0) {
-                $('#posDeliveryRow').show();
-                $('#posDeliveryCharge').text('£' + deliveryCharge.toFixed(2));
-            } else {
-                $('#posDeliveryRow').hide();
-            }
-        }
-
-        $('#clearOrderBtn').on('click', function () {
-            cart           = [];
-            appliedPromo   = { type:null, id:null, discount:0, code:null };
-            pointsUsed     = 0;
-            pointsDiscount = 0;
-            deliveryCharge = 0;
-            selectedCustomer = { id:null, name:'', email:'', phone:'', points:0 };
-            $('#posCustomer').val('');
-            $('#posNotes').val('');
-            $('#posTimeSlot').val('');
-            $('#posPromoCode').val('');
-            $('#posPointsToUse').val(0);
-            $('#promoResultMsg').hide();
-            $('#posPromoRow, #posPointsRow, #posDeliveryRow, #pointsSection').hide();
-            deliveryType = 'collection';
-            $('.pos-type-btn').removeClass('active');
-            $('.pos-type-btn[data-type="collection"]').addClass('active');
-            renderOrder();
-        });
-
-        $('#placeOrderBtn').on('click', function () {
-            if (!cart.length)  { showError('Add at least one item'); return; }
-            if (!$('#posTimeSlot').val()) { showError('Please select a time slot'); return; }
-
-            if (deliveryType === 'delivery') {
-                const postcode = $('#deliveryPostcode').val().trim();
-                const address  = $('#deliveryAddress').val().trim();
-                const city     = $('#deliveryCity').val().trim();
-
-                if (!postcode || !address || !city) {
-                    showError('Please fill Postcode, Street Address and City for delivery');
-                    $('#placeOrderBtn').prop('disabled', false).text('✅ Place Order');
+            $('#posCustomerSelect').on('change', function() {
+                const sel = $(this).find('option:selected');
+                const id = $(this).val();
+                if (!id) {
+                    customer = {
+                        id: null,
+                        name: '',
+                        email: '',
+                        phone: '',
+                        points: 0
+                    };
+                    $('#custName,#custPhone,#custEmail').val('');
+                    $('#createAccountCheck').prop('checked', false);
+                    $('#accountPasswordBlock').hide();
                     return;
                 }
+                customer = {
+                    id: id,
+                    name: sel.data('name') || '',
+                    email: sel.data('email') || '',
+                    phone: sel.data('phone') || '',
+                    points: parseInt(sel.data('points')) || 0,
+                };
+                $('#custName').val(customer.name);
+                $('#custPhone').val(customer.phone);
+                $('#custEmail').val(customer.email);
+                $('#createAccountBlock').hide();
+                updateMetaPills();
+                validateStep();
+            });
+
+            function buildSuggestions(field, query, suggestionsEl) {
+                if (!query || query.length < 2) {
+                    $(suggestionsEl).hide();
+                    return;
+                }
+                const q = query.toLowerCase();
+                const matches = clientsData.filter(c =>
+                    (c.name || '').toLowerCase().includes(q) ||
+                    (c.phone || '').toLowerCase().includes(q) ||
+                    (c.email || '').toLowerCase().includes(q)
+                ).slice(0, 6);
+                if (!matches.length) {
+                    $(suggestionsEl).hide();
+                    return;
+                }
+                let html = '';
+                matches.forEach(c => {
+                    html += `<div class="cust-suggestion-item" data-id="${c.id}" data-name="${c.name}" data-phone="${c.phone}" data-email="${c.email}" data-points="${c.points}">
+                    <div class="cust-sug-name">${c.name}</div>
+                    <div class="cust-sug-sub">${c.phone} · ${c.email}</div>
+                </div>`;
+                });
+                $(suggestionsEl).html(html).show();
             }
 
-            const paymentMethod = $('input[name="posPaymentMethod"]:checked').val();
-            if (!paymentMethod) { showError('Please select a payment method'); return; }
-
-            let custFirstName = 'Walk-in', custLastName = 'Customer', custEmail = 'pos@internal.local', custPhone = '00000000000';
-            let customerId    = null;
-
-            if (selectedCustomer.id) {
-                customerId    = selectedCustomer.id;
-                const nameParts = (selectedCustomer.name || '').split(' ');
-                custFirstName = nameParts[0] || 'Customer';
-                custLastName  = nameParts.slice(1).join(' ') || 'POS';
-                custEmail     = selectedCustomer.email || 'pos@internal.local';
-                custPhone     = selectedCustomer.phone || '00000000000';
+            function applySuggestion(el) {
+                const id = $(el).data('id');
+                const name = $(el).data('name');
+                const phone = $(el).data('phone');
+                const email = $(el).data('email');
+                const points = parseInt($(el).data('points')) || 0;
+                customer = {
+                    id,
+                    name,
+                    email,
+                    phone,
+                    points
+                };
+                $('#custName').val(name);
+                $('#custPhone').val(phone);
+                $('#custEmail').val(email);
+                $('#nameSuggestions,#phoneSuggestions,#emailSuggestions').hide();
+                $('#createAccountBlock').hide();
+                if ($('#posCustomerSelect option[value="' + id + '"]').length) {
+                    $('#posCustomerSelect').val(id).trigger('change.select2');
+                }
+                updateMetaPills();
+                validateStep();
             }
 
-            const orderData = {
-                customer: {
-                    firstName: custFirstName,
-                    lastName:  custLastName,
-                    email:     custEmail,
-                    phone:     custPhone
-                },
-                customer_id: customerId,
-                delivery: {
-                    type: deliveryType,
-                    time: $('#posTimeSlot').val(),
-                    postcode: deliveryType === 'delivery' ? $('#deliveryPostcode').val().trim() : ''
-                },
-                address:  deliveryType === 'delivery' ? $('#deliveryAddress').val().trim() : '',
-                address2: deliveryType === 'delivery' ? $('#deliveryAddress2').val().trim() : '',
-                city:     deliveryType === 'delivery' ? $('#deliveryCity').val().trim() : '',
-                cart: cart.map(i => ({
-                    productId: i.productId,
-                    quantity:  i.qty,
-                    type:      i.type,
-                    options:   i.options || null,
-                    attribute: i.attribute || false,
-                    attributePrice: i.attributePrice || 0,
-                })),
-                promoCode:     appliedPromo.code || null,
-                pointsToUse:   pointsUsed,
-                paymentMethod: paymentMethod,
-                notes:         $('#posNotes').val().trim(),
-            };
+            $('#custName').on('input', function() {
+                if (customer.id) {
+                    customer.id = null;
+                    $('#createAccountBlock').show();
+                }
+                buildSuggestions('name', $(this).val().trim(), '#nameSuggestions');
+                validateStep();
+            });
+            $('#custPhone').on('input', function() {
+                if (customer.id) {
+                    customer.id = null;
+                    $('#createAccountBlock').show();
+                }
+                buildSuggestions('phone', $(this).val().trim(), '#phoneSuggestions');
+                validateStep();
+            });
+            $('#custEmail').on('input', function() {
+                if (customer.id) {
+                    customer.id = null;
+                    $('#createAccountBlock').show();
+                }
+                buildSuggestions('email', $(this).val().trim(), '#emailSuggestions');
+                validateStep();
+            });
 
-            $('#placeOrderBtn').prop('disabled', true).text('Placing...');
+            $(document).on('click', '.cust-suggestion-item', function() {
+                applySuggestion(this);
+            });
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#newCustomerInlineBlock').length) {
+                    $('#nameSuggestions,#phoneSuggestions,#emailSuggestions').hide();
+                }
+            });
 
-            $.ajax({
-                url: '{{ route('admin.pos.place-order') }}',
-                type: 'POST',
-                contentType: 'application/json',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                data: JSON.stringify(orderData),
-                success: function (res) {
-                    $('#placeOrderBtn').prop('disabled', false).text('✅ Place Order');
-                    if (res.redirectUrl) {
-                        window.location.href = res.redirectUrl;
-                    } else {
-                        $('#successOrderNum').text(res.orderNumber);
-                        $('#successModal').show();
+            $('#createAccountCheck').on('change', function() {
+                $('#accountPasswordBlock').toggle(this.checked);
+            });
+
+            $('#custName,#custPhone,#custEmail,#deliveryPostcode,#deliveryAddress,#deliveryCity').on('input',
+                function() {
+                    validateStep();
+                });
+
+            function commitCustomer() {
+                if (orderType === 'walkin') {
+                    customer = {
+                        id: null,
+                        name: 'Walk-in',
+                        email: '',
+                        phone: '',
+                        points: 0
+                    };
+                    return;
+                }
+                if (!customer.id) {
+                    const name = $('#custName').val().trim();
+                    customer.name = name || 'Guest';
+                    customer.phone = $('#custPhone').val().trim();
+                    customer.email = $('#custEmail').val().trim();
+
+                    if ($('#createAccountCheck').is(':checked') && name) {
+                        const data = {
+                            first_name: name.split(' ')[0],
+                            last_name: name.split(' ').slice(1).join(' ') || 'Customer',
+                            email: customer.email || (name.replace(/\s/g, '').toLowerCase() + '@pos.local'),
+                            phone: customer.phone || '00000000000',
+                            password: $('#custPassword').val() || 'Password123!',
+                        };
+                        $.ajax({
+                            url: '{{ route('admin.pos.quick-customer') }}',
+                            type: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            data: data,
+                            success: function(res) {
+                                customer.id = res.id;
+                                showToast('Customer account created!', 'success');
+                            }
+                        });
                     }
-                },
-                error: function (xhr) {
-                    $('#placeOrderBtn').prop('disabled', false).text('✅ Place Order');
-                    showError(xhr.responseJSON?.message || 'Error placing order');
                 }
-            });
-        });
-
-        $('#newOrderBtn').on('click', function () {
-            $('#successModal').hide();
-            $('#clearOrderBtn').click();
-            populateSlots();
-        });
-
-        $('#openNewCustomerBtn').on('click', function () { $('#newCustomerModal').show(); });
-        $('#cancelNewCustomerBtn').on('click', function () { $('#newCustomerModal').hide(); });
-        $('#newCustomerModal').on('click', function (e) { if (e.target === this) $(this).hide(); });
-
-        $('#saveNewCustomerBtn').on('click', function () {
-            const data = {
-                first_name: $('#ncFirstName').val().trim(),
-                last_name:  $('#ncLastName').val().trim(),
-                email:      $('#ncEmail').val().trim(),
-                phone:      $('#ncPhone').val().trim(),
-                password:   $('#ncPassword').val() || 'Password123!',
-            };
-
-            if (!data.first_name || !data.last_name || !data.email || !data.phone) {
-                showError('Please fill all required fields');
-                return;
+                deliveryCharge = (orderType === 'delivery') ? 2.50 : 0;
+                updateMetaPills();
+                updateCartTotals();
             }
 
-            $.ajax({
-                url: '{{ route('admin.pos.quick-customer') }}',
-                type: 'POST',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                data: data,
-                success: function (res) {
-                    const opt = `<option value="${res.id}" data-name="${res.name}" data-phone="${res.phone}" data-email="${res.email}" data-points="${res.available_points}" selected>
-                        ${res.name} — ${res.phone}
-                    </option>`;
-                    $('#posCustomer').append(opt).val(res.id).trigger('change');
-                    $('#newCustomerModal').hide();
-                    $('#ncFirstName,#ncLastName,#ncEmail,#ncPhone').val('');
-                    showSuccess('Customer created!');
-                },
-                error: function (xhr) {
-                    showError(xhr.responseJSON?.message || 'Error creating customer');
+            $(document).on('click', '.cat-card', function() {
+                selectedCatId = parseInt($(this).data('cat-id'));
+                $('.cat-card').removeClass('selected');
+                $(this).addClass('selected');
+                validateStep();
+                setTimeout(() => goToStep(4), 150);
+            });
+
+            function renderProducts() {
+                const cat = categoriesData.find(c => c.id === selectedCatId);
+                if (cat) $('#step4CategoryLabel').text(cat.name + ' — Products');
+                $('.prod-btn').hide();
+                $('.prod-btn[data-cat="' + selectedCatId + '"]').show();
+            }
+
+            $('#productSearch').on('input', function() {
+                const q = $(this).val().toLowerCase().trim();
+                $('.prod-btn[data-cat="' + selectedCatId + '"]').each(function() {
+                    $(this).toggle(!q || $(this).data('name').includes(q));
+                });
+            });
+
+            $(document).on('click', '.prod-btn', function() {
+                const id = parseInt($(this).data('id'));
+                const cat = categoriesData.find(c => c.id === selectedCatId);
+                if (!cat) return;
+                currentProduct = cat.products.find(p => p.id === id);
+                if (!currentProduct) return;
+                currentOptions = {};
+                currentAttr = null;
+
+                if (!currentProduct.hasOptions && !currentProduct.hasAttribute) {
+                    openQtyModal(currentProduct.title, '', function(qty) {
+                        addToCart(currentProduct, qty, {}, null);
+                        goToStep(6);
+                    });
+                } else {
+                    goToStep(5);
                 }
             });
-        });
 
-        renderOrder();
-    });
-</script>
+            function isComboKebab(title) {
+                return title.toLowerCase().indexOf('combo kebab') !== -1;
+            }
+
+            function isHouseSpecialKebab(title) {
+                return title.toLowerCase().indexOf('house special kebab') !== -1;
+            }
+
+            function renderOptions() {
+                if (!currentProduct) return;
+                $('#step5ProductLabel').text(currentProduct.title);
+
+                const title = currentProduct.title;
+                const isCombo = isComboKebab(title);
+                const isHSK = isHouseSpecialKebab(title);
+                const optColors = ['#ff5a00', '#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+                let html = '';
+
+                if (currentProduct.hasAttribute) {
+                    html += '<div class="pos-section-title">Choose Option</div>';
+                    html += '<div class="attr-choice-row">';
+                    html += `<div class="attr-choice-btn" data-attr="standalone">
+                        <div class="attr-label">On Its Own</div>
+                        <div class="attr-sub">£${currentProduct.price.toFixed(2)}</div>
+                    </div>`;
+                    html += `<div class="attr-choice-btn" data-attr="with_options">
+                        <div class="attr-label">${currentProduct.attrName}</div>
+                        <div class="attr-sub">£${(currentProduct.price + currentProduct.attrPrice).toFixed(2)}</div>
+                    </div>`;
+                    html += '</div>';
+                    html += '<div id="optionGroupsContainer" style="display:none;">';
+                } else {
+                    html += '<div id="optionGroupsContainer">';
+                }
+
+                if (currentProduct.options && currentProduct.options.length) {
+                    currentProduct.options.forEach(function(grp, gi) {
+                        const color = optColors[gi % optColors.length];
+
+                        if (isHSK && grp.name.toLowerCase().includes('sauce')) {
+                            html += `<div class="option-group-pos" data-group-id="${grp.id}" data-type="sauce" data-required="${grp.required ? 1 : 0}" data-max="${grp.max}">`;
+                            html += `<div class="option-group-title-pos">
+                                <span>${grp.name}${grp.required ? ' <span style="color:var(--pos-accent);">*</span>' : ''}</span>
+                                <span style="font-size:12px;color:var(--pos-muted);">Max 3 total</span>
+                            </div>`;
+                            html += '<div class="sauce-group-grid">';
+                            grp.items.forEach(function(item, ii) {
+                                const scolor = optColors[ii % optColors.length];
+                                html += `<div class="sauce-item-row" style="border-color:${scolor}30;">
+                                    <div>
+                                        <div class="sauce-item-name">
+                                            <span style="opacity:0.85; font-weight:700; margin-right:6px;">${ii + 1}.</span>
+                                            ${item.title}
+                                        </div>
+                                        ${item.price > 0 ? `<div class="sauce-item-price">+£${item.price.toFixed(2)}</div>` : ''}
+                                    </div>
+                                    <div class="sauce-qty-ctrl">
+                                        <button type="button" class="sauce-ctrl-btn pos-sauce-minus" data-group="${grp.id}" data-item-id="${item.id}" data-title="${item.title}" data-price="${item.price}" data-hubrise="${item.hubrise}">−</button>
+                                        <span class="sauce-qty-display" id="sauceQty_${grp.id}_${item.id}" style="font-size:16px;font-weight:900;color:var(--pos-text);min-width:24px;text-align:center;">0</span>
+                                        <button type="button" class="sauce-ctrl-btn pos-sauce-plus" data-group="${grp.id}" data-item-id="${item.id}" data-title="${item.title}" data-price="${item.price}" data-hubrise="${item.hubrise}">+</button>
+                                    </div>
+                                </div>`;
+                            });
+                            html += '</div></div>';
+                            return;
+                        }
+
+                        html += `<div class="option-group-pos" data-group-id="${grp.id}" data-type="${grp.type}" data-required="${grp.required ? 1 : 0}" data-max="${grp.max}">`;
+                        html += `<div class="option-group-title-pos">
+                            <span>${grp.name}${grp.required ? ' <span style="color:var(--pos-accent);">*</span>' : ''}</span>
+                            <span style="font-size:12px;color:var(--pos-muted);">${grp.required ? '⚠️ Required' : 'Optional'}${grp.type !== 'single' && grp.max > 0 ? ' · Max ' + grp.max : ''}</span>
+                        </div>`;
+                        html += '<div class="option-btns-grid">';
+
+                        grp.items.forEach(function(item, ii) {
+                            const c = optColors[ii % optColors.length];
+                            html += `<div class="opt-btn" data-group="${grp.id}" data-type="${grp.type}" data-item-id="${item.id}"
+                                data-title="${item.title}" data-price="${item.price}" data-product-id="${item.productId}" data-hubrise="${item.hubrise}"
+                                style="background:${c};">
+                                <span>
+                                    <span style="opacity:0.85; font-weight:700; margin-right:6px;">${ii + 1}.</span>
+                                    ${item.title}
+                                    ${item.price > 0 ? ' <small>+£' + item.price.toFixed(2) + '</small>' : ''}
+                                </span>
+                            </div>`;
+                        });
+
+                        html += '</div></div>';
+                    });
+                }
+
+                html += '</div>';
+
+                html += `<div style="margin-top:16px;">
+                    <button class="btn-nav btn-nav-next" id="btnAddToOrder" style="width:100%;height:50px;font-size:16px;">Add to Order</button>
+                </div>`;
+
+                $('#optionsBody').html(html);
+
+                if (isCombo) initComboKebabFilter();
+                validateOptionsAndEnable();
+            }
+
+            function initComboKebabFilter() {
+                const sections = [];
+                $('.option-group-pos[data-group-id]').each(function() {
+                    sections.push($(this));
+                });
+                if (sections.length < 2) return;
+                for (let i = 0; i < sections.length; i++) {
+                    for (let j = i + 1; j < sections.length; j++) {
+                        const aIds = sections[i].find('.opt-btn').map(function() {
+                            return $(this).data('item-id');
+                        }).get().sort().join(',');
+                        const bIds = sections[j].find('.opt-btn').map(function() {
+                            return $(this).data('item-id');
+                        }).get().sort().join(',');
+                        if (aIds === bIds) bindLinkedOptionGroups(sections[i], sections[j]);
+                    }
+                }
+            }
+
+            function bindLinkedOptionGroups(sA, sB) {
+                function syncFilter(changed, other) {
+                    const checked = changed.find('.opt-btn.selected');
+                    const checkedId = checked.length ? checked.data('item-id') : null;
+                    other.find('.opt-btn').show();
+                    if (checkedId) {
+                        const conflict = other.find('.opt-btn[data-item-id="' + checkedId + '"]');
+                        conflict.hide();
+                        if (conflict.hasClass('selected')) {
+                            conflict.removeClass('selected');
+                            const gid = other.data('group-id');
+                            if (currentOptions[gid]) {
+                                currentOptions[gid] = currentOptions[gid].filter(i => i.title !== conflict.data(
+                                    'title'));
+                                if (!currentOptions[gid].length) delete currentOptions[gid];
+                            }
+                        }
+                    }
+                    validateOptionsAndEnable();
+                }
+                sA.on('click', '.opt-btn', function() {
+                    setTimeout(() => syncFilter(sA, sB), 10);
+                });
+                sB.on('click', '.opt-btn', function() {
+                    setTimeout(() => syncFilter(sB, sA), 10);
+                });
+            }
+
+            $(document).on('click', '.attr-choice-btn', function() {
+                currentAttr = $(this).data('attr');
+                $('.attr-choice-btn').removeClass('selected');
+                $(this).addClass('selected');
+                if (currentAttr === 'with_options') {
+                    $('#optionGroupsContainer').slideDown(200);
+                } else {
+                    $('#optionGroupsContainer').slideUp(200);
+                    currentOptions = {};
+                }
+                validateOptionsAndEnable();
+            });
+
+            $(document).on('click', '.opt-btn', function() {
+                const groupId = $(this).data('group');
+                const type = $(this).data('type');
+                const group = $('.option-group-pos[data-group-id="' + groupId + '"]');
+                const max = parseInt(group.data('max')) || 1;
+
+                if (type === 'single') {
+                    group.find('.opt-btn').removeClass('selected');
+                    $(this).addClass('selected');
+                    currentOptions[groupId] = [{
+                        title: $(this).data('title'),
+                        price: parseFloat($(this).data('price')) || 0,
+                        productId: $(this).data('product-id'),
+                        hubriseOptionRef: $(this).data('hubrise') || ''
+                    }];
+                } else {
+                    if ($(this).hasClass('selected')) {
+                        $(this).removeClass('selected');
+                        if (currentOptions[groupId]) {
+                            currentOptions[groupId] = currentOptions[groupId].filter(i => i.title !== $(
+                                this).data('title'));
+                            if (!currentOptions[groupId].length) delete currentOptions[groupId];
+                        }
+                    } else {
+                        const selected = group.find('.opt-btn.selected').length;
+                        if (selected >= max) {
+                            showToast('Max ' + max + ' selections allowed', 'error');
+                            return;
+                        }
+                        $(this).addClass('selected');
+                        if (!currentOptions[groupId]) currentOptions[groupId] = [];
+                        currentOptions[groupId].push({
+                            title: $(this).data('title'),
+                            price: parseFloat($(this).data('price')) || 0,
+                            productId: $(this).data('product-id'),
+                            hubriseOptionRef: $(this).data('hubrise') || ''
+                        });
+                    }
+                }
+                validateOptionsAndEnable();
+            });
+
+            $(document).on('click', '.pos-sauce-plus', function() {
+                const grpId = $(this).data('group');
+                const itemId = $(this).data('item-id');
+                const title = $(this).data('title');
+                const price = parseFloat($(this).data('price')) || 0;
+                const hubrise = $(this).data('hubrise') || '';
+                const dispEl = $('#sauceQty_' + grpId + '_' + itemId);
+                let cur = parseInt(dispEl.text()) || 0;
+                let total = 0;
+                $('[id^="sauceQty_' + grpId + '_"]').each(function() {
+                    total += parseInt($(this).text()) || 0;
+                });
+                if (cur >= 3 || total >= 3) {
+                    showToast('Max 3 sauce selections', 'error');
+                    return;
+                }
+                cur++;
+                dispEl.text(cur);
+                if (!currentOptions[grpId]) currentOptions[grpId] = [];
+                currentOptions[grpId].push({
+                    title,
+                    price,
+                    productId: null,
+                    hubriseOptionRef: hubrise
+                });
+                validateOptionsAndEnable();
+            });
+
+            $(document).on('click', '.pos-sauce-minus', function() {
+                const grpId = $(this).data('group');
+                const itemId = $(this).data('item-id');
+                const title = $(this).data('title');
+                const dispEl = $('#sauceQty_' + grpId + '_' + itemId);
+                let cur = parseInt(dispEl.text()) || 0;
+                if (cur <= 0) return;
+                cur--;
+                dispEl.text(cur);
+                if (currentOptions[grpId]) {
+                    const idx = currentOptions[grpId].findIndex(i => i.title === title);
+                    if (idx !== -1) currentOptions[grpId].splice(idx, 1);
+                    if (!currentOptions[grpId].length) delete currentOptions[grpId];
+                }
+                validateOptionsAndEnable();
+            });
+
+            function validateOptionsAndEnable() {
+                let valid = true;
+                if (currentProduct && currentProduct.hasAttribute && !currentAttr) valid = false;
+                if (currentAttr === 'with_options' || (!currentProduct?.hasAttribute)) {
+                    $('.option-group-pos[data-required="1"]').each(function() {
+                        const gid = $(this).data('group-id');
+                        if (!currentOptions[gid] || !currentOptions[gid].length) valid = false;
+                    });
+                }
+                $('#btnAddToOrder').prop('disabled', !valid);
+            }
+
+            $(document).on('click', '#btnAddToOrder', function() {
+                if (currentProduct.hasAttribute && !currentAttr) {
+                    showToast('Please choose an option', 'error');
+                    return;
+                }
+                let valid = true,
+                    firstError = null;
+                if (currentAttr === 'with_options' || !currentProduct.hasAttribute) {
+                    $('.option-group-pos[data-required="1"]').each(function() {
+                        const gid = $(this).data('group-id');
+                        if (!currentOptions[gid] || !currentOptions[gid].length) {
+                            valid = false;
+                            $(this).find('.option-btns-grid .opt-btn').addClass('option-error');
+                            if (!firstError) firstError = $(this);
+                        }
+                    });
+                }
+                if (!valid) {
+                    if (firstError) firstError[0].scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    showToast('Please select required options', 'error');
+                    return;
+                }
+                $('.opt-btn').removeClass('option-error');
+
+                let optsSummary = '';
+                Object.values(currentOptions).forEach(arr => arr.forEach(o => {
+                    optsSummary += o.title + (o.price > 0 ? ` (+£${o.price.toFixed(2)})` : '') +
+                        ', ';
+                }));
+                optsSummary = optsSummary.replace(/, $/, '');
+
+                openQtyModal(currentProduct.title, optsSummary, function(qty) {
+                    addToCart(currentProduct, qty, currentOptions, currentAttr);
+                    currentProduct = null;
+                    currentOptions = {};
+                    currentAttr = null;
+                    goToStep(6);
+                });
+            });
+
+            function openQtyModal(title, opts, callback) {
+                let qty = 1;
+                $('#qtyModalTitle').text(title);
+                $('#qtyModalOpts').text(opts);
+                $('#qtyVal').text(qty);
+                $('#qtyModal').show();
+
+                $('#qtyPlus').off('click').on('click', function() {
+                    qty++;
+                    $('#qtyVal').text(qty);
+                });
+                $('#qtyMinus').off('click').on('click', function() {
+                    if (qty > 1) {
+                        qty--;
+                        $('#qtyVal').text(qty);
+                    }
+                });
+                $('#qtyCancel').off('click').on('click', function() {
+                    $('#qtyModal').hide();
+                });
+                $('#qtyModal').off('click.overlay').on('click.overlay', function(e) {
+                    if (e.target === this) $('#qtyModal').hide();
+                });
+                $('#qtyConfirm').off('click').on('click', function() {
+                    $('#qtyModal').hide();
+                    callback(qty);
+                });
+            }
+
+            function addToCart(product, qty, options, attr) {
+                let optionPrice = 0,
+                    attributePrice = 0;
+                if (attr === 'with_options' && product.hasAttribute) attributePrice = product.attrPrice;
+                Object.values(options).forEach(arr => arr.forEach(o => {
+                    optionPrice += o.price;
+                }));
+                const unitPrice = product.price + optionPrice + attributePrice;
+                const optHash = JSON.stringify(options) + (attr || '');
+                const existing = cart.find(i => i.productId === product.id && i.optHash === optHash);
+                if (existing) {
+                    existing.qty += qty;
+                } else {
+                    cart.push({
+                        productId: product.id,
+                        skuRef: product.skuRef,
+                        title: product.title,
+                        price: unitPrice,
+                        qty,
+                        options,
+                        attribute: attr === 'with_options',
+                        attributePrice,
+                        type: Object.keys(options).length ? 'custom' : 'direct',
+                        optHash,
+                        catColor: getCatColor(product.id),
+                    });
+                }
+                renderCart();
+                showToast(product.title + ' added!', 'success');
+                validateStep();
+            }
+
+            function getCatColor(productId) {
+                const colors = ['#ff5a00', '#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#14b8a6',
+                    '#ef4444', '#8b5cf6', '#06b6d4'
+                ];
+                for (let ci = 0; ci < categoriesData.length; ci++) {
+                    if (categoriesData[ci].products.find(p => p.id === productId)) return colors[ci % colors
+                    .length];
+                }
+                return '#ff5a00';
+            }
+
+            function renderCart() {
+                if (!cart.length) {
+                    $('#cartItems').html(
+                        '<div class="cart-empty"><i class="ri-shopping-basket-line"></i>Cart is empty</div>');
+                    updateCartTotals();
+                    return;
+                }
+                let html = '';
+                cart.forEach((item, idx) => {
+                    let optsHtml = '';
+                    if (item.options && Object.keys(item.options).length) {
+                        Object.values(item.options).forEach(arr => arr.forEach(o => {
+                            optsHtml += o.title + (o.price > 0 ? ` +£${o.price.toFixed(2)}` :
+                                '') + '<br>';
+                        }));
+                    }
+                    html += `<div class="cart-item">
+                    <div class="cart-item-color" style="background:${item.catColor};"></div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.title}</div>
+                        ${optsHtml ? '<div class="cart-item-opts">' + optsHtml + '</div>' : ''}
+                        <div class="cart-item-price">£${(item.price * item.qty).toFixed(2)}</div>
+                    </div>
+                    <div class="qty-ctrl">
+                        <button class="qty-btn cart-minus" data-idx="${idx}">−</button>
+                        <span class="qty-val">${item.qty}</span>
+                        <button class="qty-btn cart-plus" data-idx="${idx}">+</button>
+                    </div>
+                    <button class="btn-remove-item cart-remove" data-idx="${idx}"><i class="ri-delete-bin-line"></i></button>
+                </div>`;
+                });
+                $('#cartItems').html(html);
+                updateCartTotals();
+            }
+
+            $(document).on('click', '.cart-plus', function() {
+                cart[$(this).data('idx')].qty++;
+                renderCart();
+                validateStep();
+            });
+            $(document).on('click', '.cart-minus', function() {
+                const idx = $(this).data('idx');
+                if (cart[idx].qty > 1) cart[idx].qty--;
+                else cart.splice(idx, 1);
+                renderCart();
+                validateStep();
+            });
+            $(document).on('click', '.cart-remove', function() {
+                cart.splice($(this).data('idx'), 1);
+                renderCart();
+                validateStep();
+            });
+            $('#btnClearCart').on('click', function() {
+                cart = [];
+                renderCart();
+                validateStep();
+            });
+
+            function updateCartTotals() {
+                const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+                const total = subtotal + deliveryCharge;
+                $('#cartSubtotal').text('£' + subtotal.toFixed(2));
+                $('#cartTotal').text('£' + total.toFixed(2));
+                if (deliveryCharge > 0) {
+                    $('#deliveryRow').show();
+                    $('#cartDelivery').text('£' + deliveryCharge.toFixed(2));
+                } else {
+                    $('#deliveryRow').hide();
+                }
+            }
+
+            function updateMetaPills() {
+                const typeMap = {
+                    collection: '🛍️ Collection',
+                    delivery: '🛵 Delivery',
+                    walkin: '🚶 Walk-in'
+                };
+                $('#metaType').text(orderType ? typeMap[orderType] : 'No type').toggleClass('accent', !!orderType);
+                $('#metaCustomer').text('👤 ' + (customer.name || 'Walk-in').split(' ')[0]);
+            }
+
+            function renderTimeSlots() {
+                const slots = generateTimeSlots();
+                let html = '';
+                if (!slots.length) {
+                    html = '<p style="color:var(--pos-muted);font-size:14px;">No available slots for today.</p>';
+                } else {
+                    slots.forEach(s => {
+                        html +=
+                            `<div class="time-btn${selectedTime === s.value ? ' selected' : ''}" data-time="${s.value}">${s.label}</div>`;
+                    });
+                }
+                $('#timeSlotGrid').html(html);
+            }
+
+            $(document).on('click', '.time-btn', function() {
+                selectedTime = $(this).data('time');
+                $('.time-btn').removeClass('selected');
+                $(this).addClass('selected');
+                validateStep();
+            });
+
+            function generateTimeSlots() {
+                const now = new Date();
+                const dayName = now.toLocaleDateString('en-GB', {
+                    weekday: 'long'
+                });
+                const hours = SHOP_HOURS[dayName];
+                const [openH, openM] = hours.open.split(':').map(Number);
+                const [closeH, closeM] = hours.close.split(':').map(Number);
+                let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), openH, openM);
+                const close = new Date(now.getFullYear(), now.getMonth(), now.getDate(), closeH, closeM);
+                if (now > cursor) {
+                    const rounded = Math.ceil(now.getMinutes() / 20) * 20;
+                    if (rounded >= 60) cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now
+                        .getHours() + 1, 0);
+                    else cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(),
+                        rounded);
+                }
+                const slots = [];
+                const fmt = d => d.toLocaleTimeString('en-GB', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                while (cursor < close) {
+                    const end = new Date(cursor.getTime() + 20 * 60000);
+                    if (end > close) break;
+                    slots.push({
+                        value: fmt(cursor) + '-' + fmt(end),
+                        label: fmt(cursor) + ' – ' + fmt(end)
+                    });
+                    cursor = end;
+                }
+                return slots;
+            }
+
+            $('#btnPlace').on('click', function() {
+                if (!cart.length || !selectedTime) return;
+
+                let custFirstName = 'Walk-in',
+                    custLastName = 'Customer',
+                    custEmail = 'pos@internal.local',
+                    custPhone = '00000000000';
+                if (orderType !== 'walkin') {
+                    const nameParts = (customer.name || '').trim().split(' ');
+                    custFirstName = nameParts[0] || 'Customer';
+                    custLastName = nameParts.slice(1).join(' ') || 'POS';
+                    custEmail = customer.email || 'pos@internal.local';
+                    custPhone = customer.phone || '00000000000';
+                }
+
+                const orderData = {
+                    customer: {
+                        firstName: custFirstName,
+                        lastName: custLastName,
+                        email: custEmail,
+                        phone: custPhone
+                    },
+                    customer_id: customer.id,
+                    delivery: {
+                        type: orderType === 'delivery' ? 'delivery' : 'collection',
+                        time: selectedTime,
+                        postcode: orderType === 'delivery' ? $('#deliveryPostcode').val().trim() : '',
+                    },
+                    address: orderType === 'delivery' ? $('#deliveryAddress').val().trim() : '',
+                    address2: orderType === 'delivery' ? $('#deliveryAddress2').val().trim() : '',
+                    city: orderType === 'delivery' ? $('#deliveryCity').val().trim() : '',
+                    cart: cart.map(i => ({
+                        productId: i.productId,
+                        quantity: i.qty,
+                        type: i.type,
+                        options: i.options || null,
+                        attribute: i.attribute || false,
+                        attributePrice: i.attributePrice || 0,
+                    })),
+                    paymentMethod: 'cash',
+                    notes: $('#posNotes').val().trim(),
+                };
+
+                $('#btnPlace').prop('disabled', true).text('Placing...');
+
+                $.ajax({
+                    url: '{{ route('admin.pos.place-order') }}',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: JSON.stringify(orderData),
+                    success: function(res) {
+                        $('#btnPlace').prop('disabled', false).text('✅ Place Order');
+                        if (res.success) {
+                            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+                            const total = subtotal + deliveryCharge;
+                            $('#successOrderNum').text(res.orderNumber);
+                            $('#successTotal').text('£' + total.toFixed(2));
+
+                            lastOrderData = {
+                                orderNumber: res.orderNumber,
+                                orderId: res.orderId,
+                                customer: {
+                                    ...customer,
+                                    firstName: custFirstName,
+                                    lastName: custLastName,
+                                    email: custEmail,
+                                    phone: custPhone
+                                },
+                                orderType,
+                                deliveryType: orderData.delivery.type,
+                                address: orderData.address,
+                                address2: orderData.address2,
+                                city: orderData.city,
+                                postcode: orderData.delivery.postcode,
+                                cart: JSON.parse(JSON.stringify(cart)),
+                                deliveryCharge,
+                                subtotal,
+                                total,
+                                time: selectedTime,
+                                notes: orderData.notes,
+                                placedAt: new Date(),
+                            };
+
+                            $('#successModal').show();
+                            attemptPrint(lastOrderData);
+                        } else {
+                            showToast(res.message || 'Error placing order', 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#btnPlace').prop('disabled', false).text('✅ Place Order');
+                        showToast(xhr.responseJSON?.message || 'Error placing order', 'error');
+                    }
+                });
+            });
+
+            function triggerPrint() {
+                showToast('Printer offline — please check connection', 'error');
+                console.warn('[StarPrint] Fallback triggered — no window.print fallback available');
+            }
+
+            function attemptPrint(data) {
+                printThermal(data);
+            }
+
+            async function printThermal(data) {
+                try {
+                    await sendToPrinter(data, 'customer');
+                    await new Promise(r => setTimeout(r, 1500));
+                    await sendToPrinter(data, 'kitchen');
+                } catch (err) {
+                    console.error('[ESCPrint] Failed:', err.message);
+                    showToast('Print failed: ' + err.message, 'error');
+                    triggerPrint();
+                }
+            }
+
+            async function sendToPrinter(data, copy) {
+                console.log('[ESCPrint] Sending ' + copy + ' copy...');
+
+                const response = await fetch('/admin/pos/start-print?copy=' + copy, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    body: JSON.stringify({ data: data })
+                });
+
+                const json = await response.json();
+                console.log('[ESCPrint] ' + copy + ' response:', json);
+
+                if (!response.ok || json.error) {
+                    throw new Error(json.error || 'Print failed');
+                }
+
+                showToast(copy + ' copy sent ✓', 'success');
+                return json;
+            }
+
+            function buildCustomerReceiptXml(data) {
+                const typeLabel = data.deliveryType === 'delivery' ? 'DELIVERY' : 'COLLECTION';
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                const customerName = (data.customer.firstName + ' ' + data.customer.lastName).toUpperCase();
+
+                let itemLines = '';
+                data.cart.forEach(item => {
+                    itemLines += starLine(item.qty + 'x ' + item.title, '£' + (item.price * item.qty).toFixed(2));
+                    if (item.options && Object.keys(item.options).length) {
+                        Object.values(item.options).forEach(arr => arr.forEach(o => {
+                            itemLines += `<text>  · ${o.title}${o.price > 0 ? ' (+£' + o.price.toFixed(2) + ')' : ''}\n</text>`;
+                        }));
+                    }
+                });
+
+                const addrLine = [data.address, data.address2, data.city, data.postcode].filter(Boolean).join(', ');
+
+                return `<?xml version="1.0" encoding="UTF-8"?>
+            <StarPRNT>
+            <Function type="BeginDocument"/>
+            <Function type="Alignment" position="Center"/>
+            <Function type="TextStyle" dw="true" dh="true" em="true"/>
+            <text>Propertakeways\n</text>
+            <Function type="TextStyle" dw="false" dh="false" em="false"/>
+            <text>11 Clifton Street, LN5 8LQ Lincoln\n</text>
+            <text>================================\n</text>
+            <Function type="TextStyle" dw="true" dh="true" em="true"/>
+            <text>${typeLabel}\n</text>
+            <Function type="TextStyle" dw="false" dh="false" em="false"/>
+            <text>CASH · ${dateStr}\n</text>
+            <text>Order: ${data.orderNumber}\n</text>
+            <text>================================\n</text>
+            <Function type="Alignment" position="Left"/>
+            <Function type="TextStyle" em="true"/>
+            <text>CUSTOMER:\n</text>
+            <Function type="TextStyle" em="false"/>
+            <text>${customerName}\n</text>
+            <text>${data.customer.phone || ''}\n</text>
+            ${addrLine ? `<text>${addrLine}\n</text>` : ''}
+            <text>Time: ${data.time}\n</text>
+            <text>--------------------------------\n</text>
+            <Function type="TextStyle" em="true"/>
+            <text>ITEMS:\n</text>
+            <Function type="TextStyle" em="false"/>
+            ${itemLines}
+            <text>--------------------------------\n</text>
+            ${data.deliveryCharge > 0 ? starLine('Delivery:', '£' + data.deliveryCharge.toFixed(2)) : ''}
+            <Function type="TextStyle" em="true"/>
+            ${starLine('TOTAL:', '£' + data.total.toFixed(2))}
+            <Function type="TextStyle" em="false"/>
+            ${data.notes ? `<text>Note: ${data.notes}\n</text>` : ''}
+            <text>================================\n</text>
+            <Function type="Alignment" position="Center"/>
+            <text>Thank you for your order!\n</text>
+            <text>*** CUSTOMER COPY ***\n</text>
+            <text>\n\n</text>
+            <Function type="FeedAndCut"/>
+            <Function type="EndDocument"/>
+            </StarPRNT>`;
+            }
+
+            function buildKitchenReceiptXml(data) {
+                const typeLabel = data.deliveryType === 'delivery' ? '*** DELIVERY ***' : '*** COLLECTION ***';
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+                let itemLines = '';
+                data.cart.forEach(item => {
+                    itemLines += `<Function type="TextStyle" dw="true" dh="true" em="true"/>`;
+                    itemLines += `<text>${item.qty}x ${item.title}\n</text>`;
+                    itemLines += `<Function type="TextStyle" dw="false" dh="false" em="false"/>`;
+                    if (item.options && Object.keys(item.options).length) {
+                        Object.values(item.options).forEach(arr => arr.forEach(o => {
+                            itemLines += `<text>  --> ${o.title}\n</text>`;
+                        }));
+                    }
+                    itemLines += `<text>\n</text>`;
+                });
+
+                return `<?xml version="1.0" encoding="UTF-8"?>
+            <StarPRNT>
+            <Function type="BeginDocument"/>
+            <Function type="Alignment" position="Center"/>
+            <Function type="TextStyle" dw="true" dh="true" em="true"/>
+            <text>${typeLabel}\n</text>
+            <Function type="TextStyle" dw="false" dh="false" em="false"/>
+            <text>================================\n</text>
+            <Function type="TextStyle" dw="true" dh="true"/>
+            <text>Order: ${data.orderNumber}\n</text>
+            <text>Time: ${data.time}\n</text>
+            <text>Placed: ${timeStr}\n</text>
+            <Function type="TextStyle" dw="false" dh="false"/>
+            <Function type="Alignment" position="Left"/>
+            <Function type="TextStyle" em="true"/>
+            <text>Customer: ${data.customer.firstName} ${data.customer.lastName}\n</text>
+            <text>${data.customer.phone || ''}\n</text>
+            <Function type="TextStyle" em="false"/>
+            <text>================================\n</text>
+            ${itemLines}
+            <text>================================\n</text>
+            ${data.notes ? `<Function type="TextStyle" dw="true" dh="true" em="true"/><text>NOTE: ${data.notes}\n</text><Function type="TextStyle" dw="false" dh="false" em="false"/>` : ''}
+            <Function type="Alignment" position="Center"/>
+            <text>*** KITCHEN COPY ***\n</text>
+            <text>\n\n</text>
+            <Function type="FeedAndCut"/>
+            <Function type="EndDocument"/>
+            </StarPRNT>`;
+            }
+
+            function starLine(left, right) {
+                const total = 32;
+                const space = total - left.length - right.length;
+                const padding = space > 0 ? ' '.repeat(space) : ' ';
+                return `<text>${left}${padding}${right}\n</text>`;
+            }
+
+            $('#btnPrintAgain').on('click', function() {
+                if (lastOrderData) attemptPrint(lastOrderData);
+                else showToast('No order data to print', 'error');
+            });
+
+            $('#btnNewOrder').on('click', function() {
+                $('#successModal').hide();
+                resetAll();
+            });
+
+            $('#btnTestPrint').on('click', async function() {
+                console.log('[TestPrint] Button clicked — starting test...');
+                showToast('Sending test print...', 'success');
+
+                const testData = {
+                    orderNumber: 'TEST-001',
+                    deliveryType: 'collection',
+                    customer: { firstName: 'Test', lastName: 'Customer', phone: '07700000000' },
+                    address: '', address2: '', city: '', postcode: '',
+                    cart: [
+                        { qty: 1, title: 'Test Burger', price: 5.99, options: {} },
+                        { qty: 2, title: 'Test Fries', price: 2.50, options: {} },
+                    ],
+                    deliveryCharge: 0,
+                    subtotal: 10.99,
+                    total: 10.99,
+                    time: '05:00 pm - 05:20 pm',
+                    notes: 'TEST PRINT — IGNORE',
+                };
+
+                try {
+                    const customerXml = buildCustomerReceiptXml(testData);
+                    await sendToPrinter(customerXml, 'Test Customer Copy');
+                    await new Promise(r => setTimeout(r, 1500));
+                    const kitchenXml = buildKitchenReceiptXml(testData);
+                    await sendToPrinter(kitchenXml, 'Test Kitchen Copy');
+                    showToast('Test print done ✓', 'success');
+                    console.log('[TestPrint] Both copies sent successfully');
+                } catch (err) {
+                    console.error('[TestPrint] FAILED:', err.message);
+                    showToast('Test failed: ' + err.message, 'error');
+                }
+            });
+
+            function resetAll() {
+                cart = [];
+                orderType = null;
+                selectedCatId = null;
+                currentProduct = null;
+                currentOptions = {};
+                currentAttr = null;
+                deliveryCharge = 0;
+                selectedTime = null;
+                customer = {
+                    id: null,
+                    name: 'Walk-in',
+                    email: '',
+                    phone: '',
+                    points: 0
+                };
+                $('#posCustomerSelect').val('').trigger('change');
+                $('#custName,#custPhone,#custEmail,#deliveryPostcode,#deliveryAddress,#deliveryCity,#deliveryAddress2,#posNotes')
+                    .val('');
+                $('#createAccountCheck').prop('checked', false);
+                $('#accountPasswordBlock').hide();
+                $('#createAccountBlock').show();
+                $('.order-type-card').removeClass('selected');
+                renderCart();
+                updateMetaPills();
+                goToStep(1);
+            }
+
+            function showToast(msg, type) {
+                const id = 'toast-' + Date.now();
+                $('#toastContainer').append(`<div class="toast ${type}" id="${id}">${msg}</div>`);
+                setTimeout(() => $('#' + id).remove(), 2800);
+            }
+
+            goToStep(1);
+        });
+    </script>
 @endsection

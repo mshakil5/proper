@@ -10,17 +10,14 @@ use App\Models\GiftCard;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemOption;
-use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductOptionItem;
 use App\Models\User;
 use App\Models\UserPoint;
-use App\Mail\OrderConfirmationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
 
 class PosController extends Controller
 {
@@ -29,10 +26,10 @@ class PosController extends Controller
         $categories = Category::with([
             'products' => function ($q) {
                 $q->where('status', 1)
-                ->where('stock_status', 'in_stock')
-                ->with(['options'])
-                ->orderBy('sl', 'asc')
-                ->orderBy('price', 'asc');
+                    ->where('stock_status', 'in_stock')
+                    ->with(['options.items.product'])
+                    ->orderBy('sl', 'asc')
+                    ->orderBy('price', 'asc');
             }
         ])
             ->where('status', 1)
@@ -42,27 +39,6 @@ class PosController extends Controller
         $clients = User::where('user_type', 2)->orderBy('name')->get();
 
         return view('admin.pos.create', compact('categories', 'clients'));
-    }
-
-    public function posGetProduct(Request $request)
-    {
-        $product = Product::with(['options.items.product'])->find($request->id);
-
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
-        }
-
-        $html = view('admin.pos.product-modal', compact('product'))->render();
-
-        return response()->json([
-            'html'          => $html,
-            'has_options'   => $product->options()->exists(),
-            'has_attribute' => (bool) $product->has_attribute,
-            'price'         => $product->price,
-            'title'         => $product->title,
-            'image'         => asset($product->image),
-            'sku_ref'       => $product->sku_ref,
-        ]);
     }
 
     public function posQuickCustomer(Request $request)
@@ -105,20 +81,6 @@ class PosController extends Controller
         ]);
     }
 
-    public function posGetCustomerInfo(Request $request)
-    {
-        $request->validate(['customer_id' => 'required|integer|exists:users,id']);
-        $user = User::find($request->customer_id);
-
-        return response()->json([
-            'id'               => $user->id,
-            'name'             => $user->name,
-            'email'            => $user->email,
-            'phone'            => $user->phone,
-            'available_points' => $user->available_points ?? 0,
-        ]);
-    }
-
     public function posValidatePromo(Request $request)
     {
         $request->validate([
@@ -133,10 +95,10 @@ class PosController extends Controller
 
         $giftCard = GiftCard::where('code', $code)->first();
         if ($giftCard) {
-            if (!$giftCard->is_active)                                    return response()->json(['message' => 'Gift card is inactive'], 400);
-            if ($giftCard->status === 'used')                             return response()->json(['message' => 'Gift card already used'], 400);
-            if ($giftCard->status === 'expired')                          return response()->json(['message' => 'Gift card has expired'], 400);
-            if ($giftCard->expires_at && $giftCard->expires_at < now())  return response()->json(['message' => 'Gift card has expired'], 400);
+            if (!$giftCard->is_active)                                   return response()->json(['message' => 'Gift card is inactive'], 400);
+            if ($giftCard->status === 'used')                            return response()->json(['message' => 'Gift card already used'], 400);
+            if ($giftCard->status === 'expired')                         return response()->json(['message' => 'Gift card has expired'], 400);
+            if ($giftCard->expires_at && $giftCard->expires_at < now()) return response()->json(['message' => 'Gift card has expired'], 400);
 
             $discount = min($giftCard->balance, $subtotal);
             return response()->json([
@@ -148,8 +110,8 @@ class PosController extends Controller
         }
 
         $coupon = Coupon::where('code', $code)->first();
-        if (!$coupon)               return response()->json(['message' => 'Invalid coupon or gift card code'], 404);
-        if (!$coupon->is_active)    return response()->json(['message' => 'Coupon is inactive'], 400);
+        if (!$coupon)            return response()->json(['message' => 'Invalid coupon or gift card code'], 404);
+        if (!$coupon->is_active) return response()->json(['message' => 'Coupon is inactive'], 400);
         if ($coupon->start_date && $coupon->start_date > now()) return response()->json(['message' => 'Coupon not yet active'], 400);
         if ($coupon->end_date   && $coupon->end_date < now())   return response()->json(['message' => 'Coupon has expired'], 400);
         if ($coupon->max_uses   && $coupon->used_count >= $coupon->max_uses) return response()->json(['message' => 'Coupon reached maximum usage'], 400);
@@ -158,13 +120,6 @@ class PosController extends Controller
             $usage = CouponUsage::where('coupon_id', $coupon->id)->where('user_id', $userId)->first();
             if ($usage && $usage->usage_count >= $coupon->max_uses_per_user) {
                 return response()->json(['message' => 'Customer reached maximum usage for this coupon'], 400);
-            }
-        }
-
-        if ($coupon->is_birthday_voucher && $userId) {
-            $bv = $coupon->users()->where('user_id', $userId)->first();
-            if ($bv && $bv->pivot->used_count > 0) {
-                return response()->json(['message' => 'Customer already used this birthday voucher'], 400);
             }
         }
 
@@ -208,26 +163,20 @@ class PosController extends Controller
             'cart.*.quantity'    => 'required|integer|min:1|max:999',
             'cart.*.type'        => 'nullable|string',
             'cart.*.options'     => 'nullable|array',
-            'paymentMethod'      => 'required|in:cash,stripe,paypal',
-            'pointsToUse'        => 'nullable|integer|min:0',
-            'promoCode'          => 'nullable|string|max:100',
+            'paymentMethod'      => 'required|in:cash',
             'notes'              => 'nullable|string|max:1000',
         ]);
 
         $customer      = $request->input('customer');
         $delivery      = $request->input('delivery');
         $cart          = $request->input('cart');
-        $paymentMethod = $request->input('paymentMethod');
-        $pointsToUse   = (int) ($request->input('pointsToUse') ?? 0);
-        $promoCode     = $request->input('promoCode');
-        $notes         = $request->input('notes');
         $customerId    = $request->input('customer_id');
+        $notes         = $request->input('notes');
 
-        $address   = $request->input('address', '');
-        $address2  = $request->input('address2', '');
-        $city      = $request->input('city', '');
+        $address  = $request->input('address', '');
+        $address2 = $request->input('address2', '');
+        $city     = $request->input('city', '');
 
-        // Force phone to string (This fixes the HubRise error)
         if (isset($customer['phone'])) {
             $customer['phone'] = (string) $customer['phone'];
         }
@@ -283,7 +232,7 @@ class PosController extends Controller
 
             if (empty($postcode) || empty($address) || empty($city)) {
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Postcode, street address and city are required for delivery'
                 ], 400);
             }
@@ -296,45 +245,16 @@ class PosController extends Controller
         }
         $deliveryCharge = round($deliveryCharge, 2);
 
-        $promoDiscount = 0;
-        $promoType     = null;
-        $promoId       = null;
-
-        if ($promoCode) {
-            $promoValidation = $this->validatePromoCodeBackend($promoCode, $subtotal, $customerId);
-            if (!$promoValidation['valid']) {
-                return response()->json(['success' => false, 'message' => $promoValidation['message']], 400);
-            }
-            $promoDiscount = $promoValidation['discount_amount'];
-            $promoType     = $promoValidation['type'];
-            $promoId       = $promoValidation['code_data']['id'];
-        }
-        $promoDiscount = round($promoDiscount, 2);
-
-        $pointsDiscount = 0;
-        if ($pointsToUse > 0 && $customerId) {
-            $posUser    = User::find($customerId);
-            $userPoints = $posUser ? ($posUser->available_points ?? 0) : 0;
-            if ($pointsToUse > $userPoints) {
-                return response()->json(['success' => false, 'message' => 'Insufficient points'], 400);
-            }
-            $pointsDiscount = round($pointsToUse / 100, 2);
-            $remaining      = $subtotal + $deliveryCharge - $promoDiscount;
-            if ($pointsDiscount > $remaining) $pointsDiscount = $remaining;
-        }
-        $pointsDiscount = round($pointsDiscount, 2);
-
-        $total = round($subtotal + $deliveryCharge - $promoDiscount - $pointsDiscount, 2);
-        if ($total < 0) $total = 0;
+        $total = round($subtotal + $deliveryCharge, 2);
 
         $calculationData = [
             'subtotal'       => $subtotal,
             'deliveryCharge' => $deliveryCharge,
-            'promoDiscount'  => $promoDiscount,
-            'promoType'      => $promoType,
-            'promoId'        => $promoId,
-            'pointsToUse'    => $pointsToUse,
-            'pointsDiscount' => $pointsDiscount,
+            'promoDiscount'  => 0,
+            'promoType'      => null,
+            'promoId'        => null,
+            'pointsToUse'    => 0,
+            'pointsDiscount' => 0,
             'total'          => $total,
             'cartItems'      => $cartItems,
             'customer'       => $customer,
@@ -343,175 +263,18 @@ class PosController extends Controller
             'address'        => $address,
             'address2'       => $address2,
             'city'           => $city,
-            'paymentMethod'  => $paymentMethod,
+            'paymentMethod'  => 'cash',
             'notes'          => $notes,
             'order_type'     => 'pos',
         ];
 
-        if ($paymentMethod === 'cash')   return $this->processCashOrder($calculationData);
-        if ($paymentMethod === 'stripe') return $this->processPosStripePayment($calculationData);
-        if ($paymentMethod === 'paypal') return $this->processPosPayPalPayment($calculationData);
-    }
-
-    private function processCashOrder($calculationData)
-    {
         try {
             $order = $this->createPosOrder($calculationData);
-            $this->sendToHubRise($order, $calculationData);
             return response()->json(['success' => true, 'orderNumber' => $order->order_number, 'orderId' => $order->id]);
         } catch (\Exception $e) {
-            \Log::error('POS Cash Error: ' . $e->getMessage());
+            \Log::error('POS Order Error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Error placing order: ' . $e->getMessage()], 400);
         }
-    }
-
-    private function processPosStripePayment($calculationData)
-    {
-        try {
-            $stripeCredential = \App\Models\Credential::where('gateway', 'Stripe')->first();
-            if (!$stripeCredential || !$stripeCredential->client_secret) {
-                return response()->json(['success' => false, 'message' => 'Stripe credentials not configured'], 400);
-            }
-
-            $payment = Payment::create([
-                'user_id'        => $calculationData['customer_id'] ?? null,
-                'payment_type'   => 'order',
-                'reference_id'   => 0,
-                'amount'         => $calculationData['total'],
-                'currency'       => 'GBP',
-                'payment_method' => 'stripe',
-                'status'         => 'pending',
-                'metadata'       => json_encode($calculationData),
-            ]);
-
-            session(['pos_payment_id' => $payment->id, 'pos_checkout_data' => $calculationData]);
-
-            \Stripe\Stripe::setApiKey($stripeCredential->client_secret);
-
-            $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
-                'line_items'           => [[
-                    'price_data' => [
-                        'currency'     => 'GBP',
-                        'product_data' => ['name' => 'POS Order'],
-                        'unit_amount'  => intval($calculationData['total'] * 100),
-                    ],
-                    'quantity' => 1,
-                ]],
-                'mode'           => 'payment',
-                'success_url'    => route('admin.pos.payment.success') . '?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url'     => route('admin.pos.payment.cancel'),
-                'customer_email' => $calculationData['customer']['email'],
-                'metadata'       => ['payment_id' => $payment->id],
-            ]);
-
-            $payment->update(['transaction_id' => $session->id]);
-            return response()->json(['success' => true, 'redirectUrl' => $session->url]);
-        } catch (\Exception $e) {
-            \Log::error('POS Stripe Error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Failed to create Stripe session'], 400);
-        }
-    }
-
-    private function processPosPayPalPayment($calculationData)
-    {
-        try {
-            $payment = Payment::create([
-                'user_id'        => $calculationData['customer_id'] ?? null,
-                'payment_type'   => 'order',
-                'reference_id'   => 0,
-                'amount'         => $calculationData['total'],
-                'currency'       => 'GBP',
-                'payment_method' => 'paypal',
-                'status'         => 'pending',
-                'metadata'       => json_encode($calculationData),
-            ]);
-
-            session(['pos_payment_id' => $payment->id, 'pos_checkout_data' => $calculationData]);
-
-            $this->setPayPalConfig();
-            $provider = new \Srmklive\PayPal\Services\PayPal;
-            $provider->setApiCredentials(config('paypal'));
-            $provider->getAccessToken();
-
-            $response = $provider->createOrder([
-                'intent'              => 'CAPTURE',
-                'application_context' => [
-                    'return_url' => route('admin.pos.payment.success'),
-                    'cancel_url' => route('admin.pos.payment.cancel'),
-                ],
-                'purchase_units' => [[
-                    'amount' => ['currency_code' => 'GBP', 'value' => number_format($calculationData['total'], 2, '.', '')],
-                ]],
-            ]);
-
-            if (!isset($response['id'])) throw new \Exception($response['message'] ?? 'Failed to create PayPal order');
-
-            $payment->update(['transaction_id' => $response['id']]);
-
-            foreach ($response['links'] as $link) {
-                if ($link['rel'] === 'approve') return response()->json(['success' => true, 'redirectUrl' => $link['href']]);
-            }
-
-            throw new \Exception('PayPal approval link not found');
-        } catch (\Exception $e) {
-            \Log::error('POS PayPal Error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'PayPal error: ' . $e->getMessage()], 400);
-        }
-    }
-
-    public function posPaymentSuccess(Request $request)
-    {
-        $paymentId       = session('pos_payment_id');
-        $calculationData = session('pos_checkout_data');
-
-        if (!$paymentId || !$calculationData) {
-            return redirect()->route('admin.pos')->with('error', 'Invalid payment session');
-        }
-
-        $payment = Payment::find($paymentId);
-        if (!$payment) return redirect()->route('admin.pos')->with('error', 'Payment not found');
-
-        try {
-            if ($payment->payment_method === 'stripe') {
-                $sessionId = $request->input('session_id');
-                if (!$sessionId) throw new \Exception('Session ID missing');
-                $cred = \App\Models\Credential::where('gateway', 'Stripe')->first();
-                \Stripe\Stripe::setApiKey($cred->client_secret);
-                $s = \Stripe\Checkout\Session::retrieve($sessionId);
-                if ($s->payment_status !== 'paid') throw new \Exception('Payment not confirmed');
-            } elseif ($payment->payment_method === 'paypal') {
-                $token = $request->input('token');
-                if (!$token) throw new \Exception('PayPal token missing');
-                $this->setPayPalConfig();
-                $provider = new \Srmklive\PayPal\Services\PayPal;
-                $provider->setApiCredentials(config('paypal'));
-                $provider->getAccessToken();
-                $res = $provider->capturePaymentOrder($token);
-                if (!isset($res['status']) || $res['status'] !== 'COMPLETED') {
-                    throw new \Exception($res['message'] ?? 'PayPal capture failed');
-                }
-            }
-
-            $payment->update(['status' => 'completed']);
-            $order = $this->createPosOrder($calculationData);
-            $payment->update(['reference_id' => $order->id]);
-            $this->sendToHubRise($order, $calculationData);
-            session()->forget(['pos_payment_id', 'pos_checkout_data']);
-
-            return redirect()->route('admin.pos')->with('success', 'Order #' . $order->order_number . ' placed successfully!');
-        } catch (\Exception $e) {
-            \Log::error('POS Payment Success Error: ' . $e->getMessage());
-            return redirect()->route('admin.pos')->with('error', 'Payment error: ' . $e->getMessage());
-        }
-    }
-
-    public function posPaymentCancel()
-    {
-        $paymentId = session('pos_payment_id');
-        if ($paymentId) Payment::where('id', $paymentId)->update(['status' => 'failed']);
-        session()->forget(['pos_payment_id', 'pos_checkout_data']);
-        return redirect()->route('admin.pos')->with('error', 'Payment was cancelled');
     }
 
     private function createPosOrder($calculationData)
@@ -538,13 +301,13 @@ class PosController extends Controller
                 'time'               => $calculationData['delivery']['time'],
                 'subtotal'           => $calculationData['subtotal'],
                 'delivery_charge'    => $calculationData['deliveryCharge'],
-                'coupon_discount'    => $calculationData['promoType'] === 'coupon' ? $calculationData['promoDiscount'] : 0,
-                'coupon_id'          => $calculationData['promoType'] === 'coupon' ? $calculationData['promoId'] : null,
-                'gift_card_discount' => $calculationData['promoType'] === 'gift_card' ? $calculationData['promoDiscount'] : 0,
-                'gift_card_id'       => $calculationData['promoType'] === 'gift_card' ? $calculationData['promoId'] : null,
-                'points_used'        => $calculationData['pointsToUse'] / 100,
+                'coupon_discount'    => 0,
+                'coupon_id'          => null,
+                'gift_card_discount' => 0,
+                'gift_card_id'       => null,
+                'points_used'        => 0,
                 'total'              => $calculationData['total'],
-                'payment_method'     => $calculationData['paymentMethod'],
+                'payment_method'     => 'cash',
                 'payment_status'     => 'pending',
                 'status'             => 'pending',
                 'notes'              => $calculationData['notes'],
@@ -582,171 +345,12 @@ class PosController extends Controller
                 }
             }
 
-            $this->allocatePosOrderResources($order, $calculationData);
+            if ($customerId) {
+                UserPoint::create(['user_id' => $customerId, 'order_id' => $order->id, 'point' => floor($order->total)]);
+            }
 
             return $order;
         });
-    }
-
-    private function allocatePosOrderResources($order, $calculationData)
-    {
-        $customerId = $calculationData['customer_id'] ?? null;
-
-        if ($calculationData['promoType'] === 'gift_card' && $calculationData['promoId']) {
-            $giftCard = GiftCard::find($calculationData['promoId']);
-            if ($giftCard) {
-                $newBalance = $giftCard->balance - $calculationData['promoDiscount'];
-                $giftCard->update([
-                    'balance'     => $newBalance,
-                    'status'      => $newBalance <= 0 ? 'used' : 'new',
-                    'order_id'    => $order->id,
-                    'redeemed_by' => $customerId,
-                    'redeemed_at' => now(),
-                ]);
-            }
-        }
-
-        if ($order->coupon_id) {
-            $coupon = Coupon::find($order->coupon_id);
-            if ($coupon) {
-                $coupon->increment('used_count');
-                if ($customerId) {
-                    if ($coupon->is_birthday_voucher) {
-                        $coupon->users()->updateExistingPivot($customerId, ['used_count' => 1]);
-                    } else {
-                        CouponUsage::updateOrCreate(
-                            ['coupon_id' => $coupon->id, 'user_id' => $customerId],
-                            ['usage_count' => DB::raw('usage_count + 1')]
-                        );
-                    }
-                }
-            }
-        }
-
-        if ($customerId && $calculationData['pointsToUse'] > 0) {
-            UserPoint::create(['user_id' => $customerId, 'order_id' => $order->id, 'point' => -$calculationData['pointsToUse']]);
-        }
-
-        if ($customerId) {
-            UserPoint::create(['user_id' => $customerId, 'order_id' => $order->id, 'point' => floor($order->total)]);
-        }
-    }
-
-    private function sendToHubRise($order, $calculationData)
-    {
-        $accessToken = config('services.hubrise.access_token');
-        $locationId  = config('services.hubrise.location_id');
-
-        if (!$accessToken || !$locationId) {
-            \Log::warning('HubRise credentials not configured — skipping POS sync');
-            return;
-        }
-
-        $items = [];
-        foreach ($calculationData['cartItems'] as $item) {
-            $itemData = [
-                'product_name' => $item['product']->title,
-                'sku_ref'      => $item['product']->sku_ref,
-                'price'        => number_format($item['unitPrice'], 2, '.', '') . ' GBP',
-                'quantity'     => $item['quantity'],
-                'options'      => [],
-            ];
-            if (!empty($item['options'])) {
-                foreach ($item['options'] as $optionName => $optionValues) {
-                    foreach ($optionValues as $opt) {
-                        $itemData['options'][] = [
-                            'option_list_name' => 'Option',
-                            'name'             => $opt['title'],
-                            'ref'              => (string) ($opt['hubriseOptionRef'] ?? ''),
-                            'price'            => '0.00 GBP',
-                        ];
-                    }
-                }
-            }
-            $items[] = $itemData;
-        }
-
-        $paymentRef  = 'CASH';
-        $paymentName = 'Cash on Delivery';
-        if ($calculationData['paymentMethod'] === 'stripe') { $paymentRef = 'STRIPE'; $paymentName = 'Stripe'; }
-        if ($calculationData['paymentMethod'] === 'paypal') { $paymentRef = 'PAYPAL'; $paymentName = 'PayPal'; }
-
-        $payload = [
-            'status'           => 'new',
-            'channel'          => 'POS',
-            'service_type'     => $calculationData['delivery']['type'],
-            'service_type_ref' => $calculationData['delivery']['type'] === 'delivery' ? '9' : '10',
-            'items'            => $items,
-            'payments'         => [['name' => $paymentName, 'ref' => $paymentRef, 'amount' => number_format($calculationData['total'], 2, '.', '') . ' GBP']],
-            'customer'         => [
-                'first_name' => $calculationData['customer']['firstName'],
-                'last_name'  => $calculationData['customer']['lastName'],
-                'email'      => $calculationData['customer']['email'],
-                'phone'      => (string) ($calculationData['customer']['phone'] ?? ''),
-                'address_1'  => $calculationData['address'] ?? '',
-                'address_2'  => $calculationData['address2'] ?? '',
-                'city'       => $calculationData['city'] ?? '',
-                'postal_code'=> $calculationData['delivery']['postcode'] ?? null,
-            ],
-        ];
-
-        if ($calculationData['notes'])          $payload['customer_notes'] = $calculationData['notes'];
-        if ($calculationData['deliveryCharge'] > 0) {
-            $payload['charges'] = [['name' => 'Delivery', 'price' => number_format($calculationData['deliveryCharge'], 2, '.', '') . ' GBP']];
-        }
-        if ($calculationData['promoDiscount'] > 0) {
-            $payload['discounts'] = [['name' => $calculationData['promoType'] === 'gift_card' ? 'Gift Card' : 'Coupon', 'price_off' => number_format($calculationData['promoDiscount'], 2, '.', '') . ' GBP']];
-        }
-        if ($calculationData['pointsDiscount'] > 0) {
-            if (!isset($payload['discounts'])) $payload['discounts'] = [];
-            $payload['discounts'][] = ['name' => 'Points Redeemed', 'price_off' => number_format($calculationData['pointsDiscount'], 2, '.', '') . ' GBP'];
-        }
-
-        $response = Http::withHeaders(['X-Access-Token' => $accessToken, 'Content-Type' => 'application/json'])
-            ->post("https://api.hubrise.com/v1/locations/{$locationId}/orders", $payload);
-
-        if (!$response->successful()) {
-            \Log::error('POS HubRise Error: ' . $response->body());
-            return;
-        }
-
-        $order->update(['hubrise_order_id' => $response->json()['id'] ?? null, 'status' => 'pending']);
-
-        try {
-            if ($order->email && $order->email !== 'pos@internal.local') {
-                Mail::to($order->email)->send(new OrderConfirmationMail($order));
-            }
-        } catch (\Exception $e) {
-            \Log::warning('POS email error: ' . $e->getMessage());
-        }
-    }
-
-    private function validatePromoCodeBackend($code, $subtotal, $userId = null)
-    {
-        $code     = strtoupper(trim($code));
-        $giftCard = GiftCard::where('code', $code)->first();
-
-        if ($giftCard) {
-            if (!$giftCard->is_active)                                    return ['valid' => false, 'message' => 'Gift card is inactive'];
-            if ($giftCard->status === 'used')                             return ['valid' => false, 'message' => 'Gift card already used'];
-            if ($giftCard->expires_at && $giftCard->expires_at < now())  return ['valid' => false, 'message' => 'Gift card has expired'];
-            return ['valid' => true, 'type' => 'gift_card', 'discount_amount' => min($giftCard->balance, $subtotal), 'code_data' => ['id' => $giftCard->id, 'code' => $giftCard->code]];
-        }
-
-        $coupon = Coupon::where('code', $code)->first();
-        if (!$coupon)               return ['valid' => false, 'message' => 'Invalid coupon or gift card code'];
-        if (!$coupon->is_active)    return ['valid' => false, 'message' => 'Coupon is inactive'];
-        if ($coupon->end_date && $coupon->end_date < now())  return ['valid' => false, 'message' => 'Coupon has expired'];
-        if ($coupon->max_uses && $coupon->used_count >= $coupon->max_uses) return ['valid' => false, 'message' => 'Coupon reached maximum usage'];
-        if ($coupon->min_order_amount > 0 && $subtotal < $coupon->min_order_amount) {
-            return ['valid' => false, 'message' => 'Minimum order £' . number_format($coupon->min_order_amount, 2) . ' required'];
-        }
-
-        $discount = $coupon->discount_type === 'percent'
-            ? ($subtotal * $coupon->discount_value) / 100
-            : $coupon->discount_value;
-
-        return ['valid' => true, 'type' => 'coupon', 'discount_amount' => $discount, 'code_data' => ['id' => $coupon->id, 'code' => $coupon->code, 'discount_type' => $coupon->discount_type, 'discount_value' => $coupon->discount_value]];
     }
 
     private function getDeliveryCharge($postcode)
@@ -763,13 +367,13 @@ class PosController extends Controller
             $latitude  = $data['result']['latitude'];
             $longitude = $data['result']['longitude'];
 
-            $lat1Rad  = deg2rad($centerLatitude);
-            $lon1Rad  = deg2rad($centerLongitude);
-            $lat2Rad  = deg2rad($latitude);
-            $lon2Rad  = deg2rad($longitude);
-            $dlat     = $lat2Rad - $lat1Rad;
-            $dlon     = $lon2Rad - $lon1Rad;
-            $a        = sin($dlat / 2) ** 2 + cos($lat1Rad) * cos($lat2Rad) * sin($dlon / 2) ** 2;
+            $lat1Rad = deg2rad($centerLatitude);
+            $lon1Rad = deg2rad($centerLongitude);
+            $lat2Rad = deg2rad($latitude);
+            $lon2Rad = deg2rad($longitude);
+            $dlat    = $lat2Rad - $lat1Rad;
+            $dlon    = $lon2Rad - $lon1Rad;
+            $a       = sin($dlat / 2) ** 2 + cos($lat1Rad) * cos($lat2Rad) * sin($dlon / 2) ** 2;
             $distance = 3959 * 2 * atan2(sqrt($a), sqrt(1 - $a));
 
             if ($distance <= $deliveryRadius) {
@@ -781,22 +385,199 @@ class PosController extends Controller
         }
     }
 
-    private function setPayPalConfig()
+    public function posStartPrint(Request $request)
     {
-        $credential = \App\Models\Credential::where('gateway', 'PayPal')->first();
-        if ($credential) {
-            config([
-                'paypal.mode'                  => $credential->mode ?? 'sandbox',
-                'paypal.sandbox.client_id'     => $credential->client_id ?? '',
-                'paypal.sandbox.client_secret' => $credential->client_secret ?? '',
-                'paypal.live.client_id'        => $credential->client_id ?? '',
-                'paypal.live.client_secret'    => $credential->client_secret ?? '',
-                'paypal.payment_action'        => 'Sale',
-                'paypal.currency'              => 'GBP',
-                'paypal.notify_url'            => '',
-                'paypal.locale'                => 'en_GB',
-                'paypal.validate_ssl'          => true,
-            ]);
+        $copy        = $request->query('copy', 'customer');
+        $data        = $request->input('data', []);
+        $printerName = $copy === 'kitchen' ? (config('pos.printer_kitchen') ?: config('pos.printer_customer') ?: '') : (config('pos.printer_customer') ?: '');
+
+        \Log::info('[ESCPrint] Request received', [
+            'copy'         => $copy,
+            'printer'      => $printerName,
+            'order'        => $data['orderNumber'] ?? 'unknown',
+            'items'        => count($data['cart'] ?? []),
+        ]);
+
+        if (empty($printerName)) {
+            \Log::error('[ESCPrint] No printer configured in .env');
+            return response()->json(['error' => 'No printer configured. Add POS_PRINTER_CUSTOMER to .env'], 500);
         }
+
+        if (!function_exists('exec')) {
+            \Log::error('[ESCPrint] exec() is disabled on this server');
+            return response()->json(['error' => 'exec() disabled on server — enable in php.ini'], 500);
+        }
+
+        try {
+            $raw  = $copy === 'kitchen'
+                ? $this->buildKitchenEscPos($data)
+                : $this->buildCustomerEscPos($data);
+
+            $file = tempnam(sys_get_temp_dir(), 'escpos_');
+            file_put_contents($file, $raw);
+
+            \Log::info('[ESCPrint] Temp file written', [
+                'file' => $file,
+                'size' => strlen($raw) . ' bytes',
+            ]);
+
+            $cmd1    = "copy /b \"{$file}\" \"{$printerName}\" 2>&1";
+            $cmd2    = "print /D:\"{$printerName}\" \"{$file}\" 2>&1";
+
+            exec($cmd1, $output1, $code1);
+            \Log::info('[ESCPrint] copy /b result', ['cmd' => $cmd1, 'code' => $code1, 'output' => $output1]);
+
+            if ($code1 !== 0) {
+                \Log::warning('[ESCPrint] copy /b failed, trying print command...');
+                exec($cmd2, $output2, $code2);
+                \Log::info('[ESCPrint] print command result', ['cmd' => $cmd2, 'code' => $code2, 'output' => $output2]);
+                $finalCode = $code2;
+            } else {
+                $finalCode = $code1;
+            }
+
+            @unlink($file);
+
+            if ($finalCode !== 0) {
+                \Log::error('[ESCPrint] Both commands failed', ['copy' => $copy, 'printer' => $printerName]);
+                return response()->json(['error' => 'Print command failed. Check printer name in .env matches exactly what shows in Windows Printers.'], 500);
+            }
+
+            \Log::info('[ESCPrint] SUCCESS', ['copy' => $copy, 'printer' => $printerName]);
+            return response()->json(['success' => true, 'copy' => $copy]);
+
+        } catch (\Exception $e) {
+            \Log::error('[ESCPrint] Exception', ['error' => $e->getMessage()]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    private function buildCustomerEscPos(array $data): string
+    {
+        $out = '';
+        $out .= "\x1B\x40"; // init
+        $out .= "\x1B\x61\x01"; // center
+        $out .= "\x1B\x21\x30"; // double width+height
+        $out .= "Propertakeways\n";
+        $out .= "\x1B\x21\x00"; // normal
+        $out .= "11 Clifton Street, LN5 8LQ\n";
+        $out .= "--------------------------------\n";
+
+        $typeLabel = ($data['deliveryType'] ?? 'collection') === 'delivery' ? 'DELIVERY' : 'COLLECTION';
+        $out .= "\x1B\x21\x30";
+        $out .= $typeLabel . "\n";
+        $out .= "\x1B\x21\x00";
+        $out .= "CASH\n";
+        $out .= date('d/m/Y H:i') . "\n";
+        $out .= "Order: " . ($data['orderNumber'] ?? '') . "\n";
+        $out .= "--------------------------------\n";
+
+        $out .= "\x1B\x61\x00"; // left
+        $out .= "\x1B\x45\x01"; // bold on
+        $out .= "CUSTOMER:\n";
+        $out .= "\x1B\x45\x00"; // bold off
+        $out .= ($data['customer']['firstName'] ?? '') . ' ' . ($data['customer']['lastName'] ?? '') . "\n";
+        $out .= ($data['customer']['phone'] ?? '') . "\n";
+
+        $addrParts = array_filter([
+            $data['address']  ?? '',
+            $data['address2'] ?? '',
+            $data['city']     ?? '',
+            $data['postcode'] ?? '',
+        ]);
+        if ($addrParts) $out .= implode(', ', $addrParts) . "\n";
+        $out .= "Time: " . ($data['time'] ?? '') . "\n";
+        $out .= "--------------------------------\n";
+
+        $out .= "\x1B\x45\x01";
+        $out .= "ITEMS:\n";
+        $out .= "\x1B\x45\x00";
+
+        foreach ($data['cart'] ?? [] as $item) {
+            $left  = $item['qty'] . 'x ' . $item['title'];
+            $right = number_format($item['price'] * $item['qty'], 2);
+            $out  .= str_pad($left, 22) . str_pad('£' . $right, 10, ' ', STR_PAD_LEFT) . "\n";
+
+            if (!empty($item['options'])) {
+                foreach ($item['options'] as $opts) {
+                    foreach ($opts as $o) {
+                        $out .= '  · ' . $o['title'] . (!empty($o['price']) ? ' (+£' . number_format($o['price'], 2) . ')' : '') . "\n";
+                    }
+                }
+            }
+        }
+
+        $out .= "--------------------------------\n";
+        if (!empty($data['deliveryCharge']) && $data['deliveryCharge'] > 0) {
+            $out .= str_pad('Delivery:', 22) . str_pad('£' . number_format($data['deliveryCharge'], 2), 10, ' ', STR_PAD_LEFT) . "\n";
+        }
+        $out .= "\x1B\x45\x01";
+        $out .= str_pad('TOTAL:', 22) . str_pad('£' . number_format($data['total'], 2), 10, ' ', STR_PAD_LEFT) . "\n";
+        $out .= "\x1B\x45\x00";
+
+        if (!empty($data['notes'])) $out .= "Note: " . $data['notes'] . "\n";
+
+        $out .= "================================\n";
+        $out .= "\x1B\x61\x01";
+        $out .= "Thank you for your order!\n";
+        $out .= "*** CUSTOMER COPY ***\n";
+        $out .= "\n\n\n";
+        $out .= "\x1D\x56\x00"; // cut
+
+        return $out;
+    }
+
+    private function buildKitchenEscPos(array $data): string
+    {
+        $out = '';
+        $out .= "\x1B\x40"; // init
+        $out .= "\x1B\x61\x01"; // center
+
+        $typeLabel = ($data['deliveryType'] ?? 'collection') === 'delivery' ? '*** DELIVERY ***' : '*** COLLECTION ***';
+        $out .= "\x1B\x21\x30";
+        $out .= $typeLabel . "\n";
+        $out .= "\x1B\x21\x00";
+        $out .= "================================\n";
+
+        $out .= "\x1B\x61\x00"; // left
+        $out .= "\x1B\x21\x10"; // double width
+        $out .= "Order: " . ($data['orderNumber'] ?? '') . "\n";
+        $out .= "Time:  " . ($data['time'] ?? '') . "\n";
+        $out .= "Placed: " . date('H:i') . "\n";
+        $out .= "\x1B\x21\x00";
+
+        $out .= "\x1B\x45\x01";
+        $out .= "Customer: " . ($data['customer']['firstName'] ?? '') . ' ' . ($data['customer']['lastName'] ?? '') . "\n";
+        $out .= "\x1B\x45\x00";
+        $out .= ($data['customer']['phone'] ?? '') . "\n";
+        $out .= "================================\n";
+
+        foreach ($data['cart'] ?? [] as $item) {
+            $out .= "\x1B\x21\x30"; // big
+            $out .= $item['qty'] . 'x ' . strtoupper($item['title']) . "\n";
+            $out .= "\x1B\x21\x00";
+
+            if (!empty($item['options'])) {
+                foreach ($item['options'] as $opts) {
+                    foreach ($opts as $o) {
+                        $out .= "  --> " . $o['title'] . "\n";
+                    }
+                }
+            }
+            $out .= "\n";
+        }
+
+        $out .= "================================\n";
+        if (!empty($data['notes'])) {
+            $out .= "\x1B\x21\x30";
+            $out .= "NOTE: " . $data['notes'] . "\n";
+            $out .= "\x1B\x21\x00";
+        }
+        $out .= "\x1B\x61\x01";
+        $out .= "*** KITCHEN COPY ***\n";
+        $out .= "\n\n\n";
+        $out .= "\x1D\x56\x00"; // cut
+
+        return $out;
     }
 }

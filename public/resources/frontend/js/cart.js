@@ -664,7 +664,6 @@ $(function () {
             let checkedCount = parentSection.find('input[type="checkbox"]:checked').length;
 
             if (max === 1) {
-                // single-select behaviour: uncheck others, allow unchecking current
                 parentSection.find('input[type="checkbox"]').not(this).prop('checked', false);
             } else if (max && checkedCount > max) {
                 $(this).prop('checked', false);
@@ -1367,7 +1366,6 @@ $(function () {
         if (currentVal < 3 && totalSauces < 3) {
             let newVal = currentVal + 1;
             display.text(newVal);
-            // ★ write qty back onto the input so form submit can read it
             let input = $('[data-sauce-item-id="' + itemId + '"]');
             input.data('sauce-qty', newVal);
             input.attr('data-sauce-qty', newVal);

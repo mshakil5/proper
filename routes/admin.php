@@ -27,12 +27,10 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::get('/dashboard', [HomeController::class, 'adminHome'])->name('admin.dashboard');
 
     Route::get('/pos', [PosController::class, 'pos'])->name('admin.pos');
-    Route::get('/pos/product', [PosController::class, 'posGetProduct'])->name('admin.pos.product');
     Route::post('/pos/quick-customer', [PosController::class, 'posQuickCustomer'])->name('admin.pos.quick-customer');
-    Route::get('/pos/customer-info', [PosController::class, 'posGetCustomerInfo'])->name('admin.pos.customer-info');
     Route::post('/pos/validate-promo', [PosController::class, 'posValidatePromo'])->name('admin.pos.validate-promo');
     Route::post('/pos/place-order', [PosController::class, 'posPlaceOrder'])->name('admin.pos.place-order');
-    Route::post('/pos/printer-log', [PosController::class, 'posPrinterLog'])->name('admin.pos.printer-log');
+    Route::post('/pos/start-print', [PosController::class, 'posStartPrint']);
 
     // Clients
     Route::get('/client', [ClientController::class, 'index'])->name('client.index');
