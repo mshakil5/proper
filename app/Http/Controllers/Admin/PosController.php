@@ -416,6 +416,11 @@ class PosController extends Controller
             $file = tempnam(sys_get_temp_dir(), 'escpos_');
             file_put_contents($file, $raw);
 
+            // $simulationFile = storage_path('logs/escpos_' . $copy . '_' . date('His') . '.bin');
+            // file_put_contents($simulationFile, $raw);
+            // \Log::info('[ESCPrint] SIMULATION — saved to ' . $simulationFile);
+            // return response()->json(['success' => true, 'copy' => $copy, 'simulation_file' => $simulationFile]);
+
             \Log::info('[ESCPrint] Temp file written', [
                 'file' => $file,
                 'size' => strlen($raw) . ' bytes',
@@ -456,6 +461,7 @@ class PosController extends Controller
     {
         $out = '';
         $out .= "\x1B\x40"; // init
+        $out .= "\x1B\x74\x02";
         $out .= "\x1B\x61\x01"; // center
         $out .= "\x1B\x21\x30"; // double width+height
         $out .= "Propertakeways\n";
@@ -515,7 +521,7 @@ class PosController extends Controller
         $out .= str_pad('TOTAL:', 22) . str_pad('£' . number_format($data['total'], 2), 10, ' ', STR_PAD_LEFT) . "\n";
         $out .= "\x1B\x45\x00";
 
-        if (!empty($data['notes'])) $out .= "Note: " . $data['notes'] . "\n";
+        if (!empty($data['notes'])) $out .= "Note: " . preg_replace('/[^\x00-\x7F]+/', '-', $data['notes']) . "\n";
 
         $out .= "================================\n";
         $out .= "\x1B\x61\x01";
@@ -531,6 +537,7 @@ class PosController extends Controller
     {
         $out = '';
         $out .= "\x1B\x40"; // init
+        $out .= "\x1B\x74\x02";
         $out .= "\x1B\x61\x01"; // center
 
         $typeLabel = ($data['deliveryType'] ?? 'collection') === 'delivery' ? '*** DELIVERY ***' : '*** COLLECTION ***';
@@ -570,7 +577,7 @@ class PosController extends Controller
         $out .= "================================\n";
         if (!empty($data['notes'])) {
             $out .= "\x1B\x21\x30";
-            $out .= "NOTE: " . $data['notes'] . "\n";
+            $out .= "NOTE: " . preg_replace('/[^\x00-\x7F]+/', '-', $data['notes']) . "\n";
             $out .= "\x1B\x21\x00";
         }
         $out .= "\x1B\x61\x01";

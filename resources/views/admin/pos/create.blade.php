@@ -1567,12 +1567,7 @@
                 $('#btnBack').toggle(n > 1);
                 $('#btnNext').toggle(n < 6);
 
-                const hasItems = cart.length > 0;
-                if (hasItems) {
-                    $('#btnPlace').show().prop('disabled', false);
-                } else {
-                    $('#btnPlace').toggle(n === 6).prop('disabled', true);
-                }
+                $('#btnPlace').hide().prop('disabled', true);
 
                 if (n === 4) renderProducts();
                 if (n === 5) renderOptions();
@@ -1608,8 +1603,10 @@
                 }
                 $('#btnNext').prop('disabled', !nextOk);
 
-                if (hasItems) {
+                if (currentStep === 6 && hasItems && selectedTime) {
                     $('#btnPlace').show().prop('disabled', false);
+                } else if (currentStep === 6 && hasItems && !selectedTime) {
+                    $('#btnPlace').show().prop('disabled', true);
                 } else {
                     $('#btnPlace').hide().prop('disabled', true);
                 }
@@ -2545,7 +2542,6 @@
                 } catch (err) {
                     console.error('[ESCPrint] Failed:', err.message);
                     showToast('Print failed: ' + err.message, 'error');
-                    triggerPrint();
                 }
             }
 
@@ -2572,123 +2568,6 @@
                 return json;
             }
 
-            function buildCustomerReceiptXml(data) {
-                const typeLabel = data.deliveryType === 'delivery' ? 'DELIVERY' : 'COLLECTION';
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                const customerName = (data.customer.firstName + ' ' + data.customer.lastName).toUpperCase();
-
-                let itemLines = '';
-                data.cart.forEach(item => {
-                    itemLines += starLine(item.qty + 'x ' + item.title, '£' + (item.price * item.qty).toFixed(2));
-                    if (item.options && Object.keys(item.options).length) {
-                        Object.values(item.options).forEach(arr => arr.forEach(o => {
-                            itemLines += `<text>  · ${o.title}${o.price > 0 ? ' (+£' + o.price.toFixed(2) + ')' : ''}\n</text>`;
-                        }));
-                    }
-                });
-
-                const addrLine = [data.address, data.address2, data.city, data.postcode].filter(Boolean).join(', ');
-
-                return `<?xml version="1.0" encoding="UTF-8"?>
-            <StarPRNT>
-            <Function type="BeginDocument"/>
-            <Function type="Alignment" position="Center"/>
-            <Function type="TextStyle" dw="true" dh="true" em="true"/>
-            <text>Propertakeways\n</text>
-            <Function type="TextStyle" dw="false" dh="false" em="false"/>
-            <text>11 Clifton Street, LN5 8LQ Lincoln\n</text>
-            <text>================================\n</text>
-            <Function type="TextStyle" dw="true" dh="true" em="true"/>
-            <text>${typeLabel}\n</text>
-            <Function type="TextStyle" dw="false" dh="false" em="false"/>
-            <text>CASH · ${dateStr}\n</text>
-            <text>Order: ${data.orderNumber}\n</text>
-            <text>================================\n</text>
-            <Function type="Alignment" position="Left"/>
-            <Function type="TextStyle" em="true"/>
-            <text>CUSTOMER:\n</text>
-            <Function type="TextStyle" em="false"/>
-            <text>${customerName}\n</text>
-            <text>${data.customer.phone || ''}\n</text>
-            ${addrLine ? `<text>${addrLine}\n</text>` : ''}
-            <text>Time: ${data.time}\n</text>
-            <text>--------------------------------\n</text>
-            <Function type="TextStyle" em="true"/>
-            <text>ITEMS:\n</text>
-            <Function type="TextStyle" em="false"/>
-            ${itemLines}
-            <text>--------------------------------\n</text>
-            ${data.deliveryCharge > 0 ? starLine('Delivery:', '£' + data.deliveryCharge.toFixed(2)) : ''}
-            <Function type="TextStyle" em="true"/>
-            ${starLine('TOTAL:', '£' + data.total.toFixed(2))}
-            <Function type="TextStyle" em="false"/>
-            ${data.notes ? `<text>Note: ${data.notes}\n</text>` : ''}
-            <text>================================\n</text>
-            <Function type="Alignment" position="Center"/>
-            <text>Thank you for your order!\n</text>
-            <text>*** CUSTOMER COPY ***\n</text>
-            <text>\n\n</text>
-            <Function type="FeedAndCut"/>
-            <Function type="EndDocument"/>
-            </StarPRNT>`;
-            }
-
-            function buildKitchenReceiptXml(data) {
-                const typeLabel = data.deliveryType === 'delivery' ? '*** DELIVERY ***' : '*** COLLECTION ***';
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
-                let itemLines = '';
-                data.cart.forEach(item => {
-                    itemLines += `<Function type="TextStyle" dw="true" dh="true" em="true"/>`;
-                    itemLines += `<text>${item.qty}x ${item.title}\n</text>`;
-                    itemLines += `<Function type="TextStyle" dw="false" dh="false" em="false"/>`;
-                    if (item.options && Object.keys(item.options).length) {
-                        Object.values(item.options).forEach(arr => arr.forEach(o => {
-                            itemLines += `<text>  --> ${o.title}\n</text>`;
-                        }));
-                    }
-                    itemLines += `<text>\n</text>`;
-                });
-
-                return `<?xml version="1.0" encoding="UTF-8"?>
-            <StarPRNT>
-            <Function type="BeginDocument"/>
-            <Function type="Alignment" position="Center"/>
-            <Function type="TextStyle" dw="true" dh="true" em="true"/>
-            <text>${typeLabel}\n</text>
-            <Function type="TextStyle" dw="false" dh="false" em="false"/>
-            <text>================================\n</text>
-            <Function type="TextStyle" dw="true" dh="true"/>
-            <text>Order: ${data.orderNumber}\n</text>
-            <text>Time: ${data.time}\n</text>
-            <text>Placed: ${timeStr}\n</text>
-            <Function type="TextStyle" dw="false" dh="false"/>
-            <Function type="Alignment" position="Left"/>
-            <Function type="TextStyle" em="true"/>
-            <text>Customer: ${data.customer.firstName} ${data.customer.lastName}\n</text>
-            <text>${data.customer.phone || ''}\n</text>
-            <Function type="TextStyle" em="false"/>
-            <text>================================\n</text>
-            ${itemLines}
-            <text>================================\n</text>
-            ${data.notes ? `<Function type="TextStyle" dw="true" dh="true" em="true"/><text>NOTE: ${data.notes}\n</text><Function type="TextStyle" dw="false" dh="false" em="false"/>` : ''}
-            <Function type="Alignment" position="Center"/>
-            <text>*** KITCHEN COPY ***\n</text>
-            <text>\n\n</text>
-            <Function type="FeedAndCut"/>
-            <Function type="EndDocument"/>
-            </StarPRNT>`;
-            }
-
-            function starLine(left, right) {
-                const total = 32;
-                const space = total - left.length - right.length;
-                const padding = space > 0 ? ' '.repeat(space) : ' ';
-                return `<text>${left}${padding}${right}\n</text>`;
-            }
-
             $('#btnPrintAgain').on('click', function() {
                 if (lastOrderData) attemptPrint(lastOrderData);
                 else showToast('No order data to print', 'error');
@@ -2700,14 +2579,21 @@
             });
 
             $('#btnTestPrint').on('click', async function() {
-                console.log('[TestPrint] Button clicked — starting test...');
+                console.log('[TestPrint] Starting...');
                 showToast('Sending test print...', 'success');
 
                 const testData = {
                     orderNumber: 'TEST-001',
                     deliveryType: 'collection',
-                    customer: { firstName: 'Test', lastName: 'Customer', phone: '07700000000' },
-                    address: '', address2: '', city: '', postcode: '',
+                    customer: {
+                        firstName: 'Test',
+                        lastName: 'Customer',
+                        phone: '07700000000'
+                    },
+                    address: '',
+                    address2: '',
+                    city: '',
+                    postcode: '',
                     cart: [
                         { qty: 1, title: 'Test Burger', price: 5.99, options: {} },
                         { qty: 2, title: 'Test Fries', price: 2.50, options: {} },
@@ -2720,15 +2606,12 @@
                 };
 
                 try {
-                    const customerXml = buildCustomerReceiptXml(testData);
-                    await sendToPrinter(customerXml, 'Test Customer Copy');
+                    await sendToPrinter(testData, 'customer');
                     await new Promise(r => setTimeout(r, 1500));
-                    const kitchenXml = buildKitchenReceiptXml(testData);
-                    await sendToPrinter(kitchenXml, 'Test Kitchen Copy');
-                    showToast('Test print done ✓', 'success');
-                    console.log('[TestPrint] Both copies sent successfully');
+                    await sendToPrinter(testData, 'kitchen');
+                    showToast('Test print sent successfully!', 'success');
                 } catch (err) {
-                    console.error('[TestPrint] FAILED:', err.message);
+                    console.error('[TestPrint] FAILED:', err);
                     showToast('Test failed: ' + err.message, 'error');
                 }
             });
