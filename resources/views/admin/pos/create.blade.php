@@ -2520,14 +2520,229 @@
                     },
                     error: function(xhr) {
                         $('#btnPlace').prop('disabled', false).text('✅ Place Order');
-                        showToast(xhr.responseJSON?.message || 'Error placing order', 'error');
+                        const msg = xhr.responseJSON?.message || xhr.responseJSON?.error || 'Error placing order';
+                        showError(msg);
                     }
                 });
             });
 
-            function triggerPrint() {
-                showToast('Printer offline — please check connection', 'error');
-                console.warn('[StarPrint] Fallback triggered — no window.print fallback available');
+            // function triggerPrint() {
+            //     showToast('Printer offline — please check connection', 'error');
+            //     console.warn('[StarPrint] Fallback triggered — no window.print fallback available');
+            // }
+
+            // function attemptPrint(data) {
+            //     printThermal(data);
+            // }
+
+            // async function printThermal(data) {
+            //     try {
+            //         await sendToPrinter(data, 'customer');
+            //         await new Promise(r => setTimeout(r, 1500));
+            //         await sendToPrinter(data, 'kitchen');
+            //     } catch (err) {
+            //         console.error('[ESCPrint] Failed:', err.message);
+            //         showToast('Print failed: ' + err.message, 'error');
+            //     }
+            // }
+
+            // async function sendToPrinter(data, copy) {
+            //     console.log('[ESCPrint] Sending ' + copy + ' copy...');
+
+            //     const response = await fetch('/admin/pos/start-print?copy=' + copy, {
+            //         method: 'POST',
+            //         headers: {
+            //             'Content-Type': 'application/json',
+            //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            //         },
+            //         body: JSON.stringify({ data: data })
+            //     });
+
+            //     const json = await response.json();
+            //     console.log('[ESCPrint] ' + copy + ' response:', json);
+
+            //     if (!response.ok || json.error) {
+            //         throw new Error(json.error || 'Print failed');
+            //     }
+
+            //     showToast(copy + ' copy sent ✓', 'success');
+            //     return json;
+            // }
+
+            let usbDevice = null;
+            const STAR_VENDOR_ID = 0x0519;
+
+            async function getUsbDevice() {
+                console.log('[WebUSB] SIMULATION MODE — no real printer');
+                return {
+                    opened: true,
+                    productName: 'Simulated Star TSP100',
+                    configuration: {
+                        interfaces: [{
+                            alternates: [{
+                                endpoints: [{ direction: 'out', endpointNumber: 1 }]
+                            }]
+                        }]
+                    },
+                    open: async () => console.log('[WebUSB-SIM] open()'),
+                    selectConfiguration: async () => console.log('[WebUSB-SIM] selectConfiguration()'),
+                    claimInterface: async () => console.log('[WebUSB-SIM] claimInterface()'),
+                    releaseInterface: async () => console.log('[WebUSB-SIM] releaseInterface()'),
+                    close: async () => console.log('[WebUSB-SIM] close()'),
+                    transferOut: async (endpoint, bytes) => {
+                        console.log('[WebUSB-SIM] transferOut() — endpoint:', endpoint, '— bytes:', bytes.length);
+                        console.log('[WebUSB-SIM] RAW DATA:', new TextDecoder().decode(bytes));
+                        return { status: 'ok', bytesWritten: bytes.length };
+                    }
+                };
+            }
+
+            async function releaseUsbDevice() {
+                if (usbDevice) {
+                    try {
+                        await usbDevice.releaseInterface(0);
+                        await usbDevice.close();
+                        console.log('[WebUSB] Device released');
+                    } catch (err) {
+                        console.warn('[WebUSB] Release failed:', err.message);
+                    }
+                    usbDevice = null;
+                }
+            }
+
+            function strToBytes(str) {
+                const bytes = new Uint8Array(str.length);
+                for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i) & 0xFF;
+                return bytes;
+            }
+
+            function buildCustomerEscPos(data) {
+                let out = '';
+                out += "\x1B\x40";
+                out += "\x1B\x74\x02";
+                out += "\x1B\x61\x01";
+                out += "\x1B\x21\x30";
+                out += "Propertakeways\n";
+                out += "\x1B\x21\x00";
+                out += "11 Clifton Street, LN5 8LQ\n";
+                out += "--------------------------------\n";
+                const typeLabel = (data.deliveryType || 'collection') === 'delivery' ? 'DELIVERY' : 'COLLECTION';
+                out += "\x1B\x21\x30";
+                out += typeLabel + "\n";
+                out += "\x1B\x21\x00";
+                out += "CASH\n";
+                const now = new Date();
+                out += now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + "\n";
+                out += "Order: " + (data.orderNumber || '') + "\n";
+                out += "--------------------------------\n";
+                out += "\x1B\x61\x00";
+                out += "\x1B\x45\x01";
+                out += "CUSTOMER:\n";
+                out += "\x1B\x45\x00";
+                out += (data.customer.firstName || '') + ' ' + (data.customer.lastName || '') + "\n";
+                out += (data.customer.phone || '') + "\n";
+                const addrParts = [data.address, data.address2, data.city, data.postcode].filter(Boolean);
+                if (addrParts.length) out += addrParts.join(', ') + "\n";
+                out += "Time: " + (data.time || '') + "\n";
+                out += "--------------------------------\n";
+                out += "\x1B\x45\x01";
+                out += "ITEMS:\n";
+                out += "\x1B\x45\x00";
+                (data.cart || []).forEach(item => {
+                    const left  = item.qty + 'x ' + item.title;
+                    const right = '£' + (item.price * item.qty).toFixed(2);
+                    out += left.substring(0, 22).padEnd(22) + right.padStart(10) + "\n";
+                    if (item.options) {
+                        Object.values(item.options).forEach(opts => opts.forEach(o => {
+                            out += '  · ' + o.title + (o.price > 0 ? ' (+£' + o.price.toFixed(2) + ')' : '') + "\n";
+                        }));
+                    }
+                });
+                out += "--------------------------------\n";
+                if (data.deliveryCharge > 0) {
+                    out += 'Delivery:'.padEnd(22) + ('£' + data.deliveryCharge.toFixed(2)).padStart(10) + "\n";
+                }
+                out += "\x1B\x45\x01";
+                out += 'TOTAL:'.padEnd(22) + ('£' + data.total.toFixed(2)).padStart(10) + "\n";
+                out += "\x1B\x45\x00";
+                if (data.notes) out += "Note: " + data.notes.replace(/[^\x00-\x7F]/g, '-') + "\n";
+                out += "================================\n";
+                out += "\x1B\x61\x01";
+                out += "Thank you for your order!\n";
+                out += "*** CUSTOMER COPY ***\n";
+                out += "\n\n\n";
+                out += "\x1D\x56\x00";
+                return out;
+            }
+
+            function buildKitchenEscPos(data) {
+                let out = '';
+                out += "\x1B\x40";
+                out += "\x1B\x74\x02";
+                out += "\x1B\x61\x01";
+                const typeLabel = (data.deliveryType || 'collection') === 'delivery' ? '*** DELIVERY ***' : '*** COLLECTION ***';
+                out += "\x1B\x21\x30";
+                out += typeLabel + "\n";
+                out += "\x1B\x21\x00";
+                out += "================================\n";
+                out += "\x1B\x61\x00";
+                out += "\x1B\x21\x10";
+                out += "Order: " + (data.orderNumber || '') + "\n";
+                out += "Time:  " + (data.time || '') + "\n";
+                const now = new Date();
+                out += "Placed: " + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + "\n";
+                out += "\x1B\x21\x00";
+                out += "\x1B\x45\x01";
+                out += "Customer: " + (data.customer.firstName || '') + ' ' + (data.customer.lastName || '') + "\n";
+                out += "\x1B\x45\x00";
+                out += (data.customer.phone || '') + "\n";
+                out += "================================\n";
+                (data.cart || []).forEach(item => {
+                    out += "\x1B\x21\x30";
+                    out += item.qty + 'x ' + item.title.toUpperCase() + "\n";
+                    out += "\x1B\x21\x00";
+                    if (item.options) {
+                        Object.values(item.options).forEach(opts => opts.forEach(o => {
+                            out += "  --> " + o.title + "\n";
+                        }));
+                    }
+                    out += "\n";
+                });
+                out += "================================\n";
+                if (data.notes) {
+                    out += "\x1B\x21\x30";
+                    out += "NOTE: " + data.notes.replace(/[^\x00-\x7F]/g, '-') + "\n";
+                    out += "\x1B\x21\x00";
+                }
+                out += "\x1B\x61\x01";
+                out += "*** KITCHEN COPY ***\n";
+                out += "\n\n\n";
+                out += "\x1D\x56\x00";
+                return out;
+            }
+
+            async function sendToPrinter(data, copy) {
+                console.log('[WebUSB] Building ' + copy + ' ESC/POS data...');
+                const raw = copy === 'kitchen' ? buildKitchenEscPos(data) : buildCustomerEscPos(data);
+                const bytes = strToBytes(raw);
+                console.log('[WebUSB] ' + copy + ' size: ' + bytes.length + ' bytes');
+                const device = await getUsbDevice();
+                let endpointNumber = 1;
+                try {
+                    const outEndpoint = device.configuration.interfaces[0].alternates[0].endpoints.find(e => e.direction === 'out');
+                    if (outEndpoint) {
+                        endpointNumber = outEndpoint.endpointNumber;
+                        console.log('[WebUSB] Using endpoint:', endpointNumber);
+                    }
+                } catch (err) {
+                    console.warn('[WebUSB] Could not detect endpoint, using default 1:', err.message);
+                }
+                console.log('[WebUSB] Sending ' + copy + ' to printer...');
+                const result = await device.transferOut(endpointNumber, bytes);
+                console.log('[WebUSB] Transfer result:', result.status, '— bytes written:', result.bytesWritten);
+                if (result.status !== 'ok') throw new Error('Transfer failed: ' + result.status);
+                showToast(copy + ' copy sent ✓', 'success');
+                return result;
             }
 
             function attemptPrint(data) {
@@ -2535,37 +2750,23 @@
             }
 
             async function printThermal(data) {
+                if (!navigator.usb) {
+                    showToast('WebUSB not supported — use Chrome browser', 'error');
+                    console.error('[WebUSB] navigator.usb not available');
+                    return;
+                }
                 try {
+                    console.log('[WebUSB] Starting print job...');
                     await sendToPrinter(data, 'customer');
+                    console.log('[WebUSB] Customer copy done, waiting 1.5s...');
                     await new Promise(r => setTimeout(r, 1500));
                     await sendToPrinter(data, 'kitchen');
+                    console.log('[WebUSB] Kitchen copy done');
                 } catch (err) {
-                    console.error('[ESCPrint] Failed:', err.message);
+                    console.error('[WebUSB] Print failed:', err);
                     showToast('Print failed: ' + err.message, 'error');
+                    await releaseUsbDevice();
                 }
-            }
-
-            async function sendToPrinter(data, copy) {
-                console.log('[ESCPrint] Sending ' + copy + ' copy...');
-
-                const response = await fetch('/admin/pos/start-print?copy=' + copy, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    body: JSON.stringify({ data: data })
-                });
-
-                const json = await response.json();
-                console.log('[ESCPrint] ' + copy + ' response:', json);
-
-                if (!response.ok || json.error) {
-                    throw new Error(json.error || 'Print failed');
-                }
-
-                showToast(copy + ' copy sent ✓', 'success');
-                return json;
             }
 
             $('#btnPrintAgain').on('click', function() {
@@ -2578,22 +2779,56 @@
                 resetAll();
             });
 
+            // $('#btnTestPrint').on('click', async function() {
+            //     console.log('[TestPrint] Starting...');
+            //     showToast('Sending test print...', 'success');
+
+            //     const testData = {
+            //         orderNumber: 'TEST-001',
+            //         deliveryType: 'collection',
+            //         customer: {
+            //             firstName: 'Test',
+            //             lastName: 'Customer',
+            //             phone: '07700000000'
+            //         },
+            //         address: '',
+            //         address2: '',
+            //         city: '',
+            //         postcode: '',
+            //         cart: [
+            //             { qty: 1, title: 'Test Burger', price: 5.99, options: {} },
+            //             { qty: 2, title: 'Test Fries', price: 2.50, options: {} },
+            //         ],
+            //         deliveryCharge: 0,
+            //         subtotal: 10.99,
+            //         total: 10.99,
+            //         time: '05:00 pm - 05:20 pm',
+            //         notes: 'TEST PRINT — IGNORE',
+            //     };
+
+            //     try {
+            //         await sendToPrinter(testData, 'customer');
+            //         await new Promise(r => setTimeout(r, 1500));
+            //         await sendToPrinter(testData, 'kitchen');
+            //         showToast('Test print sent successfully!', 'success');
+            //     } catch (err) {
+            //         console.error('[TestPrint] FAILED:', err);
+            //         showToast('Test failed: ' + err.message, 'error');
+            //     }
+            // });
+
             $('#btnTestPrint').on('click', async function() {
+                if (!navigator.usb) {
+                    showToast('WebUSB not supported — use Chrome browser', 'error');
+                    return;
+                }
                 console.log('[TestPrint] Starting...');
                 showToast('Sending test print...', 'success');
-
                 const testData = {
                     orderNumber: 'TEST-001',
                     deliveryType: 'collection',
-                    customer: {
-                        firstName: 'Test',
-                        lastName: 'Customer',
-                        phone: '07700000000'
-                    },
-                    address: '',
-                    address2: '',
-                    city: '',
-                    postcode: '',
+                    customer: { firstName: 'Test', lastName: 'Customer', phone: '07700000000' },
+                    address: '', address2: '', city: '', postcode: '',
                     cart: [
                         { qty: 1, title: 'Test Burger', price: 5.99, options: {} },
                         { qty: 2, title: 'Test Fries', price: 2.50, options: {} },
@@ -2604,7 +2839,6 @@
                     time: '05:00 pm - 05:20 pm',
                     notes: 'TEST PRINT — IGNORE',
                 };
-
                 try {
                     await sendToPrinter(testData, 'customer');
                     await new Promise(r => setTimeout(r, 1500));
@@ -2613,6 +2847,7 @@
                 } catch (err) {
                     console.error('[TestPrint] FAILED:', err);
                     showToast('Test failed: ' + err.message, 'error');
+                    await releaseUsbDevice();
                 }
             });
 
