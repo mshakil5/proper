@@ -693,7 +693,6 @@ $(function () {
 
         if (hasAttribute && attributeSelect === 'standalone') {
             let cart = sanitizeCart();
-            let attributePrice = Number($('[data-attribute-price]').data('attribute-price')) || 0;
             let basePrice = Number($('#totalPrice').data('base-price')) || 0;
             let qty = Number($('#quantity').val()) || 1;
 
@@ -711,7 +710,7 @@ $(function () {
                     id: productId + '-standalone',
                     title: $('#productTitle').text().trim(),
                     image: $('#productImage').attr('src'),
-                    price: basePrice + attributePrice,
+                    price: basePrice,  // ← Only basePrice, no attributePrice
                     quantity: qty,
                     type: "direct_with_attribute",
                     attribute: true
