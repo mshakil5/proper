@@ -10,13 +10,20 @@
                             <h5 class="checkout-title">Checkout As</h5>
                             {{-- Tab Buttons --}}
                             <div class="nav nav-tabs" role="tablist" id="customerTypeTabs">
-                                <button class="nav-link {{ !$errors->any() ? 'active' : '' }}" id="guest-tab" data-bs-toggle="tab" data-bs-target="#guestPanel" type="button" role="tab">
+                                <button class="nav-link {{ !$errors->any() ? 'active' : '' }}" id="guest-tab"
+                                    data-bs-toggle="tab" data-bs-target="#guestPanel" type="button" role="tab">
                                     <i class="fas fa-user-secret"></i> Guest
                                 </button>
-                                <button class="nav-link {{ $errors->any() && !old('first_name') && !old('last_name') && !old('phone') ? 'active' : '' }}" id="existing-tab" data-bs-toggle="tab" data-bs-target="#existingPanel" type="button" role="tab">
+                                <button
+                                    class="nav-link {{ $errors->any() && !old('first_name') && !old('last_name') && !old('phone') ? 'active' : '' }}"
+                                    id="existing-tab" data-bs-toggle="tab" data-bs-target="#existingPanel" type="button"
+                                    role="tab">
                                     <i class="fas fa-sign-in-alt"></i> Login
                                 </button>
-                                <button class="nav-link {{ (old('first_name') || old('last_name') || old('phone')) && $errors->any() ? 'active' : '' }}" id="register-tab" data-bs-toggle="tab" data-bs-target="#registerPanel" type="button" role="tab">
+                                <button
+                                    class="nav-link {{ (old('first_name') || old('last_name') || old('phone')) && $errors->any() ? 'active' : '' }}"
+                                    id="register-tab" data-bs-toggle="tab" data-bs-target="#registerPanel" type="button"
+                                    role="tab">
                                     <i class="fas fa-user-plus"></i> Register
                                 </button>
                             </div>
@@ -24,7 +31,8 @@
                         {{-- Tab Panels --}}
                         <div class="tab-content" id="customerTypeContent">
                             {{-- Guest Panel --}}
-                            <div class="tab-pane fade {{ !$errors->any() ? 'show active' : '' }}" id="guestPanel" role="tabpanel">
+                            <div class="tab-pane fade {{ !$errors->any() ? 'show active' : '' }}" id="guestPanel"
+                                role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Guest Details</h5>
                                     <div class="alert mb-3 text-white" style="background:#ff8a00;">
@@ -40,36 +48,38 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Last Name <span class="required">*</span></label>
-                                                <input type="text" class="form-control" id="guestLastName"
-                                                    placeholder="" required>
+                                                <input type="text" class="form-control" id="guestLastName" placeholder=""
+                                                    required>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Email <span class="required">*</span></label>
-                                                <input type="email" class="form-control" id="guestEmail"
-                                                    placeholder="" required>
+                                                <input type="email" class="form-control" id="guestEmail" placeholder=""
+                                                    required>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Phone <span class="required">*</span></label>
-                                                <input type="tel" class="form-control" id="guestPhone"
-                                                    placeholder="" required>
+                                                <input type="tel" class="form-control" id="guestPhone" placeholder=""
+                                                    required>
                                             </div>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                             {{-- Login Panel --}}
-                            <div class="tab-pane fade {{ $errors->any() && !old('first_name') && !old('last_name') && !old('phone') ? 'show active' : '' }}" id="existingPanel" role="tabpanel">
+                            <div class="tab-pane fade {{ $errors->any() && !old('first_name') && !old('last_name') && !old('phone') ? 'show active' : '' }}"
+                                id="existingPanel" role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Login to Your Account</h5>
-                                    <form id="loginForm" method="POST" action="{{ route('login') }}" onsubmit="let b=this.querySelector('[type=submit]');b.disabled=true;b.innerHTML='<span>Please wait...</span><i class=\'fas fa-spinner fa-spin\'></i>';">
+                                    <form id="loginForm" method="POST" action="{{ route('login') }}"
+                                        onsubmit="let b=this.querySelector('[type=submit]');b.disabled=true;b.innerHTML='<span>Please wait...</span><i class=\'fas fa-spinner fa-spin\'></i>';">
                                         @csrf
                                         <input type="hidden" name="redirect_to_checkout" value="1">
                                         <div class="row g-3">
                                             <div class="col-md-6">
                                                 <label class="form-label">Email <span class="required">*</span></label>
                                                 <input type="email"
-                                                    class="form-control @error('email') is-invalid @enderror" name="email" placeholder=""
-                                                    value="{{ old('email') }}" required>
+                                                    class="form-control @error('email') is-invalid @enderror" name="email"
+                                                    placeholder="" value="{{ old('email') }}" required>
                                                 @error('email')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
@@ -77,7 +87,8 @@
                                             <div class="col-md-6">
                                                 <label class="form-label">Password <span class="required">*</span></label>
                                                 <input type="password"
-                                                    class="form-control @error('password') is-invalid @enderror" name="password" placeholder="" required>
+                                                    class="form-control @error('password') is-invalid @enderror"
+                                                    name="password" placeholder="" required>
                                                 @error('password')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
@@ -92,10 +103,12 @@
                                 </div>
                             </div>
                             {{-- Register Panel --}}
-                            <div class="tab-pane fade {{ (old('first_name') || old('last_name') || old('phone')) && $errors->any() ? 'show active' : '' }}" id="registerPanel" role="tabpanel">
+                            <div class="tab-pane fade {{ (old('first_name') || old('last_name') || old('phone')) && $errors->any() ? 'show active' : '' }}"
+                                id="registerPanel" role="tabpanel">
                                 <div class="checkout-card">
                                     <h5 class="checkout-title">Create New Account</h5>
-                                    <form id="registerForm" method="POST" action="{{ route('register') }}" onsubmit="let b=this.querySelector('[type=submit]');b.disabled=true;b.innerHTML='<span>Please wait...</span><i class=\'fas fa-spinner fa-spin\'></i>';">
+                                    <form id="registerForm" method="POST" action="{{ route('register') }}"
+                                        onsubmit="let b=this.querySelector('[type=submit]');b.disabled=true;b.innerHTML='<span>Please wait...</span><i class=\'fas fa-spinner fa-spin\'></i>';">
                                         @csrf
                                         <input type="hidden" name="redirect_to_checkout" value="1">
                                         <div class="row g-3">
@@ -103,8 +116,9 @@
                                                 <label class="form-label">First Name <span
                                                         class="required">*</span></label>
                                                 <input type="text"
-                                                    class="form-control @error('first_name') is-invalid @enderror" name="first_name" placeholder=""
-                                                    value="{{ old('first_name') }}" required>
+                                                    class="form-control @error('first_name') is-invalid @enderror"
+                                                    name="first_name" placeholder="" value="{{ old('first_name') }}"
+                                                    required>
                                                 @error('first_name')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
@@ -113,8 +127,9 @@
                                                 <label class="form-label">Last Name <span
                                                         class="required">*</span></label>
                                                 <input type="text"
-                                                    class="form-control @error('last_name') is-invalid @enderror" name="last_name" placeholder=""
-                                                    value="{{ old('last_name') }}" required>
+                                                    class="form-control @error('last_name') is-invalid @enderror"
+                                                    name="last_name" placeholder="" value="{{ old('last_name') }}"
+                                                    required>
                                                 @error('last_name')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
@@ -122,8 +137,8 @@
                                             <div class="col-md-6">
                                                 <label class="form-label">Email <span class="required">*</span></label>
                                                 <input type="email"
-                                                    class="form-control @error('email') is-invalid @enderror" name="email" placeholder=""
-                                                    value="{{ old('email') }}" required>
+                                                    class="form-control @error('email') is-invalid @enderror"
+                                                    name="email" placeholder="" value="{{ old('email') }}" required>
                                                 @error('email')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
@@ -131,8 +146,8 @@
                                             <div class="col-md-6">
                                                 <label class="form-label">Phone <span class="required">*</span></label>
                                                 <input type="tel"
-                                                    class="form-control @error('phone') is-invalid @enderror" name="phone" placeholder=""
-                                                    value="{{ old('phone') }}" required>
+                                                    class="form-control @error('phone') is-invalid @enderror"
+                                                    name="phone" placeholder="" value="{{ old('phone') }}" required>
                                                 @error('phone')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
@@ -140,7 +155,8 @@
                                             <div class="col-md-6">
                                                 <label class="form-label">Password <span class="required">*</span></label>
                                                 <input type="password"
-                                                    class="form-control @error('password') is-invalid @enderror" name="password" placeholder="" required>
+                                                    class="form-control @error('password') is-invalid @enderror"
+                                                    name="password" placeholder="" required>
                                                 @error('password')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
@@ -148,8 +164,8 @@
                                             <div class="col-md-6">
                                                 <label class="form-label">Confirm Password <span
                                                         class="required">*</span></label>
-                                                <input type="password" class="form-control"
-                                                    name="password_confirmation" placeholder="" required>
+                                                <input type="password" class="form-control" name="password_confirmation"
+                                                    placeholder="" required>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-check">
@@ -157,7 +173,9 @@
                                                         type="checkbox" id="regTerms" name="terms" value="1"
                                                         {{ old('terms') ? 'checked' : '' }} required>
                                                     <label class="form-check-label" for="regTerms">
-                                                        I agree to <a href="{{ route('terms-and-conditions') }}" style="color: #ff8a00; text-decoration: none;">the terms and conditions</a>
+                                                        I agree to <a href="{{ route('terms-and-conditions') }}"
+                                                            style="color: #ff8a00; text-decoration: none;">the terms and
+                                                            conditions</a>
                                                     </label>
                                                     @error('terms')
                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -209,9 +227,9 @@
                         <h5 class="checkout-title">
                             Delivery Address
                             @auth
-                            <small style="font-size:11px; color:#999;">
-                                (may be different from your profile address)
-                            </small>
+                                <small style="font-size:11px; color:#999;">
+                                    (may be different from your profile address)
+                                </small>
                             @endauth
                         </h5>
                         <div class="row g-3 mb-3">
@@ -221,7 +239,8 @@
                                     placeholder="e.g. LN5 8LQ">
                             </div>
                             <div class="col-md-4 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-dark w-100" id="findAddressBtn" style="height: 45px;">
+                                <button type="button" class="btn btn-outline-dark w-100" id="findAddressBtn"
+                                    style="height: 45px;">
                                     <i class="fas fa-search"></i> Find
                                 </button>
                             </div>
@@ -251,7 +270,8 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label">Address Line 2 (Optional)</label>
-                                    <input type="text" class="form-control" id="address2" placeholder="" name="address2">
+                                    <input type="text" class="form-control" id="address2" placeholder=""
+                                        name="address2">
                                 </div>
                             </div>
                         </div>
@@ -301,7 +321,8 @@
                                 <form id="paymentForm">
                                     <div class="payment-options">
                                         <div class="payment-option" id="paymentCashOption">
-                                            <input type="radio" name="paymentMethod" id="paymentCash" value="cash" class="form-check-input">
+                                            <input type="radio" name="paymentMethod" id="paymentCash" value="cash"
+                                                class="form-check-input">
                                             <label for="paymentCash" class="payment-option-label">
                                                 <i class="fas fa-money-bill-wave"></i>
                                                 <div class="payment-option-text">
@@ -312,7 +333,8 @@
                                         </div>
 
                                         <div class="payment-option" id="paymentStripeOption">
-                                            <input type="radio" name="paymentMethod" id="paymentStripe" value="stripe" class="form-check-input">
+                                            <input type="radio" name="paymentMethod" id="paymentStripe" value="stripe"
+                                                class="form-check-input">
                                             <label for="paymentStripe" class="payment-option-label">
                                                 <i class="fab fa-stripe"></i>
                                                 <div class="payment-option-text">
@@ -323,7 +345,8 @@
                                         </div>
 
                                         <div class="payment-option" id="paymentPaypalOption">
-                                            <input type="radio" name="paymentMethod" id="paymentPaypal" value="paypal" class="form-check-input">
+                                            <input type="radio" name="paymentMethod" id="paymentPaypal" value="paypal"
+                                                class="form-check-input">
                                             <label for="paymentPaypal" class="payment-option-label">
                                                 <i class="fab fa-paypal"></i>
                                                 <div class="payment-option-text">
@@ -354,7 +377,8 @@
                             <label class="form-label">Promo Code / Gift Card</label>
                             <div class="row g-2">
                                 <div class="col-8">
-                                    <input type="text" class="form-control promo-input" id="promoCode" placeholder="Enter code">
+                                    <input type="text" class="form-control promo-input" id="promoCode"
+                                        placeholder="Enter code">
                                 </div>
                                 <div class="col-4">
                                     <button class="btn btn-promo w-100" type="button" id="applyPromoBtn">Apply</button>
@@ -367,19 +391,20 @@
 
                         <div class="summary-divider"></div>
 
-                        @if(auth()->check())
+                        @if (auth()->check())
                             @php
                                 $userAvailablePoints = auth()->user()->available_points ?? 0;
                             @endphp
-                            
-                            @if($userAvailablePoints >= 100)
+
+                            @if ($userAvailablePoints >= 100 && auth()->user()->total_orders > 0)
                                 <div class="points-redemption-section">
                                     <h6 class="points-section-title">
                                         <i class="fas fa-star"></i> Redeem Points
                                     </h6>
 
                                     <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input form-check-input" id="usePoints" name="use_points">
+                                        <input type="checkbox" class="custom-control-input form-check-input"
+                                            id="usePoints" name="use_points">
                                         <label class="custom-control-label" for="usePoints">
                                             Use my points <strong>({{ $userAvailablePoints }} available)</strong>
                                         </label>
@@ -392,7 +417,7 @@
 
                                         <label class="form-label">Points to Redeem</label>
                                         <input type="number" class="form-control" id="pointsToUse" name="points_to_use"
-                                               min="0" value="0" placeholder="0">
+                                            min="0" value="0" placeholder="0">
 
                                         <div class="points-display-box">
                                             <div class="points-row">
@@ -412,6 +437,17 @@
                                 </div>
 
                                 <div class="summary-divider"></div>
+                            @elseif($userAvailablePoints >= 100 && auth()->user()->total_orders == 0)
+                                <div
+                                    style="background:#fff8f0; border:1px solid #F4A340; border-radius:8px; padding:16px; margin-bottom:16px;">
+                                    <p style="margin:0 0 6px 0; font-size:14px; font-weight:bold; color:#E8932A;">
+                                        <i class="fas fa-star"></i> You have {{ $userAvailablePoints }} points!
+                                    </p>
+                                    <p style="margin:0; font-size:13px; color:#666; line-height:1.5;">
+                                        Points cannot be redeemed on your first order. Complete this order and you'll be
+                                        able to use them from your next one.
+                                    </p>
+                                </div>
                             @endif
                         @endif
 
@@ -454,8 +490,12 @@
             let foundAddresses = [];
             let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
             const userAvailablePoints = {{ auth()->check() ? auth()->user()->available_points ?? 0 : 0 }};
-            
-            let appliedPromoCode = { type: null, id: null, discount: 0 };
+
+            let appliedPromoCode = {
+                type: null,
+                id: null,
+                discount: 0
+            };
             let pointsUsedDiscount = 0;
             let pointsUsed = 0;
             let selectedPaymentMethod = null;
@@ -493,21 +533,21 @@
 
             function showFieldError(field, message) {
                 const selector = fieldMap[field];
-                
+
                 if (!selector) {
                     showError(message);
                     return;
                 }
 
                 const $field = $(selector);
-                
+
                 if ($field.length === 0) {
                     showError(message);
                     return;
                 }
-                
+
                 $field.addClass('is-invalid');
-                
+
                 if (field === 'paymentMethod') {
                     $('.payment-option').addClass('is-invalid').css({
                         'border': '2px solid #dc3545',
@@ -540,7 +580,7 @@
             $('#findAddressBtn').on('click', function(e) {
                 e.preventDefault();
                 clearAllErrors();
-                
+
                 let postcode = $('#postcodeInput').val().trim().toUpperCase();
                 if (!postcode) {
                     showFieldError('localOrder.postalCode', 'Postcode is required');
@@ -551,7 +591,8 @@
             });
 
             function validatePostcodeAndLoadAddresses(postcode) {
-                $('#findAddressBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Searching...');
+                $('#findAddressBtn').prop('disabled', true).html(
+                    '<i class="fas fa-spinner fa-spin"></i> Searching...');
 
                 $.ajax({
                     url: 'https://api.postcodes.io/postcodes/' + postcode,
@@ -563,32 +604,44 @@
                         $.ajax({
                             url: "{{ route('get-addresses') }}",
                             type: 'GET',
-                            data: { postcode, latitude, longitude },
+                            data: {
+                                postcode,
+                                latitude,
+                                longitude
+                            },
                             success: function(res) {
                                 foundAddresses = res.addresses;
-                                let options = '<option value="">Choose from suggestions...</option>';
+                                let options =
+                                    '<option value="">Choose from suggestions...</option>';
                                 foundAddresses.forEach((addr, idx) => {
-                                    options += `<option value="${idx}">${addr.display}</option>`;
+                                    options +=
+                                        `<option value="${idx}">${addr.display}</option>`;
                                 });
 
                                 $('#addressSelect').html(options);
                                 $('#addressFieldsDiv').show();
-                                updateDeliveryDetailsWithNewPostcode(postcode, res.delivery_charge);
-                                showSuccess('Found ' + foundAddresses.length + ' addresses!');
-                                $('#findAddressBtn').prop('disabled', false).html('<i class="fas fa-search"></i> Find');
+                                updateDeliveryDetailsWithNewPostcode(postcode, res
+                                    .delivery_charge);
+                                showSuccess('Found ' + foundAddresses.length +
+                                    ' addresses!');
+                                $('#findAddressBtn').prop('disabled', false).html(
+                                    '<i class="fas fa-search"></i> Find');
                             },
                             error: function(xhr) {
                                 $('#addressFieldsDiv').hide();
-                                let message = xhr.responseJSON?.message || 'Invalid postcode';
+                                let message = xhr.responseJSON?.message ||
+                                    'Invalid postcode';
                                 showFieldError('localOrder.postalCode', message);
-                                $('#findAddressBtn').prop('disabled', false).html('<i class="fas fa-search"></i> Find');
+                                $('#findAddressBtn').prop('disabled', false).html(
+                                    '<i class="fas fa-search"></i> Find');
                             }
                         });
                     },
                     error: function() {
                         $('#addressFieldsDiv').hide();
                         showFieldError('localOrder.postalCode', 'Invalid postcode');
-                        $('#findAddressBtn').prop('disabled', false).html('<i class="fas fa-search"></i> Find');
+                        $('#findAddressBtn').prop('disabled', false).html(
+                            '<i class="fas fa-search"></i> Find');
                     }
                 });
             }
@@ -604,12 +657,18 @@
                         $.ajax({
                             url: "{{ route('get-addresses') }}",
                             type: 'GET',
-                            data: { postcode, latitude, longitude },
+                            data: {
+                                postcode,
+                                latitude,
+                                longitude
+                            },
                             success: function(res) {
                                 foundAddresses = res.addresses;
-                                let options = '<option value="">Choose from suggestions...</option>';
+                                let options =
+                                    '<option value="">Choose from suggestions...</option>';
                                 foundAddresses.forEach((addr, idx) => {
-                                    options += `<option value="${idx}">${addr.display}</option>`;
+                                    options +=
+                                        `<option value="${idx}">${addr.display}</option>`;
                                 });
 
                                 $('#addressSelect').html(options);
@@ -651,17 +710,17 @@
                 const promoDiscount = appliedPromoCode.discount || 0;
 
                 const remainingTotal = subtotal + deliveryCharge - promoDiscount;
-                
+
                 const maxPointsValue = Math.floor(remainingTotal * 100);
                 const maxPoints = Math.min(userAvailablePoints, maxPointsValue);
-                
+
                 if (val > maxPoints) val = maxPoints;
                 if (val < 0) val = 0;
 
                 $(this).val(val);
                 pointsUsed = val;
                 pointsUsedDiscount = val / 100;
-                
+
                 $('#pointsUsedDisplay').text(val);
                 $('#pointsDiscountDisplay').text('£' + (val / 100).toFixed(2));
                 $('#remainingPointsDisplay').text(userAvailablePoints - val);
@@ -682,7 +741,7 @@
             });
 
             $('#applyPromoBtn').on('click', function() {
-                @if(!auth()->check())
+                @if (!auth()->check())
                     showError('Please login to apply coupon codes');
                     return;
                 @endif
@@ -694,7 +753,7 @@
                 }
 
                 let totalPrice = checkoutData.subtotal + checkoutData.deliveryCharge - pointsUsedDiscount;
-                
+
                 if (totalPrice <= 0) {
                     showError('Cannot apply coupon when total is zero or negative');
                     return;
@@ -707,12 +766,16 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                         'Content-Type': 'application/json'
                     },
-                    data: JSON.stringify({ code: promoCode, subtotal: checkoutData.subtotal }),
+                    data: JSON.stringify({
+                        code: promoCode,
+                        subtotal: checkoutData.subtotal
+                    }),
                     success: function(res) {
                         // Calculate remaining total after existing discounts
                         let currentDiscount = appliedPromoCode.discount || 0;
-                        let remainingTotal = checkoutData.subtotal + checkoutData.deliveryCharge - currentDiscount - pointsUsedDiscount;
-                        
+                        let remainingTotal = checkoutData.subtotal + checkoutData
+                            .deliveryCharge - currentDiscount - pointsUsedDiscount;
+
                         // For gift cards, allow using up to remaining total
                         // For coupons, don't allow to exceed remaining total
                         if (res.type === 'gift_card') {
@@ -722,9 +785,10 @@
                         } else {
                             // For coupons, check if it would make total negative
                             let finalTotal = remainingTotal - res.discount_amount;
-                            
+
                             if (finalTotal < 0) {
-                                showError('Discount cannot exceed remaining total amount of £' + remainingTotal.toFixed(2));
+                                showError('Discount cannot exceed remaining total amount of £' +
+                                    remainingTotal.toFixed(2));
                                 return;
                             }
                         }
@@ -736,18 +800,23 @@
                         };
 
                         $('#promoMessageContainer').show();
-                        let message = res.type === 'gift_card' 
-                            ? `✓ Gift Card applied! Balance used: £${res.discount_amount.toFixed(2)}`
-                            : `✓ Coupon applied! Discount: ${res.code_data.discount_type === 'percent' ? res.code_data.discount_value + '%' : '£' + res.discount_amount.toFixed(2)}`;
+                        let message = res.type === 'gift_card' ?
+                            `✓ Gift Card applied! Balance used: £${res.discount_amount.toFixed(2)}` :
+                            `✓ Coupon applied! Discount: ${res.code_data.discount_type === 'percent' ? res.code_data.discount_value + '%' : '£' + res.discount_amount.toFixed(2)}`;
 
-                        $('#promoMessage').html(message).removeClass('alert-danger').addClass('alert-success');
+                        $('#promoMessage').html(message).removeClass('alert-danger').addClass(
+                            'alert-success');
                         $('#discountRow').show();
                         $('#summaryDiscount').text(`-£${res.discount_amount.toFixed(2)}`);
                         updateTotals();
                         showSuccess('Applied successfully!');
                     },
                     error: function(err) {
-                        appliedPromoCode = { type: null, id: null, discount: 0 };
+                        appliedPromoCode = {
+                            type: null,
+                            id: null,
+                            discount: 0
+                        };
                         $('#discountRow').hide();
                         $('#promoMessageContainer').hide();
                         let message = err.responseJSON?.message || 'Invalid code';
@@ -826,31 +895,36 @@
             }
 
             function updateTotals() {
-                let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode.discount - pointsUsedDiscount;
-                
+                let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode.discount -
+                    pointsUsedDiscount;
+
                 $('#summarySubtotal').text('£' + checkoutData.subtotal.toFixed(2));
                 $('#summaryDeliveryCharge').text('£' + checkoutData.deliveryCharge.toFixed(2));
-                
+
                 if (appliedPromoCode.discount > 0) {
                     $('#discountRow').show();
                     $('#summaryDiscount').text('-£' + appliedPromoCode.discount.toFixed(2));
                 } else {
                     $('#discountRow').hide();
                 }
-                
+
                 if (pointsUsedDiscount > 0) {
                     $('#pointsDiscountRow').show();
                     $('#summaryPointsDiscount').text('-£' + pointsUsedDiscount.toFixed(2));
                 } else {
                     $('#pointsDiscountRow').hide();
                 }
-                
+
                 $('#summaryTotal').text('£' + finalTotal.toFixed(2));
             }
 
             function escapeHtml(text) {
                 const map = {
-                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
                 };
                 return String(text).replace(/[&<>"']/g, m => map[m]);
             }
@@ -867,8 +941,9 @@
                 clearAllErrors();
 
                 if (checkoutData.delivery.type === 'delivery') {
-                    let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode.discount - pointsUsedDiscount;
-                    
+                    let finalTotal = checkoutData.subtotal + checkoutData.deliveryCharge - appliedPromoCode
+                        .discount - pointsUsedDiscount;
+
                     if (finalTotal < 15) {
                         $btn.prop('disabled', false).text(originalText);
                         showMinOrderModal();
@@ -937,7 +1012,8 @@
                             localStorage.removeItem('checkoutData');
 
                             setTimeout(() => {
-                                window.location.href = '/order-confirmation/' + response.orderNumber;
+                                window.location.href = '/order-confirmation/' + response
+                                    .orderNumber;
                             }, 1500);
                         }
                     },
@@ -956,17 +1032,22 @@
                             });
 
                             if (firstField && firstField.length) {
-                                $('html, body').animate({ scrollTop: firstField.offset().top - 100 }, 500);
+                                $('html, body').animate({
+                                    scrollTop: firstField.offset().top - 100
+                                }, 500);
                             }
                         } else {
-                            showError(err.responseJSON?.message || 'Error placing order. Please try again.');
+                            showError(err.responseJSON?.message ||
+                                'Error placing order. Please try again.');
                         }
                     }
                 });
             });
 
             function showMinOrderModal() {
-                let cart = checkoutData.cart.map(item => ({ ...item }));
+                let cart = checkoutData.cart.map(item => ({
+                    ...item
+                }));
 
                 function calcTotal(c) {
                     let sub = c.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -978,7 +1059,8 @@
                     c.forEach((item, idx) => {
                         let optionsHTML = '';
                         if (item.type === 'custom' && item.options) {
-                            optionsHTML = '<ul style="margin:2px 0 4px 0; padding-left:14px; font-size:11px; color:#999; list-style:disc;">';
+                            optionsHTML =
+                                '<ul style="margin:2px 0 4px 0; padding-left:14px; font-size:11px; color:#999; list-style:disc;">';
                             Object.values(item.options).forEach(optArr => {
                                 optArr.forEach(opt => {
                                     optionsHTML += `<li>${escapeHtml(opt.title)}</li>`;
@@ -1106,15 +1188,25 @@
                     if (reached) {
                         $('#minOrderContinue')
                             .prop('disabled', false)
-                            .css({ background: 'linear-gradient(135deg,#ff8a00,#ff5a00)', color: '#fff', cursor: 'pointer' })
+                            .css({
+                                background: 'linear-gradient(135deg,#ff8a00,#ff5a00)',
+                                color: '#fff',
+                                cursor: 'pointer'
+                            })
                             .text('Continue to Order ✓');
-                        $('#minOrderHint').html('<span style="color:#28a745;font-weight:600;">✓ Minimum reached!</span>');
+                        $('#minOrderHint').html(
+                            '<span style="color:#28a745;font-weight:600;">✓ Minimum reached!</span>');
                     } else {
                         $('#minOrderContinue')
                             .prop('disabled', true)
-                            .css({ background: '#ddd', color: '#aaa', cursor: 'not-allowed' })
+                            .css({
+                                background: '#ddd',
+                                color: '#aaa',
+                                cursor: 'not-allowed'
+                            })
                             .text('Add More Items');
-                        $('#minOrderHint').html(`Add <strong style="color:#1a1a1a;">£${remaining}</strong> more to continue`);
+                        $('#minOrderHint').html(
+                            `Add <strong style="color:#1a1a1a;">£${remaining}</strong> more to continue`);
                     }
                 }
 

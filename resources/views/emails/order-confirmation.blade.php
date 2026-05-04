@@ -117,6 +117,47 @@
                     </td>
                 </tr>
 
+                <!-- Points Earned -->
+                @if($order->user_id)
+                <tr>
+                    <td style="padding:0 24px 24px 24px;">
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #fff8f0 0%, #fff3e0 100%); border: 1px solid #F4A340; border-radius:8px;">
+                            <tr>
+                                <td style="padding:20px; text-align:center;">
+                                    <p style="margin:0 0 6px 0; font-size:20px;">⭐</p>
+                                    <p style="margin:0 0 8px 0; font-size:15px; font-weight:bold; color:#E8932A;">
+                                        You earned {{ floor($order->total) }} points on this order!
+                                    </p>
+                                    <p style="margin:0; font-size:13px; color:#666; line-height:1.5;">
+                                        Points are redeemable on your next order. 100 points = £1 discount.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                @endif
+
+                <!-- Points Upsell -->
+                @if(!$order->user_id)
+                <tr>
+                    <td style="padding:0 24px 24px 24px;">
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #fff8f0 0%, #fff3e0 100%); border: 1px solid #F4A340; border-radius:8px;">
+                            <tr>
+                                <td style="padding:20px; text-align:center;">
+                                    <p style="margin:0 0 6px 0; font-size:20px;">⭐</p>
+                                    <p style="margin:0 0 8px 0; font-size:15px; font-weight:bold; color:#E8932A;">You could have earned 500 points on this order!</p>
+                                    <p style="margin:0 0 16px 0; font-size:13px; color:#666; line-height:1.5;">Register an account and start earning points on every order — redeem them for discounts on future orders.</p>
+                                    <a href="https://www.propertakeaways.co.uk/register" style="display:inline-block; background: linear-gradient(135deg, #F4A340 0%, #E8932A 100%); color:#ffffff; font-size:13px; font-weight:bold; padding:12px 28px; border-radius:6px;">
+                                        Create Free Account
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                @endif
+
                 <!-- Footer -->
                 <tr>
                     <td style="background-color:#f8f8f8;padding:20px;font-size:12px;color:#555;text-align:center;">

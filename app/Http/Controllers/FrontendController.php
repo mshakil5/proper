@@ -747,6 +747,17 @@ class FrontendController extends Controller
 
         $customer = $request->input('customer');
         $email = $customer['email'];
+
+        $geoData = Http::get("http://ip-api.com/json/{$request->ip()}")->json();
+
+        $metaData = [
+            'ip'         => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'country'    => $geoData['country'] ?? null,
+            'city'       => $geoData['city'] ?? null,
+            'isp'        => $geoData['isp'] ?? null,
+            'is_proxy'   => $geoData['proxy'] ?? false,
+        ];
     
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json(['message' => 'Invalid email'], 400);
@@ -925,7 +936,8 @@ class FrontendController extends Controller
             'address2' => $address2,
             'city' => $city,
             'paymentMethod' => $paymentMethod,
-            'notes' => $notes
+            'notes' => $notes,
+            'metaData' => $metaData,
         ];
 
         if ($paymentMethod === 'cash') {
@@ -1291,7 +1303,8 @@ class FrontendController extends Controller
                 'status' => 'pending',
                 'notes' => $calculationData['notes'],
                 'hubrise_order_id' => null,
-                'payment_transaction_id' => null
+                'payment_transaction_id' => null,
+                'meta_data' => json_encode($calculationData['metaData']),
             ]);
 
             if ($user) {
