@@ -86,7 +86,7 @@ class FrontendController extends Controller
 
         $centerLatitude = 53.223912;
         $centerLongitude = -0.532985;
-        $deliveryRadius = 7.5;
+        $deliveryRadius = 6.5;
 
         $user = auth()->user();
 
@@ -140,7 +140,7 @@ class FrontendController extends Controller
 
         $centerLatitude  = 53.223912;
         $centerLongitude = -0.532985;
-        $deliveryRadius  = 7.5;
+        $deliveryRadius  = 6.5;
 
         $user = auth()->user();
 
@@ -1558,7 +1558,7 @@ class FrontendController extends Controller
     {
         $centerLatitude = 53.223912;
         $centerLongitude = -0.532985;
-        $deliveryRadius = 7.5;
+        $deliveryRadius = 6.5;
 
         try {
             $response = Http::get('https://api.postcodes.io/postcodes/' . $postcode);
