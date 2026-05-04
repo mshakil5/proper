@@ -33,16 +33,13 @@ class HomeController extends Controller
 
     public function adminHome(Request $request)
     {
-        // Default: Start of current month to today
         $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : now()->startOfMonth();
         $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : now();
 
-        // Previous period for percentage comparison
         $periodDays = $startDate->diffInDays($endDate);
         $prevStartDate = $startDate->copy()->subDays($periodDays);
         $prevEndDate = $startDate->copy()->subDay();
 
-        // Upcoming Birthdays (not filtered by date range)
         $upcomingBirthdays = User::where('user_type', 2)
             ->whereNotNull('dob')
             ->get()
@@ -56,32 +53,44 @@ class HomeController extends Controller
         $this->sendBirthdayVouchers();
         $this->sendSubscriptionReminderEmails();
 
-        // Key Metrics - ALL filtered by date range
-        $totalOrders = Order::whereBetween('created_at', [$startDate, $endDate])->count();
-        $totalSales = Order::whereBetween('created_at', [$startDate, $endDate])->sum('total');
+        $totalOrders = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'delivered')->count();
+
+        $totalSales = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'delivered')->sum('total');
+
         $avgOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
-        $newCustomers = User::where('user_type', 2)->whereBetween('created_at', [$startDate, $endDate])->count();
+
+        $newCustomers = User::where('user_type', 2)
+            ->whereBetween('created_at', [$startDate, $endDate])->count();
+
         $repeatedCustomers = User::where('user_type', 2)
-            ->whereRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id AND orders.created_at BETWEEN ? AND ?) > 1", [$startDate, $endDate])
+            ->whereRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id AND orders.status = 'delivered' AND orders.created_at BETWEEN ? AND ?) > 1", [$startDate, $endDate])
             ->count();
 
         $pendingOrders = Order::whereBetween('created_at', [$startDate, $endDate])
             ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'])
             ->count();
 
-        // Previous period metrics for percentage calculation
-        $prevTotalOrders = Order::whereBetween('created_at', [$prevStartDate, $prevEndDate])->count();
-        $prevTotalSales = Order::whereBetween('created_at', [$prevStartDate, $prevEndDate])->sum('total');
+        $prevTotalOrders = Order::whereBetween('created_at', [$prevStartDate, $prevEndDate])
+            ->where('status', 'delivered')->count();
+
+        $prevTotalSales = Order::whereBetween('created_at', [$prevStartDate, $prevEndDate])
+            ->where('status', 'delivered')->sum('total');
+
         $prevAvgOrder = $prevTotalOrders > 0 ? $prevTotalSales / $prevTotalOrders : 0;
-        $prevNewCustomers = User::where('user_type', 2)->whereBetween('created_at', [$prevStartDate, $prevEndDate])->count();
+
+        $prevNewCustomers = User::where('user_type', 2)
+            ->whereBetween('created_at', [$prevStartDate, $prevEndDate])->count();
+
         $prevRepeatedCustomers = User::where('user_type', 2)
-            ->whereRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id AND orders.created_at BETWEEN ? AND ?) > 1", [$prevStartDate, $prevEndDate])
+            ->whereRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id AND orders.status = 'delivered' AND orders.created_at BETWEEN ? AND ?) > 1", [$prevStartDate, $prevEndDate])
             ->count();
+
         $prevPendingOrders = Order::whereBetween('created_at', [$prevStartDate, $prevEndDate])
             ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'])
             ->count();
 
-        // Calculate percentage changes
         $revenuePercent = $prevTotalSales > 0 ? (($totalSales - $prevTotalSales) / $prevTotalSales) * 100 : 0;
         $ordersPercent = $prevTotalOrders > 0 ? (($totalOrders - $prevTotalOrders) / $prevTotalOrders) * 100 : 0;
         $avgOrderPercent = $prevAvgOrder > 0 ? (($avgOrderValue - $prevAvgOrder) / $prevAvgOrder) * 100 : 0;
@@ -89,8 +98,8 @@ class HomeController extends Controller
         $repeatedPercent = $prevRepeatedCustomers > 0 ? (($repeatedCustomers - $prevRepeatedCustomers) / $prevRepeatedCustomers) * 100 : 0;
         $pendingPercent = $prevPendingOrders > 0 ? (($pendingOrders - $prevPendingOrders) / $prevPendingOrders) * 100 : 0;
 
-        // Daily Revenue - for chart
         $dailyRevenue = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'delivered')
             ->selectRaw('DATE(created_at) as date, SUM(total) as revenue, COUNT(*) as orders')
             ->groupBy('date')
             ->orderBy('date')
@@ -105,8 +114,8 @@ class HomeController extends Controller
             ];
         }
 
-        // Payment methods breakdown
         $paymentMethods = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'delivered')
             ->selectRaw('payment_method, COUNT(*) as count, SUM(total) as total')
             ->groupBy('payment_method')
             ->get();
@@ -120,9 +129,9 @@ class HomeController extends Controller
             ];
         }
 
-        // Top Products - filtered by date range
         $topProducts = OrderItem::whereHas('order', function($q) use ($startDate, $endDate) {
-            $q->whereBetween('created_at', [$startDate, $endDate]);
+            $q->whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'delivered');
         })
             ->selectRaw('product_name, SUM(quantity) as total_qty, SUM(total) as revenue')
             ->groupBy('product_name')
@@ -130,15 +139,15 @@ class HomeController extends Controller
             ->limit(5)
             ->get();
 
-        // Recent Orders - filtered by date range
         $recentOrders = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'delivered')
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
-        // Peak hours
         $peakHours = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'delivered')
             ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count, SUM(total) as revenue')
             ->groupBy('hour')
             ->orderBy('hour')

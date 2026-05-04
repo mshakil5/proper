@@ -126,6 +126,7 @@ $(function() {
             url: "{{ route('admin.orders.index') }}",
             data: function(d) {
                 d.status          = new URLSearchParams(window.location.search).get('status') || '';
+                d.client_id      = new URLSearchParams(window.location.search).get('client_id') || '';
                 d.order_type      = $('#orderTypeFilter').val();
                 d.payment_method  = $('#paymentMethodFilter').val();
                 d.customer        = $('#customerFilter').val();
