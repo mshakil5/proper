@@ -796,7 +796,7 @@ class FrontendController extends Controller
             $optionPrice = 0;
             $attributePrice = 0;
 
-            if (($item['attribute'] ?? false) && $product->has_attribute) {
+            if (($item['attribute'] ?? false) && $product->has_attribute && ($item['type'] === 'custom')) {
                 $attributePrice = (float)$product->attribute_price;
             }
 
@@ -1356,7 +1356,7 @@ class FrontendController extends Controller
             $itemData = [
                 'product_name' => $item['product']->title,
                 'sku_ref' => $item['product']->sku_ref,
-                'price' => number_format($item['unitPrice'] + ($item['attributePrice'] ?? 0), 2, '.', '') . ' GBP',
+                'price' => number_format($item['unitPrice'], 2, '.', '') . ' GBP',
                 'quantity' => $item['quantity'],
                 'options' => []
             ];
