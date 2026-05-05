@@ -453,6 +453,7 @@ $(function () {
         `;
 
         const container = document.createElement('div');
+        container.id = 'alertModalContainer';
         container.innerHTML = modalHtml;
         document.body.appendChild(container);
 
@@ -951,6 +952,7 @@ $(function () {
     });
 
     $(document).on('change', 'input[name="deliveryType"]', function() {
+        $('#alertModalContainer').remove();
         selectedDelivery.type = $(this).val();
         selectedDelivery.time = '';
         selectedDelivery.postcode = '';
