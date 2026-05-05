@@ -15,7 +15,8 @@ $(function () {
         postcode: '',
         charge: 0,
         time: '',
-        isValid: false
+        isValid: false,
+        distance: 0
     };
 
     localStorage.setItem('deliveryOptions', JSON.stringify(selectedDelivery));
@@ -33,6 +34,10 @@ $(function () {
         if (selectedDelivery.type === 'collection') {
             $('input[name="deliveryType"][value="collection"]').prop('checked', true);
             $('#collectionMode').show();
+
+            if (selectedDelivery.postcode) {
+                $('#collectionPostcode').val(selectedDelivery.postcode);
+            }
 
             if (
                 selectedDelivery.time &&
@@ -390,6 +395,10 @@ $(function () {
                 return;
             }
         } else {
+            if (!selectedDelivery.isValid) {
+                showError('Please verify your postcode for collection');
+                return;
+            }
             if (!selectedDelivery.time) {
                 showError('Please select collection time');
                 return;
@@ -944,29 +953,28 @@ $(function () {
     $(document).on('change', 'input[name="deliveryType"]', function() {
         selectedDelivery.type = $(this).val();
         selectedDelivery.time = '';
-        
+        selectedDelivery.postcode = '';
+        selectedDelivery.charge = 0;
+        selectedDelivery.distance = 0;
+        selectedDelivery.isValid = false;
+
         if ($(this).val() === 'delivery') {
             $('#deliveryMode').show();
             $('#collectionMode').hide();
             populateTimeSlots('#deliveryMode .delivery-time-select', 16, 30);
             $('#deliveryMode .delivery-time-select').val('');
-            selectedDelivery.isValid = false;
-            selectedDelivery.charge = 0;
-            selectedDelivery.postcode = '';
         } else {
             $('#deliveryMode').hide();
             $('#collectionMode').show();
             populateTimeSlots('#collectionMode .delivery-time-select', 16, 30);
             $('#collectionMode .delivery-time-select').val('');
-            selectedDelivery.isValid = true;
-            selectedDelivery.charge = 0;
-            selectedDelivery.postcode = '';
+            $('#collectionPostcode').val('');
         }
         saveDeliveryData();
         updateCartUI();
     });
 
-    $(document).on('click', '.postcode-check-btn', function(e) {
+    $(document).on('click', '.postcode-check-btn:not(.collection-postcode-check-btn)', function(e) {
         e.preventDefault();
         let postcode = $('#deliveryPostcode').val().trim().toUpperCase();
         
@@ -996,6 +1004,7 @@ $(function () {
                         selectedDelivery.postcode = postcode;
                         selectedDelivery.charge = parseFloat(res.delivery_charge);
                         selectedDelivery.isValid = true;
+                        selectedDelivery.distance = res.distance;
                         showSuccess('✓ Delivery available for ' + postcode + ' | Charge: £' + parseFloat(res.delivery_charge).toFixed(2));
                         saveDeliveryData();
                         updateCartUI();
@@ -1005,6 +1014,7 @@ $(function () {
                         selectedDelivery.isValid = false;
                         selectedDelivery.postcode = '';
                         selectedDelivery.charge = 0;
+                        selectedDelivery.distance = xhr.responseJSON?.distance || 0;
                         saveDeliveryData();
                         showError('✗ Outside delivery area');
                         $('.postcode-check-btn').prop('disabled', false).text('CHECK');
@@ -1014,6 +1024,59 @@ $(function () {
             error: function() {
                 showError('Invalid postcode');
                 $('.postcode-check-btn').prop('disabled', false).text('CHECK');
+            }
+        });
+    });
+    
+    $(document).on('click', '.collection-postcode-check-btn', function(e) {
+        e.preventDefault();
+        let postcode = $('#collectionPostcode').val().trim().toUpperCase();
+
+        if (!postcode) {
+            showError('Please enter a postcode');
+            return;
+        }
+
+        $('.collection-postcode-check-btn').prop('disabled', true).text('CHECKING...');
+
+        $.ajax({
+            url: 'https://api.postcodes.io/postcodes/' + postcode,
+            type: 'GET',
+            success: function(res) {
+                let latitude = res.result.latitude;
+                let longitude = res.result.longitude;
+
+                $.ajax({
+                    url: '/get-addresses',
+                    type: 'GET',
+                    data: { postcode: postcode, latitude: latitude, longitude: longitude },
+                    success: function(res) {
+                        selectedDelivery.postcode = postcode;
+                        selectedDelivery.distance = res.distance;
+                        selectedDelivery.isValid = true;
+                        selectedDelivery.charge = 0;
+                        let label = res.collection_only
+                            ? '✓ ' + postcode + ' (' + res.distance + ' miles) — Collection only'
+                            : '✓ ' + postcode + ' (' + res.distance + ' miles) — Delivery & Collection available';
+                        showSuccess(label);
+                        saveDeliveryData();
+                        updateCartUI();
+                        $('.collection-postcode-check-btn').prop('disabled', false).text('CHECK');
+                    },
+                    error: function(xhr) {
+                        selectedDelivery.isValid = false;
+                        selectedDelivery.postcode = '';
+                        selectedDelivery.distance = xhr.responseJSON?.distance || 0;
+                        saveDeliveryData();
+                        let msg = xhr.responseJSON?.message || '✗ Outside service area';
+                        showError('✗ ' + msg);
+                        $('.collection-postcode-check-btn').prop('disabled', false).text('CHECK');
+                    }
+                });
+            },
+            error: function() {
+                showError('Invalid postcode');
+                $('.collection-postcode-check-btn').prop('disabled', false).text('CHECK');
             }
         });
     });

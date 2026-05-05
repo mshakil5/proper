@@ -1217,6 +1217,13 @@
             toggleAddressCard();
             displaySummaryItems();
             updateTotals();
+
+            let distance = checkoutData.delivery?.distance || 0;
+            if (distance > 10) {
+                $('#paymentCashOption').hide();
+                $('#paymentCash').prop('checked', false);
+                selectedPaymentMethod = null;
+            }
         });
     </script>
 @endsection
