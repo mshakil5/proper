@@ -192,6 +192,23 @@
             </div>
             @endif
 
+            @if($order->meta_data)
+                @php $meta = json_decode($order->meta_data, true); @endphp
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <h5>Meta Data</h5>
+                        <div class="border p-3 rounded">
+                            <p><strong>IP Address:</strong> {{ $meta['ip'] ?? 'N/A' }}</p>
+                            <p><strong>Country:</strong> {{ $meta['country'] ?? 'N/A' }}</p>
+                            <p><strong>City:</strong> {{ $meta['city'] ?? 'N/A' }}</p>
+                            <p><strong>ISP:</strong> {{ $meta['isp'] ?? 'N/A' }}</p>
+                            <p><strong>Proxy:</strong> {{ ($meta['is_proxy'] ?? false) ? 'Yes' : 'No' }}</p>
+                            <p><strong>User Agent:</strong> {{ $meta['user_agent'] ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="row mt-3">
                 <div class="col-md-12">
                     <p><strong>Order Date:</strong> {{ $order->created_at->format('M d, Y H:i') }}</p>
