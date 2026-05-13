@@ -31,6 +31,8 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::post('/pos/validate-promo', [PosController::class, 'posValidatePromo'])->name('admin.pos.validate-promo');
     Route::post('/pos/place-order', [PosController::class, 'posPlaceOrder'])->name('admin.pos.place-order');
     // Route::post('/pos/start-print', [PosController::class, 'posStartPrint']);
+    Route::get('/pos/receipt/{order}', [PosController::class, 'posReceipt'])->name('admin.pos.receipt');
+    Route::get('/pos/receipt/test', [PosController::class, 'posReceiptTest'])->name('admin.pos.receipt.test');
 
     // Clients
     Route::get('/client', [ClientController::class, 'index'])->name('client.index');
