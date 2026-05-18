@@ -21,6 +21,7 @@
         </div>
 
         <div class="card-body">
+            <div class="table-responsive">
             <table id="blockedOrdersTable" class="table table-bordered table-striped">
                 <thead>
                     <tr>
@@ -35,6 +36,7 @@
                     </tr>
                 </thead>
             </table>
+            </div>
         </div>
 
     </div>

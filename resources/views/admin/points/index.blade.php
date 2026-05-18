@@ -63,6 +63,7 @@
             <button class="btn btn-success btn-sm" id="addPointsBtn"><i class="ri-add-line"></i> Add Points</button>
         </div>
         <div class="card-body">
+            <div class="table-responsive">
             <table id="pointsTable" class="table table-bordered table-striped">
                 <thead>
                     <tr>
@@ -75,6 +76,7 @@
                     </tr>
                 </thead>
             </table>
+            </div>
         </div>
     </div>
 </div>

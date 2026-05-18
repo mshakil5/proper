@@ -158,6 +158,7 @@
                 </ul>
             </div>
             <div class="card-body">
+                <div class="table-responsive">
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="mainProducts" role="tabpanel">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -213,6 +214,7 @@
                             </thead>
                         </table>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

@@ -76,6 +76,7 @@
                 <h4>All Masters</h4>
             </div>
             <div class="card-body">
+                <div class="table-responsive">
                 <table id="masterTable" class="table table-bordered table-striped">
                     <thead>
                         <tr>
@@ -86,6 +87,7 @@
                         </tr>
                     </thead>
                 </table>
+                </div>
             </div>
         </div>
     </div>

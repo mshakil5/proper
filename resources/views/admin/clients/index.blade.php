@@ -118,6 +118,7 @@
                 <h4 class="card-title mb-0">All Clients</h4>
             </div>
             <div class="card-body">
+                <div class="table-responsive">
                 <table id="clientTable" class="table table-bordered table-striped">
                     <thead>
                         <tr>
@@ -134,6 +135,7 @@
                         </tr>
                     </thead>
                 </table>
+                </div>
             </div>
         </div>
     </div>

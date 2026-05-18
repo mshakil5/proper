@@ -69,6 +69,7 @@
                         <h4 class="card-title mb-0">Categories</h4>
                     </div>
                     <div class="card-body">
+                        <div class="table-responsive">
                         <table id="categoryTable" class="table table-bordered table-striped">
                             <thead>
                                 <tr>
@@ -81,6 +82,7 @@
                                 </tr>
                             </thead>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,6 +94,7 @@
                         <small class="text-muted">Drag & drop rows to change order</small>
                     </div>
                     <div class="card-body">
+                        <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
@@ -108,6 +111,7 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>

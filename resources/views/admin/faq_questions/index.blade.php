@@ -45,6 +45,7 @@
             <h4 class="card-title mb-0">All FAQs</h4>
         </div>
         <div class="card-body">
+            <div class="table-responsive">
             <table id="faqTable" class="table table-bordered table-striped">
                 <thead>
                     <tr>
@@ -55,6 +56,7 @@
                     </tr>
                 </thead>
             </table>
+            </div>
         </div>
     </div>
 </div>

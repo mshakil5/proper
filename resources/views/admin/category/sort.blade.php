@@ -13,6 +13,7 @@
             </div>
             <div class="card-body">
                 <small class="text-muted">Drag rows to change order, then click "Update Sorting".</small>
+                <div class="table-responsive">
                 <table class="table table-bordered mt-3">
                     <thead>
                         <tr>
@@ -39,6 +40,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
             <div class="card-footer text-end">
                 <button id="updateOrderBtnBottom" class="btn btn-success btn-sm">

@@ -153,6 +153,7 @@
                 </ul>
             </div>
             <div class="card-body">
+                <div class="table-responsive">
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="coupons" role="tabpanel">
                         <table id="couponsTable" class="table table-bordered table-striped">
@@ -187,6 +188,7 @@
                             </thead>
                         </table>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

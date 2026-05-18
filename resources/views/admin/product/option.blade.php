@@ -123,6 +123,7 @@
                     <h5 class="card-title mb-0">Options List</h5>
                 </div>
                 <div class="card-body">
+                    <div class="table-responsive">
                     <table id="optionsTable" class="table table-bordered table-striped">
                         <thead>
                             <tr>
@@ -137,6 +138,7 @@
                             </tr>
                         </thead>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
