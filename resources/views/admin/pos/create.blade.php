@@ -38,7 +38,7 @@
         .pos-shell {
             display: grid;
             grid-template-columns: 1fr 400px;
-            height: calc(100vh - 60px);
+            height: calc(100vh - 100px);
             background: var(--pos-bg);
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
@@ -704,6 +704,7 @@
             border-top: 1px solid var(--pos-border);
             background: var(--pos-surface);
             flex-shrink: 0;
+            /* margin-bottom: 20px; */
         }
 
         .btn-nav {
@@ -1950,7 +1951,7 @@
                     currentProduct.options.forEach(function(grp, gi) {
                         const color = optColors[gi % optColors.length];
 
-                        if (isHSK && grp.name.toLowerCase().includes('sauce')) {
+                        if (grp.name.toLowerCase().includes('sauce options')) {
                             html += `<div class="option-group-pos" data-group-id="${grp.id}" data-type="sauce" data-required="${grp.required ? 1 : 0}" data-max="${grp.max}">`;
                             html += `<div class="option-group-title-pos">
                                 <span>${grp.name}${grp.required ? ' <span style="color:var(--pos-accent);">*</span>' : ''}</span>
@@ -2370,6 +2371,12 @@
             }
 
             function renderTimeSlots() {
+                if (orderType === 'walkin') {
+                    selectedTime = 'ASAP';
+                    $('#timeSlotGrid').html('<div style="padding:16px 0;font-size:18px;font-weight:800;color:var(--pos-success);">🚶 Walk-in</div>');
+                    validateStep();
+                    return;
+                }
                 const slots = generateTimeSlots();
                 let html = '';
                 if (!slots.length) {
@@ -2430,14 +2437,14 @@
 
                 let custFirstName = 'Walk-in',
                     custLastName = 'Customer',
-                    custEmail = 'pos@internal.local',
-                    custPhone = '00000000000';
+                    custEmail = '',
+                    custPhone = '';
                 if (orderType !== 'walkin') {
                     const nameParts = (customer.name || '').trim().split(' ');
                     custFirstName = nameParts[0] || 'Customer';
                     custLastName = nameParts.slice(1).join(' ') || 'POS';
-                    custEmail = customer.email || 'pos@internal.local';
-                    custPhone = customer.phone || '00000000000';
+                    custEmail = customer.email || '';
+                    custPhone = customer.phone || '';
                 }
 
                 const orderData = {
