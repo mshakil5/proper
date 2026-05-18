@@ -125,9 +125,20 @@ class OrderController extends Controller
                     return $row->created_at->format('M d, Y g:i A');
                 })
                 ->addColumn('action', function ($row) {
-                    return '<a href="' . route('admin.orders.details', $row->id) . '" class="btn btn-sm btn-primary">
-                        <i class="ri-eye-line"></i> View
-                    </a>';
+                    return '
+                        <div class="d-flex flex-column gap-1">
+                            <a href="' . route('admin.pos.receipt', $row->id) . '" 
+                            target="_blank"
+                            class="btn btn-sm btn-dark">
+                                <i class="ri-printer-line"></i> Print
+                            </a>
+
+                            <a href="' . route('admin.orders.details', $row->id) . '" 
+                            class="btn btn-sm btn-primary">
+                                <i class="ri-eye-line"></i> View
+                            </a>
+                        </div>
+                    ';
                 })
                 ->rawColumns(['order_number', 'customer', 'order_type', 'order_status', 'payment_status', 'delivery_type', 'payment_method', 'action'])
                 ->make(true);
