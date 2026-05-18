@@ -24,7 +24,7 @@
                         <h3 class="card-title mb-0 flex-grow-1">Comapny Details</h3>
                     </div>
 
-                    <form id="createThisForm" action="{{ route('admin.companyDetails') }}" method="POST"
+                    <form id="createThisForm" action="{{ route('admin.companyDetails.update') }}" method="POST"
                         enctype="multipart/form-data">
                         <div class="card-body">
                             @csrf
@@ -201,7 +201,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-4">
+                                <div class="col-sm-4 d-none">
                                     <div class="form-group">
                                         <label>App store link</label>
                                         <input type="url"
@@ -211,7 +211,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-4">
+                                <div class="col-sm-4 d-none">
                                     <div class="form-group">
                                         <label>google playstore link</label>
                                         <input type="url"
@@ -256,7 +256,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-4">
+                                <div class="col-sm-4 d-none">
                                     <div class="form-group">
                                         <label>Company Registration Number</label>
                                         <input type="text"
@@ -266,7 +266,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-4">
+                                <div class="col-sm-4 d-none">
                                     <div class="form-group">
                                         <label>Bank</label>
                                         <input type="text" class="form-control @error('bank') is-invalid @enderror"
@@ -274,7 +274,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-4">
+                                <div class="col-sm-4 d-none">
                                     <div class="form-group">
                                         <label>Account Number</label>
                                         <input type="text"
@@ -284,7 +284,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-4">
+                                <div class="col-sm-4 d-none">
                                     <div class="form-group">
                                         <label>Sort Code</label>
                                         <input type="text"

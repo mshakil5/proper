@@ -49,7 +49,7 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
 
     // Company
     Route::get('/company-details', [CompanyDetailsController::class, 'index'])->name('admin.companyDetails');
-    Route::post('/company-details', [CompanyDetailsController::class, 'update'])->name('admin.companyDetails');
+    Route::post('/company-details', [CompanyDetailsController::class, 'update'])->name('admin.companyDetails.update');
 
     Route::get('/company/seo-meta', [CompanyDetailsController::class, 'seoMeta'])->name('admin.company.seo-meta');
     Route::post('/company/seo-meta/update', [CompanyDetailsController::class, 'seoMetaUpdate'])->name('admin.company.seo-meta.update');
