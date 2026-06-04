@@ -176,7 +176,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-4">
+                                <div class="col-sm-4 d-none">
                                     <div class="form-group">
                                         <label>LinkedIn</label>
                                         <input type="url"
