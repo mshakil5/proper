@@ -159,7 +159,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-4 d-none">
+                                <div class="col-sm-4">
                                     <div class="form-group">
                                         <label>Instagram</label>
                                         <input type="url"

@@ -31,9 +31,9 @@
                             @endif
                             <p style="margin-top:8px;color:#c0c0c0">{{ $company->footer_content ?? '' }}</p>
                             <div class="mt-2">
-                                <a class="me-2" href="{{ $company->instagram ?? '' }}"><i
+                                <a target="_blank" class="me-2" href="{{ $company->instagram ?? '' }}"><i
                                         class="fa-brands fa-instagram"></i></a>
-                                <a class="me-2" href="{{ $company->facebook ?? '' }}"><i
+                                <a target="_blank" class="me-2" href="{{ $company->facebook ?? '' }}"><i
                                         class="fa-brands fa-facebook"></i></a>
                             </div>
                         </div>

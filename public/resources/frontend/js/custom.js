@@ -133,3 +133,19 @@ window.hideLoader = function() {
     const loader = document.getElementById('loadingModal');
     if (loader) $(loader).fadeOut(300);
 };
+
+
+$(window).on('scroll', function () {
+    if ($(this).scrollTop() > 300) {
+        $('#backToTop').addClass('show');
+    } else {
+        $('#backToTop').removeClass('show');
+    }
+});
+
+$(document).on('click', '#backToTop', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('html, body').animate({ scrollTop: 0 }, 600);
+    return false;
+});

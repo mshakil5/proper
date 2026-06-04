@@ -173,6 +173,10 @@
         showError('{{ session("error") }}');
     @endif
 
+    <button id="backToTop" title="Back to top">
+        <i class="fa fa-chevron-up"></i>
+    </button>
+
 </body>
 
 </html>
