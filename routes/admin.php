@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\BlockedCustomerController;
 use App\Http\Controllers\Admin\BlockedCustomerOrderController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -186,4 +187,7 @@ Route::group(['prefix' =>'admin/', 'middleware' => ['auth', 'is_admin']], functi
     Route::get('/blocked-orders', [BlockedCustomerOrderController::class, 'index'])->name('admin.blocked-orders.index');
     Route::get('/blocked-orders/{id}', [BlockedCustomerOrderController::class, 'show'])->name('admin.blocked-orders.show');
     Route::delete('/blocked-orders/{id}', [BlockedCustomerOrderController::class, 'destroy'])->name('admin.blocked-orders.destroy');
+
+    Route::get('/profile', [AdminProfileController::class, 'index'])->name('admin.profile');
+    Route::post('/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
 });
