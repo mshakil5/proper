@@ -1594,12 +1594,24 @@
 
                 let nextOk = false;
                 switch (currentStep) {
-                    case 1: nextOk = !!orderType; break;
-                    case 2: nextOk = validateStep2(); break;
-                    case 3: nextOk = !!selectedCatId; break;
-                    case 4: nextOk = true; break;
-                    case 5: nextOk = true; break;
-                    case 6: nextOk = hasItems && !!selectedTime; break;
+                    case 1:
+                        nextOk = !!orderType;
+                        break;
+                    case 2:
+                        nextOk = validateStep2();
+                        break;
+                    case 3:
+                        nextOk = !!selectedCatId;
+                        break;
+                    case 4:
+                        nextOk = true;
+                        break;
+                    case 5:
+                        nextOk = true;
+                        break;
+                    case 6:
+                        nextOk = hasItems && !!selectedTime;
+                        break;
                 }
                 $('#btnNext').prop('disabled', !nextOk);
 
@@ -1926,7 +1938,9 @@
                 const title = currentProduct.title;
                 const isCombo = isComboKebab(title);
                 const isHSK = isHouseSpecialKebab(title);
-                const optColors = ['#ff5a00', '#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#8b5cf6', '#06b6d4'];
+                const optColors = ['#ff5a00', '#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#14b8a6',
+                    '#ef4444', '#8b5cf6', '#06b6d4'
+                ];
 
                 let html = '';
 
@@ -1952,7 +1966,8 @@
                         const color = optColors[gi % optColors.length];
 
                         if (grp.name.toLowerCase().includes('sauce options')) {
-                            html += `<div class="option-group-pos" data-group-id="${grp.id}" data-type="sauce" data-required="${grp.required ? 1 : 0}" data-max="${grp.max}">`;
+                            html +=
+                                `<div class="option-group-pos" data-group-id="${grp.id}" data-type="sauce" data-required="${grp.required ? 1 : 0}" data-max="${grp.max}">`;
                             html += `<div class="option-group-title-pos">
                                 <span>${grp.name}${grp.required ? ' <span style="color:var(--pos-accent);">*</span>' : ''}</span>
                                 <span style="font-size:12px;color:var(--pos-muted);">Max 3 total</span>
@@ -1979,7 +1994,8 @@
                             return;
                         }
 
-                        html += `<div class="option-group-pos" data-group-id="${grp.id}" data-type="${grp.type}" data-required="${grp.required ? 1 : 0}" data-max="${grp.max}">`;
+                        html +=
+                            `<div class="option-group-pos" data-group-id="${grp.id}" data-type="${grp.type}" data-required="${grp.required ? 1 : 0}" data-max="${grp.max}">`;
                         html += `<div class="option-group-title-pos">
                             <span>${grp.name}${grp.required ? ' <span style="color:var(--pos-accent);">*</span>' : ''}</span>
                             <span style="font-size:12px;color:var(--pos-muted);">${grp.required ? '⚠️ Required' : 'Optional'}${grp.type !== 'single' && grp.max > 0 ? ' · Max ' + grp.max : ''}</span>
@@ -2284,7 +2300,7 @@
                 ];
                 for (let ci = 0; ci < categoriesData.length; ci++) {
                     if (categoriesData[ci].products.find(p => p.id === productId)) return colors[ci % colors
-                    .length];
+                        .length];
                 }
                 return '#ff5a00';
             }
@@ -2373,7 +2389,9 @@
             function renderTimeSlots() {
                 if (orderType === 'walkin') {
                     selectedTime = 'ASAP';
-                    $('#timeSlotGrid').html('<div style="padding:16px 0;font-size:18px;font-weight:800;color:var(--pos-success);">🚶 Walk-in</div>');
+                    $('#timeSlotGrid').html(
+                        '<div style="padding:16px 0;font-size:18px;font-weight:800;color:var(--pos-success);">🚶 Walk-in</div>'
+                        );
                     validateStep();
                     return;
                 }
@@ -2526,20 +2544,19 @@
                     },
                     error: function(xhr) {
                         $('#btnPlace').prop('disabled', false).text('✅ Place Order');
-                        const msg = xhr.responseJSON?.message || xhr.responseJSON?.error || 'Error placing order';
+                        const msg = xhr.responseJSON?.message || xhr.responseJSON?.error ||
+                            'Error placing order';
                         showError(msg);
                     }
                 });
             });
 
             function attemptPrint(data) {
-                const win = window.open('/admin/pos/receipt/' + data.orderId, '_blank');
-                if (win) {
-                    win.onload = function() {
-                        win.print();
-                        setTimeout(() => win.close(), 500);
-                    };
-                }
+                window.open('/admin/pos/receipt/' + data.orderId + '/customer', '_blank', 'width=500,height=700');
+                setTimeout(function() {
+                    window.open('/admin/pos/receipt/' + data.orderId + '/kitchen', '_blank',
+                        'width=500,height=700');
+                }, 4000);
             }
 
             $('#btnPrintAgain').on('click', function() {

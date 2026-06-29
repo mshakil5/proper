@@ -38,14 +38,6 @@
             width: 100%;
         }
 
-        .divider-solid {
-            border: none;
-            border-top: 2px solid #000;
-            margin: 6px 0;
-            width: 100%;
-        }
-
-        /* ── CUSTOMER COPY ── */
         .customer-wrap {
             padding: 6px 4px;
             width: 72mm;
@@ -95,7 +87,6 @@
             word-break: break-word;
         }
 
-        /* Item rows */
         .item-row {
             display: table;
             width: 100%;
@@ -142,10 +133,7 @@
             margin: 4px 0 2px 0;
         }
 
-        .delivery-row span:first-child {
-            display: table-cell;
-        }
-
+        .delivery-row span:first-child { display: table-cell; }
         .delivery-row span:last-child {
             display: table-cell;
             text-align: right;
@@ -161,10 +149,7 @@
             margin: 4px 0 2px 0;
         }
 
-        .total-row span:first-child {
-            display: table-cell;
-        }
-
+        .total-row span:first-child { display: table-cell; }
         .total-row span:last-child {
             display: table-cell;
             text-align: right;
@@ -179,10 +164,7 @@
             margin: 2px 0;
         }
 
-        .payment-row span:first-child {
-            display: table-cell;
-        }
-
+        .payment-row span:first-child { display: table-cell; }
         .payment-row span:last-child {
             display: table-cell;
             text-align: right;
@@ -201,76 +183,7 @@
             margin: 4px 0;
         }
 
-        /* Auto cut line — printer driver picks this up as page break = cut */
-        .cut-line {
-            page-break-after: always;
-            display: block;
-            height: 0;
-            overflow: hidden;
-            visibility: hidden;
-        }
-
-        /* Feed space before cut */
         .feed-space {
-            height: 30mm;
-            display: block;
-        }
-
-        /* ── KITCHEN COPY ── */
-        .kitchen-wrap {
-            padding: 6px 4px;
-            width: 72mm;
-        }
-
-        .kitchen-title-box {
-            display: inline-block;
-            border: 2px solid #000;
-            padding: 4px 16px;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-
-        .kitchen-order-num { font-size: 14px; font-weight: bold; }
-        .kitchen-type { font-size: 13px; font-weight: bold; }
-        .kitchen-due { font-size: 13px; }
-
-        .kitchen-divider {
-            border: none;
-            border-top: 3px solid #000;
-            margin: 6px 0;
-        }
-
-        .kitchen-item {
-            font-size: 22px;
-            font-weight: 900;
-            text-transform: uppercase;
-            line-height: 1.1;
-            margin: 8px 0 3px 0;
-            border-bottom: 1px solid #000;
-            padding-bottom: 4px;
-            word-break: break-word;
-        }
-
-        .kitchen-option {
-            font-size: 16px;
-            font-weight: bold;
-            padding-left: 8px;
-            margin-bottom: 3px;
-            word-break: break-word;
-        }
-
-        .kitchen-note {
-            font-size: 18px;
-            font-weight: bold;
-            border: 3px dashed #000;
-            padding: 6px;
-            margin-top: 10px;
-            word-break: break-word;
-        }
-
-        .kitchen-footer-feed {
             height: 30mm;
             display: block;
         }
@@ -278,23 +191,19 @@
 </head>
 <body>
 
-    {{-- ════════ CUSTOMER COPY ════════ --}}
     <div class="customer-wrap">
 
-        {{-- Shop Header --}}
         <div class="shop-name">PROPER TAKEAWAY LINCOLN</div>
         <div class="shop-address">11 Clifton street</div>
         <div class="shop-address">LN5 8LQ Lincoln</div>
 
-        <div class="divider"></div>
+        <hr class="divider">
 
-        {{-- Order type + big name --}}
         <div class="delivery-label">{{ strtoupper($order->delivery_type) }}</div>
         <div class="big-name">{{ strtoupper($order->first_name) }} {{ strtoupper($order->last_name) }}</div>
 
-        <div class="divider"></div>
+        <hr class="divider">
 
-        {{-- Customer details --}}
         <div class="customer-name">{{ strtoupper($order->first_name) }} {{ strtoupper($order->last_name) }}</div>
         <div class="customer-phone">{{ $order->phone }}</div>
         @if($order->delivery_type === 'delivery')
@@ -303,9 +212,8 @@
             <div class="customer-address">{{ $order->postcode }} {{ $order->city }}</div>
         @endif
 
-        <div class="divider"></div>
+        <hr class="divider">
 
-        {{-- Items --}}
         <div>
             @foreach($order->items as $item)
                 <div class="item-row">
@@ -326,9 +234,8 @@
             @endif
         </div>
 
-        <div class="divider"></div>
+        <hr class="divider">
 
-        {{-- Total --}}
         <div class="total-row">
             <span>TOTAL</span>
             <span>£{{ number_format($order->total, 2) }}</span>
@@ -338,51 +245,16 @@
             <span>£{{ number_format($order->total, 2) }}</span>
         </div>
 
-        <div class="divider"></div>
+        <hr class="divider">
 
-        {{-- Reference + Date --}}
         <div class="meta-text">Ref: {{ $order->order_number }}</div>
         <div class="meta-text">{{ $order->created_at->format('d/m/Y H:i') }}</div>
 
-        <div class="divider"></div>
+        <hr class="divider">
 
         <div class="thank-you">Thank you for your order!</div>
 
-        {{-- Feed before cut --}}
         <div class="feed-space"></div>
-    </div>
-
-    {{-- PAGE BREAK = AUTO CUT trigger --}}
-    <div class="cut-line"></div>
-
-    {{-- ════════ KITCHEN COPY ════════ --}}
-    <div class="kitchen-wrap">
-        <div class="center">
-            <div class="kitchen-title-box">KITCHEN</div><br>
-            <div class="kitchen-order-num">#{{ $order->order_number }}</div>
-            <div class="kitchen-type">{{ strtoupper($order->delivery_type) }}</div>
-            <div class="kitchen-due">Due: {{ $order->time }}</div>
-        </div>
-
-        <div class="kitchen-divider"></div>
-
-        <div>
-            @foreach($order->items as $item)
-                <div class="kitchen-item">{{ $item->quantity }}X {{ strtoupper($item->product_name) }}</div>
-                @foreach($item->options as $opt)
-                    <div class="kitchen-option">{{ strtoupper($opt->option_name) }}</div>
-                @endforeach
-            @endforeach
-        </div>
-
-        @if($order->notes)
-            <div class="kitchen-note">NOTE: {{ strtoupper($order->notes) }}</div>
-        @endif
-
-        <div class="center" style="font-size:10px; font-weight:bold; margin-top:16px;">*** KITCHEN COPY ***</div>
-
-        {{-- Feed before cut --}}
-        <div class="kitchen-footer-feed"></div>
     </div>
 
     <script>

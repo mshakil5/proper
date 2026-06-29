@@ -390,4 +390,16 @@ class PosController extends Controller
         $order->load(['items.options']);
         return view('admin.pos.receipt', compact('order'));
     }
+
+    public function posReceiptCustomer(Order $order)
+    {
+        $order->load(['items.options']);
+        return view('admin.pos.receipt_customer', compact('order'));
+    }
+
+    public function posReceiptKitchen(Order $order)
+    {
+        $order->load(['items.options']);
+        return view('admin.pos.receipt_kitchen', compact('order'));
+    }
 }

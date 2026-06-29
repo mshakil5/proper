@@ -126,15 +126,19 @@ class OrderController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     return '
-                        <div class="d-flex flex-column gap-1">
-                            <a href="' . route('admin.pos.receipt', $row->id) . '" 
+                        <div class="d-flex flex-column gap-1" style="min-width:100px;">
+                            <a href="' . route('admin.pos.receipt.customer', $row->id) . '" 
                             target="_blank"
-                            class="btn btn-sm btn-dark">
-                                <i class="ri-printer-line"></i> Print
+                            class="btn btn-sm btn-dark w-100">
+                                <i class="ri-printer-line"></i> Customer
                             </a>
-
+                            <a href="' . route('admin.pos.receipt.kitchen', $row->id) . '" 
+                            target="_blank"
+                            class="btn btn-sm btn-secondary w-100">
+                                <i class="ri-restaurant-line"></i> Kitchen
+                            </a>
                             <a href="' . route('admin.orders.details', $row->id) . '" 
-                            class="btn btn-sm btn-primary">
+                            class="btn btn-sm btn-primary w-100">
                                 <i class="ri-eye-line"></i> View
                             </a>
                         </div>
