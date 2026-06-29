@@ -106,7 +106,7 @@
                 <li class="nav-item">
                     <a href="{{ route('admin.orders.online', ['type' => 'frontend']) }}"
                         class="nav-link {{ Route::is('admin.orders.online') || Route::is('admin.orders.details') ? 'active' : '' }}">
-                        <i class="ri-file-list-line me-2"></i>
+                        <i class="ri-file-list-line"></i>
                         <span>Online Orders</span>
                     </a>
                 </li>
@@ -114,7 +114,7 @@
                 <li class="nav-item">
                     <a href="{{ route('admin.pos') }}"
                         class="nav-link {{ Route::is('admin.pos') ? 'active' : '' }}">
-                        <i class="ri-store-2-line me-2"></i>
+                        <i class="ri-store-2-line"></i>
                         <span>POS</span>
                     </a>
                 </li>
@@ -122,7 +122,7 @@
                 <li class="nav-item">
                     <a href="{{ route('admin.orders.pos', ['type' => 'pos']) }}"
                         class="nav-link {{ Route::is('admin.orders.pos') || Route::is('admin.orders.pos.details') ? 'active' : '' }}">
-                        <i class="ri-file-list-3-line me-2"></i>
+                        <i class="ri-file-list-3-line"></i>
                         <span>POS Orders</span>
                     </a>
                 </li>
