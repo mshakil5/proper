@@ -50,8 +50,8 @@ class HomeController extends Controller
             ->sortBy('days_until_birthday')
             ->values();
 
-        $this->sendBirthdayVouchers();
-        $this->sendSubscriptionReminderEmails();
+        // $this->sendBirthdayVouchers();
+        // $this->sendSubscriptionReminderEmails();
 
         $totalOrders = Order::whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'delivered')->count();
