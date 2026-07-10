@@ -1401,11 +1401,29 @@ class FrontendController extends Controller
             $paymentName = 'PayPal';
         }
 
+        $rawTime = $calculationData['delivery']['time'] ?? null;
+
+        if ($rawTime) {
+            $firstTime = trim(explode('-', $rawTime)[0]);
+            $parsed = \Carbon\Carbon::createFromFormat('h:i A', $firstTime);
+
+            $now = \Carbon\Carbon::now();
+            $expectedTime = $now->copy()->setTime($parsed->hour, $parsed->minute, 0);
+
+            if ($expectedTime->lt($now)) {
+                $expectedTime->addDay();
+            }
+        } else {
+            $expectedTime = \Carbon\Carbon::now();
+        }
+
         $hubRisePayload = [
             'status' => 'new',
             'channel' => 'Website',
             'service_type' => $calculationData['delivery']['type'],
             'service_type_ref' => $calculationData['delivery']['type'] === 'delivery' ? '9' : '10',
+            'expected_time' => $expectedTime->toIso8601String(),
+            'asap' => false,
             'items' => $items,
             'payments' => [
                 [
