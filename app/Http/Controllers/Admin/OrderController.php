@@ -25,6 +25,14 @@ class OrderController extends Controller
                 $query->where('user_id', $request->client_id);
             }
 
+            if ($request->has('customer_type') && $request->customer_type) {
+                if ($request->customer_type === 'registered') {
+                    $query->whereNotNull('user_id');
+                } elseif ($request->customer_type === 'guest') {
+                    $query->whereNull('user_id');
+                }
+            }
+
             if ($request->has('order_type') && $request->order_type && $request->order_type !== 'all') {
                 $query->where('order_type', $request->order_type);
             }
@@ -61,6 +69,25 @@ class OrderController extends Controller
             }
             if ($request->has('end_date') && $request->end_date) {
                 $query->whereDate('created_at', '<=', $request->end_date);
+            }
+
+            if ($request->boolean('summary')) {
+                $base = clone $query;
+                $totalCount = (clone $base)->count();
+                $totalAmount = (clone $base)->sum('total');
+                $registeredCount = (clone $base)->whereNotNull('user_id')->count();
+                $registeredAmount = (clone $base)->whereNotNull('user_id')->sum('total');
+                $guestCount = (clone $base)->whereNull('user_id')->count();
+                $guestAmount = (clone $base)->whereNull('user_id')->sum('total');
+
+                return response()->json([
+                    'total_count' => $totalCount,
+                    'total_amount' => (float) $totalAmount,
+                    'registered_count' => $registeredCount,
+                    'registered_amount' => (float) $registeredAmount,
+                    'guest_count' => $guestCount,
+                    'guest_amount' => (float) $guestAmount,
+                ]);
             }
 
             return DataTables::of($query)

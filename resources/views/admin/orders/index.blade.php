@@ -37,6 +37,40 @@
     </div>
 
     <div class="card mb-3">
+        <div class="card-body py-3">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="border rounded p-3 bg-light">
+                        <div class="text-muted small">Total Orders (filtered)</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fs-4 fw-bold" id="sumTotalCount">0</span>
+                            <span class="fw-semibold">£<span id="sumTotalAmount">0.00</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 bg-light">
+                        <div class="text-muted small">Registered Orders</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fs-4 fw-bold text-success" id="sumRegCount">0</span>
+                            <span class="fw-semibold">£<span id="sumRegAmount">0.00</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 bg-light">
+                        <div class="text-muted small">Guest Orders</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fs-4 fw-bold text-secondary" id="sumGuestCount">0</span>
+                            <span class="fw-semibold">£<span id="sumGuestAmount">0.00</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
         <div class="card-header" style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
             <h5 class="mb-0 d-flex justify-content-between align-items-center">
                 <span>🔎 Advanced Filters</span>
@@ -62,6 +96,15 @@
                             <option value="cash">Cash</option>
                             <option value="stripe">Stripe</option>
                             <option value="paypal">PayPal</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Customer Type</label>
+                        <select id="customerTypeFilter" class="form-select">
+                            <option value="">All (Registered + Guest)</option>
+                            <option value="registered">Registered</option>
+                            <option value="guest">Guest</option>
                         </select>
                     </div>
 
@@ -131,6 +174,7 @@ $(function() {
                 d.client_id      = new URLSearchParams(window.location.search).get('client_id') || '';
                 d.order_type      = $('#orderTypeFilter').val();
                 d.payment_method  = $('#paymentMethodFilter').val();
+                d.customer_type   = $('#customerTypeFilter').val();
                 d.customer        = $('#customerFilter').val();
                 d.start_date      = $('#startDateFilter').val();
                 d.end_date        = $('#endDateFilter').val();
@@ -156,18 +200,52 @@ $(function() {
         order: [[9, 'desc']]
     });
 
+    function collectFilterParams(extra) {
+        var params = {
+            status: new URLSearchParams(window.location.search).get('status') || '',
+            client_id: new URLSearchParams(window.location.search).get('client_id') || '',
+            order_type: $('#orderTypeFilter').val(),
+            payment_method: $('#paymentMethodFilter').val(),
+            customer_type: $('#customerTypeFilter').val(),
+            customer: $('#customerFilter').val(),
+            start_date: $('#startDateFilter').val(),
+            end_date: $('#endDateFilter').val(),
+            type: new URLSearchParams(window.location.search).get('type') || ''
+        };
+        if ($('#orderNumberFilter').val().trim() !== '') {
+            params.order_number = $('#orderNumberFilter').val().trim();
+        }
+        return $.extend(params, extra || {});
+    }
+
+    function loadSummary() {
+        $.get("{{ route('admin.orders.index') }}", collectFilterParams({ summary: 1 }), function(res) {
+            $('#sumTotalCount').text(res.total_count || 0);
+            $('#sumTotalAmount').text(Number(res.total_amount || 0).toFixed(2));
+            $('#sumRegCount').text(res.registered_count || 0);
+            $('#sumRegAmount').text(Number(res.registered_amount || 0).toFixed(2));
+            $('#sumGuestCount').text(res.guest_count || 0);
+            $('#sumGuestAmount').text(Number(res.guest_amount || 0).toFixed(2));
+        });
+    }
+
+    loadSummary();
+
     $('#applyFilters').on('click', function() {
         table.ajax.reload();
+        loadSummary();
     });
 
     $('#resetFilters').on('click', function() {
         $('#orderTypeFilter').val('all');
         $('#paymentMethodFilter').val('');
+        $('#customerTypeFilter').val('');
         $('#customerFilter').val('');
         $('#orderNumberFilter').val('');
         $('#startDateFilter').val('');
         $('#endDateFilter').val('');
         table.ajax.reload();
+        loadSummary();
     });
 });
 </script>
