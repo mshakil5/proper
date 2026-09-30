@@ -39,6 +39,69 @@ use Twitter;
 
 class FrontendController extends Controller
 {
+    /**
+     * Website ordering hours. Must stay in sync with the
+     * SHOP_HOURS object in cart.js / header.blade.php.
+     * Times are in Europe/London (see config/app.php timezone).
+     */
+    private const SHOP_HOURS = [
+        'Monday'    => ['open' => '16:30', 'close' => '23:30'],
+        'Tuesday'   => ['open' => '16:30', 'close' => '23:30'],
+        'Wednesday' => ['open' => '16:30', 'close' => '23:30'],
+        'Thursday'  => ['open' => '16:30', 'close' => '23:30'],
+        'Friday'    => ['open' => '16:30', 'close' => '23:30'],
+        'Saturday'  => ['open' => '16:30', 'close' => '23:30'],
+        'Sunday'    => ['open' => '16:30', 'close' => '22:00'],
+    ];
+
+    /**
+     * Check whether website ordering is currently open.
+     * Uses Europe/London explicitly so a server in UTC (or
+     * anywhere else) still enforces UK shop time incl. DST.
+     *
+     * @return array{open: bool, message: string, day: string, now: string}
+     */
+    private function checkShopOpen(?Carbon $now = null): array
+    {
+        $now = $now ? $now->copy()->tz('Europe/London') : Carbon::now('Europe/London');
+        $day = $now->format('l');
+
+        $hours = self::SHOP_HOURS[$day] ?? null;
+        if (!$hours) {
+            return [
+                'open' => false,
+                'message' => 'We are closed right now.',
+                'day' => $day,
+                'now' => $now->format('Y-m-d H:i'),
+            ];
+        }
+
+        [$openH, $openM] = array_map('intval', explode(':', $hours['open']));
+        [$closeH, $closeM] = array_map('intval', explode(':', $hours['close']));
+
+        $openAt = $now->copy()->setTime($openH, $openM, 0);
+        $closeAt = $now->copy()->setTime($closeH, $closeM, 0);
+
+        if ($now->lt($openAt) || $now->gte($closeAt)) {
+            $openLabel = $openAt->format('g:i A');
+            $closeLabel = $closeAt->format('g:i A');
+
+            return [
+                'open' => false,
+                'message' => "Sorry, we are closed now and not taking online orders. Our {$day} opening hours are {$openLabel} – {$closeLabel}. Please place your order during opening hours.",
+                'day' => $day,
+                'now' => $now->format('Y-m-d H:i'),
+            ];
+        }
+
+        return [
+            'open' => true,
+            'message' => 'Open',
+            'day' => $day,
+            'now' => $now->format('Y-m-d H:i'),
+        ];
+    }
+
     public function index()
     {
       $company = CompanyDetails::first();
@@ -732,6 +795,14 @@ class FrontendController extends Controller
 
     public function placeOrder(Request $request)
     {
+        $shopState = $this->checkShopOpen();
+        if (!$shopState['open']) {
+            return response()->json([
+                'success' => false,
+                'message' => $shopState['message'],
+            ], 403);
+        }
+
         if ($request->input('delivery.type') === 'delivery') {
             $request->validate([
                 'address' => 'required|string|max:255',
@@ -846,21 +917,21 @@ class FrontendController extends Controller
 
         $deliveryCharge = 0;
         if ($delivery['type'] === 'delivery') {
+            $postcode = $delivery['postcode'];
+            $deliveryData = $this->getDeliveryCharge($postcode);
+
+            if (!$deliveryData['available']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Delivery not available for this postcode'
+                ], 400);
+            }
+
             $user = auth()->user();
-            
+
             if ($user && $user->hasActiveDeliverySubscription()) {
                 $deliveryCharge = 0.00;
             } else {
-                $postcode = $delivery['postcode'];
-                $deliveryData = $this->getDeliveryCharge($postcode);
-                
-                if (!$deliveryData['available']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Delivery not available for this postcode'
-                    ], 400);
-                }
-
                 $deliveryCharge = $deliveryData['charge'];
             }
         }

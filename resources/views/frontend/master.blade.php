@@ -74,7 +74,7 @@
             },
             "deliveryRange": {
                 "@type": "Distance",
-                "name": "7.5 miles"
+                "name": "6 miles"
             }
         }
     </script>
