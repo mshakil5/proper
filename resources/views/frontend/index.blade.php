@@ -47,7 +47,7 @@
                                                 <div class="stat-value fw-bold fs-4">£15</div>
                                                 <div class="stat-label text-muted small">
                                                     Minimum Order<br>
-                                                    Within 6 Miles
+                                                    Within 4 Miles
                                                 </div>
                                             </div>
                                         </div>

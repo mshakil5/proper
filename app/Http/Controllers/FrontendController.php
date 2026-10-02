@@ -149,7 +149,7 @@ class FrontendController extends Controller
 
         $centerLatitude = 53.223912;
         $centerLongitude = -0.532985;
-        $deliveryRadius = 6;
+        $deliveryRadius = 4;
 
         $user = auth()->user();
 
@@ -171,10 +171,8 @@ class FrontendController extends Controller
         if ($distance <= $deliveryRadius) {
             if ($user && $user->hasActiveDeliverySubscription()) {
                 $deliveryCharge = 0.00;
-            } elseif ($distance <= 4) {
-                $deliveryCharge = 2.00;
             } else {
-                $deliveryCharge = 3.00;
+                $deliveryCharge = 2.00;
             }
 
             return response()->json([
@@ -240,7 +238,7 @@ class FrontendController extends Controller
             ], 422);
         }
 
-        if ($distance > 6) {
+        if ($distance > 4) {
             return response()->json([
                 'available'       => false,
                 'collection_only' => true,
@@ -254,10 +252,8 @@ class FrontendController extends Controller
 
         if ($user && $user->hasActiveDeliverySubscription()) {
             $deliveryCharge = 0.00;
-        } elseif ($distance <= 4) {
-            $deliveryCharge = 2.00;
         } else {
-            $deliveryCharge = 3.00;
+            $deliveryCharge = 2.00;
         }
 
         return response()->json([
@@ -1660,7 +1656,7 @@ class FrontendController extends Controller
     {
         $centerLatitude = 53.223912;
         $centerLongitude = -0.532985;
-        $deliveryRadius = 6;
+        $deliveryRadius = 4;
 
         try {
             $response = Http::get('https://api.postcodes.io/postcodes/' . $postcode);
@@ -1690,9 +1686,6 @@ class FrontendController extends Controller
 
             if ($distance <= $deliveryRadius) {
                 $charge = 2.00;
-                if ($distance > 4) {
-                    $charge = 3.00;
-                }
 
                 return [
                     'available' => true,

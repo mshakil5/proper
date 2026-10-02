@@ -59,7 +59,7 @@
                 <h5 class="fw-bold mb-3" style="margin-bottom:8px;">Minimum Order For Delivery</h5>
                 
                 <div class="d-flex justify-content-between align-items-center">
-                    <p class="order-info mb-0">Minimum Order Within 6 Miles</p>
+                    <p class="order-info mb-0">Minimum Order Within 4 Miles</p>
                     <div class="badge bg-warnng text-white" style="padding:0.25rem 0.5rem; font-size:0.85rem;">£15</div>
                 </div>
 

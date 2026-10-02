@@ -357,7 +357,7 @@ class PosController extends Controller
     {
         $centerLatitude  = 53.223912;
         $centerLongitude = -0.532985;
-        $deliveryRadius  = 6;
+        $deliveryRadius  = 4;
 
         try {
             $response = Http::get('https://api.postcodes.io/postcodes/' . $postcode);
@@ -377,7 +377,7 @@ class PosController extends Controller
             $distance = 3959 * 2 * atan2(sqrt($a), sqrt(1 - $a));
 
             if ($distance <= $deliveryRadius) {
-                return ['available' => true, 'charge' => $distance > 4 ? 3.00 : 2.00, 'distance' => $distance];
+                return ['available' => true, 'charge' => 2.00, 'distance' => $distance];
             }
             return ['available' => false];
         } catch (\Exception $e) {
