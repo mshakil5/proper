@@ -132,9 +132,9 @@
     <link rel="icon" href="{{ asset('uploads/company/' . $company->fav_icon) }}" sizes="48x48">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-    <link href="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet"
+    <link href="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.css') }}?v={{ filemtime(public_path('resources/backend/libs/sweetalert2/sweetalert2.min.css')) }}" rel="stylesheet"
         type="text/css" />
-    <link href="{{ asset('resources/frontend/css/custom.css') }}" rel="stylesheet">
+    <link href="{{ asset('resources/frontend/css/custom.css') }}?v={{ filemtime(public_path('resources/frontend/css/custom.css')) }}" rel="stylesheet">
 </head>
 
 <body>
@@ -157,11 +157,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script src="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.js') }}?v={{ filemtime(public_path('resources/backend/libs/sweetalert2/sweetalert2.min.js')) }}"></script>
 
-    <script src="{{ asset('resources/frontend/js/custom.js') }}"></script>
+    <script src="{{ asset('resources/frontend/js/custom.js') }}?v={{ filemtime(public_path('resources/frontend/js/custom.js')) }}"></script>
 
-    <script src="{{ asset('resources/frontend/js/cart.js') }}"></script>
+    <script src="{{ asset('resources/frontend/js/cart.js') }}?v={{ filemtime(public_path('resources/frontend/js/cart.js')) }}"></script>
 
     @yield('script')
     

@@ -16,16 +16,16 @@
     <link href="{{ asset('uploads/company/' . $company->fav_icon) }}" rel="icon">
 
     <!-- Layout config Js -->
-    <script src="{{ asset('resources/backend/js/layout.js') }}"></script>
+    <script src="{{ asset('resources/backend/js/layout.js') }}?v={{ filemtime(public_path('resources/backend/js/layout.js')) }}"></script>
 
     <!-- Bootstrap Css -->
-    <link href="{{ asset('resources/backend/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('resources/backend/css/bootstrap.min.css') }}?v={{ filemtime(public_path('resources/backend/css/bootstrap.min.css')) }}" rel="stylesheet" type="text/css" />
 
     <!-- Icons Css -->
-    <link href="{{ asset('resources/backend/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('resources/backend/css/icons.min.css') }}?v={{ filemtime(public_path('resources/backend/css/icons.min.css')) }}" rel="stylesheet" type="text/css" />
 
     <!-- App Css -->
-    <link href="{{ asset('resources/backend/css/app.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('resources/backend/css/app.min.css') }}?v={{ filemtime(public_path('resources/backend/css/app.min.css')) }}" rel="stylesheet" type="text/css" />
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
@@ -33,11 +33,11 @@
 
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
 
-    <link href="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet"
+    <link href="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.css') }}?v={{ filemtime(public_path('resources/backend/libs/sweetalert2/sweetalert2.min.css')) }}" rel="stylesheet"
         type="text/css" />
 
     <!-- Custom Css -->
-    <link href="{{ asset('resources/backend/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('resources/backend/css/custom.min.css') }}?v={{ filemtime(public_path('resources/backend/css/custom.min.css')) }}" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
@@ -80,10 +80,10 @@
         <i class="ri-arrow-up-line"></i>
     </button>
 
-    <script src="{{ asset('resources/backend/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ asset('resources/backend/libs/simplebar/simplebar.min.js') }}"></script>
-    <script src="{{ asset('resources/backend/libs/feather-icons/feather.min.js') }}"></script>
-    <script src="{{ asset('resources/backend/libs/node-waves/waves.min.js') }}"></script>
+    <script src="{{ asset('resources/backend/libs/bootstrap/js/bootstrap.bundle.min.js') }}?v={{ filemtime(public_path('resources/backend/libs/bootstrap/js/bootstrap.bundle.min.js')) }}"></script>
+    <script src="{{ asset('resources/backend/libs/simplebar/simplebar.min.js') }}?v={{ filemtime(public_path('resources/backend/libs/simplebar/simplebar.min.js')) }}"></script>
+    <script src="{{ asset('resources/backend/libs/feather-icons/feather.min.js') }}?v={{ filemtime(public_path('resources/backend/libs/feather-icons/feather.min.js')) }}"></script>
+    <script src="{{ asset('resources/backend/libs/node-waves/waves.min.js') }}?v={{ filemtime(public_path('resources/backend/libs/node-waves/waves.min.js')) }}"></script>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -94,11 +94,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
 
-    <script src="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script src="{{ asset('resources/backend/libs/sweetalert2/sweetalert2.min.js') }}?v={{ filemtime(public_path('resources/backend/libs/sweetalert2/sweetalert2.min.js')) }}"></script>
 
-    <script src="{{ asset('resources/backend/js/app.js') }}"></script>
+    <script src="{{ asset('resources/backend/js/app.js') }}?v={{ filemtime(public_path('resources/backend/js/app.js')) }}"></script>
 
-    <script src="{{ asset('resources/backend/js/custom.js') }}"></script>
+    <script src="{{ asset('resources/backend/js/custom.js') }}?v={{ filemtime(public_path('resources/backend/js/custom.js')) }}"></script>
 
     <script>
         $(function () {
