@@ -1469,8 +1469,11 @@ class FrontendController extends Controller
         }
 
         $rawTime = $calculationData['delivery']['time'] ?? null;
+        $isAsap = is_string($rawTime) && strtoupper(trim($rawTime)) === 'ASAP';
 
-        if ($rawTime) {
+        if ($isAsap) {
+            $expectedTime = \Carbon\Carbon::now();
+        } elseif ($rawTime) {
             $firstTime = trim(explode('-', $rawTime)[0]);
             $parsed = \Carbon\Carbon::createFromFormat('h:i A', $firstTime);
 
@@ -1490,7 +1493,7 @@ class FrontendController extends Controller
             'service_type' => $calculationData['delivery']['type'],
             'service_type_ref' => $calculationData['delivery']['type'] === 'delivery' ? '9' : '10',
             'expected_time' => $expectedTime->toIso8601String(),
-            'asap' => false,
+            'asap' => $isAsap,
             'items' => $items,
             'payments' => [
                 [

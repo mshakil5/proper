@@ -156,8 +156,16 @@ $(function () {
 
         let currentTimeInMinutes = current.getHours() * 60 + current.getMinutes();
         let closeTimeInMinutes = closeHour * 60 + closeMinute;
+        let ukTimeInMinutes = ukTime.getHours() * 60 + ukTime.getMinutes();
+        let rolledToNextDay = false;
+
+        if (currentTimeInMinutes >= closeTimeInMinutes && ukTimeInMinutes < closeTimeInMinutes) {
+            current = new Date(ukTime);
+            currentTimeInMinutes = ukTimeInMinutes;
+        }
 
         if (currentTimeInMinutes >= closeTimeInMinutes) {
+            rolledToNextDay = true;
             let nextDate = new Date(year, month, date + 1, startHour, startMinute, 0);
             current = nextDate;
             targetDate = nextDate.getDate();
@@ -171,11 +179,17 @@ $(function () {
 
         let endTime = new Date(targetYear, targetMonth, targetDate, closeHour, closeMinute, 0);
 
-        while ((current.getHours() * 60 + current.getMinutes()) + 20 <= closeHour * 60 + closeMinute) {
+        if (!rolledToNextDay && ukTimeInMinutes >= closeTimeInMinutes - 20 && ukTimeInMinutes < closeTimeInMinutes) {
+            let todayName = ukTime.toLocaleDateString('en-GB', { weekday: 'long' });
+            return [{ value: 'ASAP', label: 'ASAP (' + todayName + ')' }];
+        }
+
+        while ((current.getHours() * 60 + current.getMinutes()) < closeHour * 60 + closeMinute) {
             let dayName = current.toLocaleDateString('en-GB', { weekday: 'long' });
             let start = current.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
             let end = new Date(current);
             end.setMinutes(end.getMinutes() + 20);
+            if (end > endTime) end = new Date(endTime);
             let endSlot = end.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
 
             slots.push({

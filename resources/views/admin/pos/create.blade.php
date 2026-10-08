@@ -2431,6 +2431,7 @@
                         .getHours() + 1, 0);
                     else cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(),
                         rounded);
+                    if (cursor >= close && now < close) cursor = new Date(now);
                 }
                 const slots = [];
                 const fmt = d => d.toLocaleTimeString('en-GB', {
@@ -2440,10 +2441,10 @@
                 });
                 while (cursor < close) {
                     const end = new Date(cursor.getTime() + 20 * 60000);
-                    if (end > close) break;
+                    const slotEnd = end > close ? new Date(close) : end;
                     slots.push({
-                        value: fmt(cursor) + '-' + fmt(end),
-                        label: fmt(cursor) + ' – ' + fmt(end)
+                        value: fmt(cursor) + '-' + fmt(slotEnd),
+                        label: fmt(cursor) + ' – ' + fmt(slotEnd)
                     });
                     cursor = end;
                 }
