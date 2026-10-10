@@ -1698,6 +1698,9 @@ footer a:hover {
     top: 0;
     width: 400px;
     height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     background: #fff;
     box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
     z-index: 1000;
@@ -1750,6 +1753,9 @@ footer a:hover {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding-bottom: 8px;
 }
 
 .cart-scrollable-content::-webkit-scrollbar {
@@ -2002,12 +2008,17 @@ footer a:hover {
     font-size: 9px;
 }
 
-/* Cart Footer */
+/* Cart Footer - always pinned/floating at bottom, never hidden */
 .cart-footer {
     padding: 16px 24px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid #E8E8E8;
     background: #FAFAFA;
     flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
 }
 
 /* Summary Row */
@@ -2021,21 +2032,27 @@ footer a:hover {
     font-weight: 500;
 }
 
-/* Checkout Button */
+/* Checkout Button - floating, always tappable */
 .cart-checkout-btn {
     width: 100%;
-    padding: 12px 20px;
+    min-height: 48px;
+    padding: 14px 20px;
     background: linear-gradient(135deg, #ff8a00 0%, #ff5a00 100%);
     color: white;
     border: none;
     border-radius: 10px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     text-decoration: none;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
+    position: sticky;
+    bottom: 0;
+    box-shadow: 0 4px 14px rgba(255, 138, 0, 0.35);
 }
 
 .cart-checkout-btn:hover {
@@ -2331,6 +2348,12 @@ footer a:hover {
     .cart-offcanvas {
         width: 100%;
         right: -100%;
+        height: 100dvh;
+        max-height: 100dvh;
+    }
+
+    .cart-footer {
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
     }
 
     .cart-item-row {
@@ -2413,8 +2436,9 @@ footer a:hover {
     }
 
     .cart-checkout-btn {
-        font-size: 12px;
-        padding: 10px 16px;
+        font-size: 14px;
+        padding: 14px 16px;
+        min-height: 52px;
     }
 
     .collapsible-header {
